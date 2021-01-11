@@ -12,14 +12,40 @@ from types import FunctionType
 #   #   #   #   #   #   #   #   #
 
 #################################
-## Universal Variables
+## Universal Variables/Methods
 # common error messages
 must_be_expression = 'I am sorry. The input function must be an expression.'
 must_be_collection = 'I am sorry. The input function must be a collection.'
 opposite_signs = 'Initial guesses must yield opposite signs.'
 solution_not_found = 'Solution could not be found with initial guess or tolerance.'
+func_func = 'Input expression used.'
+bad_matrix_A = "Warning: Matrix, A of 'Ac = g' is not strictly, diagonally dominant. Solution may be inaccurate."
 # string outputs of polynomials
 sym_x = sp.Symbol('x')
+
+# common functions
+def make_array(X, f):
+    print(func_func)
+    g = []
+    for xi in X: g.append(f(xi))
+    return g
+
+def diagonality(A):
+    """
+    Warnings
+    --------
+    bad_matrix_A : string
+        Printed string to say that matrix, A is not strictly, diagonally dominant. This could lead to poor solution of 'Ac = g'.'
+    """
+    i, j, n, diags, long = 0, 0, len(A) - 1 , [], []
+    for k in range(-A.shape[0] + 1, A.shape[1]):
+        b = []
+        for a in A.diagonal(k): b.append(abs(a))
+        j = n - i
+        if i == j: long.append(b)
+        else: diags.append(b)
+        i += 1
+    if not np.sum(long) >= np.sum(diags): print(bad_matrix_A)
 #   #   #   #   #   #   #   #   #
 
 
@@ -50,7 +76,7 @@ class iterative_techniques:     # solving equation(s)
     multi_variable : function
         Iterative techniques performed on functions/systems of equations of more than one variable.
     """
-    def single_variable():      # implicitly find root of equation
+    class single_variable:      # implicitly find root of equation
         """Techniques to find solution to single-variable equations.
 
         Methods
@@ -65,7 +91,7 @@ class iterative_techniques:     # solving equation(s)
             Fixed point technique.
         
         max_iterations():
-            asdf
+            Determines maximum number of iterations before exiting procedure.
         
         newton_raphson():
             Fixed point technique.
@@ -82,14 +108,14 @@ class iterative_techniques:     # solving equation(s)
             f : expression
                 Input function.
             
-            a
+            a : float
                 Left-hand bound of interval.
             
-            b 
+            b : float
                 Right-hand bound of interval.
             
             tol : float
-                Specified tolerance until satisfying method.
+                Signed, specified power of tolerance until satisfying method.
             
             Returns
             -------
@@ -123,6 +149,7 @@ class iterative_techniques:     # solving equation(s)
             
             =>  f(x) = x**3 + 4*x**2 - 10 = 0
             """
+            a, b, tol = float(a), float(b), float(tol)
             i, error = 0, tol*10        # initialize
             P, ERROR, I = [], [], []    # initialize lists
             # calculate if expression
@@ -131,7 +158,7 @@ class iterative_techniques:     # solving equation(s)
                 if f(a)*f(b) < 0:
                     # exit by whichever condition is TRUE first
                     if error >= tol or \
-                        i <= max_iterations(f, a, b, tol, 'bisection'):
+                        i <= max_iterations(a, b, tol, 'bisection'):
                         x = (b - a)/2
                         p = a + x       # new value, p
                         P.append(p)
@@ -160,19 +187,19 @@ class iterative_techniques:     # solving equation(s)
             f : expression
                 Input function.
             
-            k
+            k : float
                 Absolute maximum slope of `f`.
             
-            a
+            a : float
                 Left-hand bound of interval.
             
-            b 
+            b : float
                 Right-hand bound of interval.
             
-            p0 
+            p0 : float
                 First initial guess.
             
-            p1 
+            p1 : float
                 Second initial guess.
             
             tol : float
@@ -221,6 +248,7 @@ class iterative_techniques:     # solving equation(s)
             
             =>  p**2 - p - 2 = 0
             """
+            k, a, b, p0, p1, tol = float(k), float(a), float(b), float(p0), float(p1), float(tol)
             i, error = 0, tol*10        # initialize
             P, ERROR, I = [], [], []    # initialize lists
             # calculate if expression
@@ -229,7 +257,7 @@ class iterative_techniques:     # solving equation(s)
                 if f(p0)*f(p1) < 0:
                     # exit by whichever condition is TRUE first
                     if error >= tol or \
-                        i <= max_iterations(f, a, b, tol, 'false position', k, p0):
+                        i <= max_iterations(a, b, tol, 'false position', k, p0):
                         q0, q1 = f(p0), f(p1)
                         # new value, p
                         p = p1 - q1*(p1 - p0)/(q1 - q0)
@@ -261,16 +289,16 @@ class iterative_techniques:     # solving equation(s)
             f : expression
                 Input function.
             
-            k
+            k : float
                 Absolute maximum slope of `f`.
             
-            a
+            a : float
                 Left-hand bound of interval.
             
-            b 
+            b : float
                 Right-hand bound of interval.
             
-            p0 
+            p0 : float
                 Initial guess.
             
             tol : float
@@ -317,13 +345,14 @@ class iterative_techniques:     # solving equation(s)
             
             =>  p**2 - p - 2 = 0
             """
+            k, a, b, p0, tol = float(k), float(a), float(b), float(p0), float(tol)
             i, error = 0, tol*10        # initialize
             P, ERROR, I = [], [], []    # initialize lists
             # calculate if expression
             if isinstance(f,(FunctionType, sp.Expr)):
                 # exit by whichever condition is TRUE first
                 if error >= tol or \
-                    i <= max_iterations(f, a, b, tol, 'fixed point', k, p0):
+                    i <= max_iterations(a, b, tol, 'fixed point', k, p0):
                     p = f(p0)           # new value, p
                     P.append(p)
                     error = abs(p - p0) # error of new value, p
@@ -335,14 +364,8 @@ class iterative_techniques:     # solving equation(s)
             else: sys.exit(must_be_expression)
             return P, ERROR, I
 
-        def max_iterations(f, a, b, tol, method, k=0, p0=0):
-            """f(x) = 0.
-
-            Example: 
-                
-            If  f(x) = x**3 + 4*x**2 = 10
-            
-            =>  f(x) = x**3 + 4*x**2 - 10 = 0
+        def max_iterations(a, b, tol, method, k=0, p0=0):
+            """Find greatest integer for maximum iterations for tolerance.
 
             Parameters
             ----------
@@ -350,34 +373,66 @@ class iterative_techniques:     # solving equation(s)
             f : expression
                 Input function.
             
-            a
+            a : float
                 Left-hand bound of interval.
             
-            b 
+            b : float
                 Right-hand bound of interval.
             
             tol : float
                 Specified tolerance until satisfying method.
             
+            method : string
+                Selection of iterative method for iterations are needed.
+            
+            k : float
+                Maximum possible slope of input function.
+            
+            p0 : float
+                Initial guess for function solution.
+            
             Returns
             -------
-            P : list
-                Aggregate collection of evaluated points, `p`.
-            
-            ERROR : list
-                Propogation of `error` through method.
-            
-            I : list
-                Running collection of iterations through method.
+            N_max : integer
+                Maximum number of iterations required for specified tolerance.
+
+            Raises
+            ------
+            bad_method : string
+                Prescribed method is not an available option.
 
             Notes
             -----
-            Relying on the Intermediate Value Theorem, this is a bounded, root-finding method. Generates a sequence {p_n}^{inf}_{n=1} to approximate a zero of f(x), `p` and converges by O(1 / (2**N)).
+            Will round away from zero to higher integers.
+
+            Examples
+            --------
+            If `method == 'bisection'` & a=1, b=2, and tol=-3, then:
+            `N_max` >= -log(`tol`/(`b` - `a`))/log(2)
+
+            `N_max` >= -log((10**(-3)/(2 - 1))/log(2)
+
+            `N_max` >= 9.96
+
+            `N_max` = 10
+
+            Else, if a=1, b=2, tol=-3, p0=1.5, nd k=0.9, then:
+            `N_max` >= log(`tol`/max('p0' - `a`, `b` - `p0`))/log(k)
+            
+            `N_max` >= log(10**(-3)/max(1.5 - 1, 2 - 1.5))/log(0.9)
+            
+            `N_max` >= log(10**(-3)/0.5)/log(0.9)
+            
+            `N_max` >= 58.98
+            
+            `N_max` >= 59
             """
+            bad_method = 'I am sorry. The desired method must be: bisection, fixed point, newton raphson, secant method, or false position.'
             if method == 'bisection':
                 N_max = math.ceil(-math.log(tol/(b - a))/math.log(2))
-            else:
-                N_max = math.ceil(-math.log(tol/max(p0 - a, b - p0))/math.log(k))
+            elif method == ('fixed point', 'newton raphson', 'secant method', 'false position'):
+                N_max = math.ceil(math.log(tol/max(p0 - a, b - p0))/math.log(k))
+            else: sys.exit(bad_method)
             return N_max
 
         def newton_raphson(f, x, k, a, b, p0, tol):
@@ -396,16 +451,16 @@ class iterative_techniques:     # solving equation(s)
             x : symbol
                 Respected variable in derivative.
             
-            k
+            k : float
                 Absolute maximum slope of `f`.
             
-            a
+            a : float
                 Left-hand bound of interval.
             
-            b 
+            b : float
                 Right-hand bound of interval.
             
-            p0 
+            p0 : float
                 Initial guess.
             
             tol : float
@@ -434,11 +489,20 @@ class iterative_techniques:     # solving equation(s)
             Warnings
             --------
             f'(x) != 0.
+            
             Not root-bracketed.
+
+            Initial guess must be close to real solution; else, will converge to different root or oscillate (if symmetric).
 
             Notes
             -----
             Check that |g'(x)| <= (leading coefficient of g'(x)) for all x in [`a`,`b`].
+
+            Technique based on first Taylor polynomial expansion of `f` about `p0` and evaluated at x = p. |p - p0| is assumed small; therefore, 2nd order Taylor term, the error, is small.
+
+            Newton-Raphson has quickest convergence rate.
+
+            This method can be viewed as fixed-point iteration.
 
             Theorem:
             1) Existence of a fixed-point:
@@ -457,15 +521,17 @@ class iterative_techniques:     # solving equation(s)
             
             =>  p**2 - p - 2 = 0
             """
+            k, a, b, p0, tol = float(k), float(a), float(b), float(p0), float(tol)
             i, error = 0, tol*10        # initialize
             P, ERROR, I = [], [], []    # initialize lists
             # calculate if expression
             if isinstance(f,(FunctionType, sp.Expr)):
+                # determine form of derivative
+                df = sp.lambdify(x, sp.diff(f))
                 # exit by whichever condition is TRUE first
                 if error >= tol or \
-                    i <= max_iterations(f, a, b, tol, 'newton raphson', k, p0):
+                    i <= max_iterations(a, b, tol, 'newton raphson', k, p0):
                     fp0 = f(p0)
-                    df = sp.lambdify(x, sp.diff(f))
                     dfp0 = df(p0)
                     p = p0 - (fp0/dfp0) # new value, p
                     P.append(p)
@@ -490,19 +556,19 @@ class iterative_techniques:     # solving equation(s)
             f : expression
                 Input function.
             
-            k
+            k : float
                 Absolute maximum slope of `f`.
             
-            a
+            a : float
                 Left-hand bound of interval.
             
-            b 
+            b : float
                 Right-hand bound of interval.
             
-            p0 
+            p0 : float
                 First initial guess.
             
-            p1 
+            p1 : float
                 Second initial guess.
             
             tol : float
@@ -523,6 +589,7 @@ class iterative_techniques:     # solving equation(s)
             ------
             solution_not_found : string
                 If initial guess or tolerance were badly defined.
+            
             opposite_signs : string
                 If initial guesses did not evaluate to have opposite signs.
             
@@ -535,6 +602,8 @@ class iterative_techniques:     # solving equation(s)
 
             Notes
             -----
+            Bypasses need to calculate derivative (as in Newton-Raphson).
+
             Check that |g'(x)| <= (leading coefficient of g'(x)) for all x in [`a`,`b`].
 
             Theorem:
@@ -554,6 +623,7 @@ class iterative_techniques:     # solving equation(s)
             
             =>  p**2 - p - 2 = 0
             """
+            k, a, b, p0, p1, tol = float(k), float(a), float(b), float(p0), float(p1), float(tol)
             i, error = 0, tol*10        # initialize
             P, ERROR, I = [], [], []    # initialize lists
             # calculate if expression
@@ -562,7 +632,7 @@ class iterative_techniques:     # solving equation(s)
                 if f(p0)*f(p1) < 0:
                     # exit by whichever condition is TRUE first
                     if error >= tol or \
-                        i <= max_iterations(f, a, b, tol, 'secant method', k, p0):
+                        i <= max_iterations(a, b, tol, 'secant method', k, p0):
                         q0, q1 = f(p0), f(p1)
                         # new value, p
                         p = p1 - q1*(p1 - p0)/(q1 - q0)
@@ -579,7 +649,7 @@ class iterative_techniques:     # solving equation(s)
             else: sys.exit(must_be_expression)
             return P, ERROR, I
 
-    def multi_variable():       # implicitly solve system of equations
+    class multi_variable:       # implicitly solve system of equations
         """Techniques to find solutions of multi-variate equations or systems of equations.
 
         Methods
@@ -599,15 +669,15 @@ class iterative_techniques:     # solving equation(s)
         successive_over_relaxation():
             [x]_(k) = ( (D - wL)^(-1) * ((1 - w)*D + w*U) ) * [x]_(k - 1) + w*( (D - w*L)^(-1) )*[b]
         """
-        def l_infinity_norm(x, x0):
-            """Absolute maximum difference between two vectors.
+        def l_infinity_norm(x, x0=0):
+            """Maximum difference between absolute sum of i'th rows.
 
             Parameters
             ----------
-            x : vector
+            x : array or vector
                 Newly approximated guess.
             
-            x0 : vector
+            x0 : array or vector
                 Previously approximated guess.
 
             Returns
@@ -619,6 +689,8 @@ class iterative_techniques:     # solving equation(s)
             -----
             Best thought as "actual" distance between vectors.
 
+            Also calculates infinity norm of matrix(ces).
+
             Examples
             --------
             [x0] = (1, 1, 1)^(t)
@@ -629,21 +701,28 @@ class iterative_techniques:     # solving equation(s)
 
             ||x0 - x|| = 0.2001
             """
-            norm_i, i = np.zeros_like(x0), 0
-            while i < len(x0):
-                norm_i[i] = abs(x[i] - x0[i])
-                i += 1
+            # initialize loop
+            i, norm_i = 0, np.zeros_like(x)
+            while i < len(x):
+                j = 0
+                while j < len(x[0]):
+                    # evaluate and store norm, ||.||
+                    if x0 != 0: norm_i[i] += abs(x[i][j] - x0[i][j])
+                    else: norm_i[i] += abs(x[i][j])
+                    j += 1      # iterate to j + 1 column
+                i += 1          # iterate to i + 1 row
+            # return the l_infinity norm
             return np.amax(norm_i)
 
-        def l_2_norm(x, x0):
-            """Square root of sum of differences squared.
+        def l_2_norm(x, x0=0):
+            """Square root of sum of differences squared along i'th row.
 
             Parameters
             ----------
-            x : vector
+            x : array
                 Newly approximated guess.
             
-            x0 : vector
+            x0 : array
                 Previously approximated guess.
 
             Returns
@@ -662,11 +741,23 @@ class iterative_techniques:     # solving equation(s)
 
             ||x0 - x|| = 0.21356
             """
-            norm_i, i = np.zeros_like(x0), 0
-            while i < len(x0):
-                norm_i[i] = (x[i] - x0[i])**2
-                i += 1
+            # initialize loop
+            i, norm_i = 0, np.zeros_like(x)
+            while i < len(x):
+                j = 0
+                while j <= len(x[0]):
+                    # evaluate and store norm, ||.||
+                    if x0 != 0: norm_i[i] += (x[i] - x0[i])**2
+                    else: norm_i[i] += x[i]**2
+                    j += 1      # iterate to j + 1 column
+                i += 1          # iterate to i + 1
+            # return the l_2 norm
             return math.sqrt(np.sum(norm_i))
+
+        def eigen_values(A):
+            r_sym = sp.Symbol('r')
+            identity_matrix = np.identity(A)*r_sym
+            lambda_matrix = 
 
         def vector_converge(A, x0, b, N, tol, type, method, w=0):
             """Given [`A`]*[`x`] = [`b`], use `method` and `type` to find [x].
@@ -685,8 +776,8 @@ class iterative_techniques:     # solving equation(s)
             N : int
                 Maximum number of iterations.
             
-            tol
-                Desired constraint for final solution.
+            tol : float
+                Power of desired constraint for final solution.
             
             type : string
                 Prescription of desired norm.
@@ -694,7 +785,7 @@ class iterative_techniques:     # solving equation(s)
             method : string
                 Actual technique.
             
-            w
+            w : float
                 Relaxation parameter.
             
             Returns
@@ -718,6 +809,9 @@ class iterative_techniques:     # solving equation(s)
             
             bad_b : string
                 If {`b`} is neither n x 1 nor 1 x n array.
+            
+            bad_N : string
+                If iterations constraints is not an integer.
 
             solution_not_found : string
                 If initial guess or tolerance were badly defined.
@@ -726,7 +820,7 @@ class iterative_techniques:     # solving equation(s)
             -----
             Unless stated, `w = 0`.
             """
-            def jacobi(x0):
+            def jacobi(x0):         
                 while i < n:
                     j, y = 0, 0.
                     while j < n:
@@ -758,11 +852,14 @@ class iterative_techniques:     # solving equation(s)
             bad_matrix = 'Characteristic matrix, A must be square!'
             bad_x0 = 'Systems vector, x0 must be n x 1 or 1 x n array!'
             bad_b = 'Input vector, b must be n x 1 or 1 x n array!'
+            bad_N = "Maximum iterations, N must be an integer greater than zero."
             if len(A) != len(A[0]): sys.exit(bad_matrix)
             if len(x0[0]) > 1 and len(x0[1]) > 1: sys.exit(bad_x0)
             if len(b[0]) > 1 and len(b[1]) > 1: sys.exit(bad_b)
+            if N <= 0 or not isinstance(N, int): sys.exit(bad_N)
+            tol = float(tol)
             n = len(x0)
-            x0, b, norm, k = np.reshape(x0,(n,1)), np.reshape(b,(n,1)), tol*10, 0
+            k, x0, b, norm = 0, np.reshape(x0,(n,1)), np.reshape(b,(n,1)), tol*10
             xi = np.zeros_like(x0)
             X, NORM, K = [], [], [] 
             X.append(x0); K.append(k)
@@ -795,34 +892,33 @@ class interpolations:           # use data set to build polynomial
     cubic_spline : function
         Constructs a cubic spline polynomial through some data.
     
-    lagrange_polynomial : function
+    hermite : function
+        Oscullating curve that matches data set and its trend.
+
+    lagrange : function
         Constructs a Lagrangian polynomial through some data.
     
-    linear_least_squares : 
+    linear_least_squares : function
+        Yields a polynomial of desired degree with minimal error to data.
     
-    newton_difference : 
+    newton_difference : function
+        Polynomial built direclty from data set.
     """
-    def cubic_spline(X, f, a, b, method, fp=0):
-        """Given a domain and range, construct a spline polynomial within interval by some method.
+    def cubic_spline(X, f, condition, fp=0):
+        """Given a domain and range, construct a spline polynomial within interval by some condition.
 
         Parameters
         ----------
         X : array
             Input domain.
         
-        f
+        f : array or expression
             Desired/Found range of interest.
         
-        a
-            Left-hand bound of interval.
-        
-        b
-            Right-hand bound of interval.
-        
-        method : string
+        condition : string
             Method by which to construct spline polynomial.
         
-        fp
+        fp : array or expression
             Derivative at each point in `f`.
         
         Returns
@@ -844,33 +940,58 @@ class interpolations:           # use data set to build polynomial
         bad_f : string
             If `f` is not an expression or function and is not an n x 1 or 1 x n array.
         
+        bad_data : string
+            If {`X`} and {`f`} are of unequal length.
+        
         bad_fp : string
             If `fp` is not an expression or function and is not an n x 1 or 1 x n array.
+        
+        missing_fp : string
+            Output message that derivative data or expression is missing.
 
-        bad_method : string
-            If indicated method was neither `'clamped'` nor `'natural'`.
+        bad_condition : string
+            If indicated condition was neither `'clamped'` nor `'natural'`.
+
+        Warnings
+        --------
+        `fp` will be calculated if not specified.
+
+        See Also
+        --------
+        num_diff_and_int.endpoint() : Relies on another technique to find derivatives at endpoints if not explicitly provided by data, `fp` nor an expression.
+
+        diagonality() : Determines whether input matrix is strictly, diagonally dominant.
 
         Notes
         -----
-        Clamped splines fit the constructed polynomial to the given data and its derivatives at each point.
+        Method uses many, low-ordered polynomials to fit larger data sets. This minimizes computational load, which conversely greatly increases for larger data sets that yield high-ordered polynomials.
 
-        If selected `method` is `'natural'`, then `fp = 0`.
+        General form: 
+        S(x) = sum_(j=0)^(n){aj + bj(x - xj) + cj(x - xj)^2 + dj(x - xj)^3}
+
+        Clamped splines fit the constructed polynomial to the given data and its der
+        ivatives at either endpoint.
+
+        If selected `condition` is `'natural'`, then `fp = 0`, because derivative is assumed to be straight line outside of data set.
+
+        Definitions of cubic spline conditions:
+        a) S(x) is a cubic polynomial, Sj(x) on sub-interval [x_(j), x_(j + 1)] for each j = 0, 1, ..., n - 1;
+
+        b) Sj(x_(j)) = f(x_(j)) and Sj(x_(j + 1)) = f(x_(j + 1)) for each j = 0, 1, ..., n - 1;
+
+        c) S_(j + 1)(x_(j + 1)) = Sj(x_(j + 1)) for each j = 0, 1, ..., n - 2;
+
+        d) S_(j + 1)'(x_(j + 1)) = Sj'(x_(j + 1)) for each j = 0, 1, ..., n - 2;
+
+        e) One of the following conditions is satisfied:
+            1) S''(x0) = S''(xn) = 0                ->  `'natural'`
+            
+            2) S'(x0) = f'(x0) and S'(xn) = f'(xn)  ->  `'clamped'`
         """
-        def clamped(f, fp, m):
-            Y, YP = np.zeros(m), np.zeros(m)
-            if isinstance(f,(FunctionType, sp.Expr)):
-                f = f(sym_x)
-                # n = m - 1
-                YP_sym = sp.diff(f, sym_x)
-                i = 0
-                while i <= n:
-                    xi = X[i]
-                    Y[i] = f.evalf(subs={sym_x: xi})
-                    YP[i] = YP_sym.evalf(subs={sym_x: xi})
-                    i += 1
-            else: Y, YP = f, fp
+        def clamped():
+            Y, YP = f, fp
             # STEP 1:   build list, h_i
-            H, i = np.zeros(n), 0
+            i, H = 0, np.zeros(n)
             while i < n:
                 H[i] = X[i+1] - X[i]
                 i += 1
@@ -908,16 +1029,10 @@ class interpolations:           # use data set to build polynomial
                 D[j] = (C[j+1] - C[j])/(3*H[j])
                 i += 1
             return Y, A, B, C, D
-        def natural(f, m):
+        def natural():
             Y = np.zeros(m)
             if isinstance(f,(FunctionType, sp.Expr)):
-                f = f(sym_x)
-                # n = m - 1
-                i = 0
-                while i <= n:
-                    xi = X[i]
-                    Y[i] = f.evalf(subs={sym_x: xi})
-                    i += 1
+                Y = make_array(X, f)
             else: Y = f
             # STEP 1:   build list, h_i
             H, i = np.zeros(n), 0
@@ -954,20 +1069,39 @@ class interpolations:           # use data set to build polynomial
             return Y, A, B, C, D
         bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
         bad_f = 'Input range was neither function nor expression and not an n x 1 or 1 x n array.'
+        bad_data = 'Arrays X and f must be of equal length.'
         bad_fp = 'Derivative range was neither function nor expression and not an n x 1 or 1 x n array.'
-        bad_method = "Desired method was not understood. Expected 'clamped' or 'natural'."
+        bad_fp_data = 'Arrays X, f, and fp must be of equal length.'
+        missing_fp = 'Missing derivative data or expression.'
+        bad_condition = "Desired condition was not understood. Expected 'clamped' or 'natural'."
         if len(X[0]) > 1 and len(X[1]) > 1: sys.exit(bad_X)
-        if not isinstance(f, (FunctionType, sp.Expr)) and \
-            len(f[0]) > 1 and len(f[1]) > 1: sys.exit(bad_f)
+        if not isinstance(f, (FunctionType, sp.Expr)):
+            if len(f[0]) > 1 and len(f[1]) > 1: sys.exit(bad_f)
+            if len(X) != len(f): sys.exit(bad_data)
         if fp != 0:
-            if not isinstance(fp, (FunctionType, sp.Expr)) and \
-                len(fp[0]) > 1 and len(fp[1]) > 1: sys.exit(bad_fp)
+            if not isinstance(fp, (FunctionType, sp.Expr)):
+                if len(fp[0]) > 1 and len(fp[1]) > 1: sys.exit(bad_fp)
+                if len(X) != len(fp): sys.exit(bad_fp_data)
+            if isinstance(fp, (FunctionType, sp.Expr)): fp = make_array(X, fp)
+        if fp == 0:
+            if isinstance(f,(FunctionType, sp.Expr)):
+                g = sp.diff(f, sym_x)
+                fp = make_array(X, g)
+            if not isinstance(f,(FunctionType, sp.Expr)):
+                fp = []
+                if len(f) > 3:
+                    fp.append(num_diff_and_int.endpoint(X, f, X[1]-X[0], 'three', 'left'))
+                    fp.append(num_diff_and_int.endpoint(X, f, X[-2]-X[-1], 'three', 'right'))
+                if len(f) > 5:
+                    fp.append(num_diff_and_int.endpoint(X, f, X[1]-X[0], 'five', 'left'))
+                    fp.append(num_diff_and_int.endpoint(X, f, X[-2]-X[-1], 'five', 'right'))
+            else: sys.exit(missing_fp)
         m = len(X)
         n = m - 1
-        if method == 'clamped': Y, A, B, C, D = clamped(f, fp, m)
-        if method == 'natural': Y, A, B, C, D = natural(f, m)
-        else: sys.exit(bad_method)
-        splines_j, j = [], 0
+        if condition == 'clamped': Y, A, B, C, D = clamped()
+        if condition == 'natural': Y, A, B, C, D = natural()
+        else: sys.exit(bad_condition)
+        j, splines_j = 0, []
         while j <= n-1:
             xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
             sj = aj + bj*(sym_x - xj) + cj*(sym_x - xj)**2 + dj*(sym_x - xj)**3
@@ -976,7 +1110,110 @@ class interpolations:           # use data set to build polynomial
         spline = sum(splines_j)
         return Y, splines_j, spline
 
-    def lagrange_polynomial(X, Y):
+    def hermite(X, FX, FP=0):
+        """Given a domain and range, construct a Hermetic polynomial.
+
+        Parameters
+        ----------
+        X : array
+            Input domain.
+        
+        FX : array
+            Desired/Found range of interest.
+        
+        FP : array or expression
+            Derivative at each point in `FX`.
+        
+        Returns
+        -------
+        polynomial : string
+            Totally constructed Hermetic polynomial.
+
+        Raises
+        ------
+        bad_X : string
+            If {`X`} is neither n x 1 nor 1 x n array.
+        
+        bad_FX : string
+            If {`FX`} is neither n x 1 nor 1 x n array.
+        
+        bad_data : string
+            If {`X`} and {`FX`} are of unequal length.
+        
+        bad_FP : string
+            If `FP` is not an expression or function and is not an n x 1 or 1 x n array.
+
+        bad_FP_data : string
+            If {`X`}, {`FX`}, or {`FP`} are of unequal lengths.
+        
+        missing_FP : string
+            If `FP = 0` and `FX` is not an expression, then missing derivative data or expression.
+
+        Warnings
+        --------
+        `FP` calculated if not specified.
+
+        Slow computation time for larger data sets.
+
+        See Also
+        --------
+        make_array() : Prints string that expression was used to make array.
+        
+        Notes
+        -----
+        Oscullating curve incorporates Taylor and Lagrangian polynomials to kiss the data and match each data point's derivatives. Which fits the curve to the shape of the data and its trend.
+        """
+        bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
+        bad_FX = 'Input range was neither an n x 1 nor a 1 x n array.'
+        bad_data = 'Arrays X and FX must be of equal length.'
+        bad_FP = 'Derivative range was neither function nor expression and not an n x 1 or 1 x n array.'
+        bad_FP_data = 'Arrays X, FX, and FP must be of equal length.'
+        missing_FP = 'Missing derivative data or expression.'
+        if len(X[0]) > 1 and len(X[1]) > 1: sys.exit(bad_X)
+        if not isinstance(FX, (FunctionType, sp.Expr)):
+            if len(FX[0]) > 1 and len(FX[1]) > 1: sys.exit(bad_FX)
+            if len(X) != len(FX): sys.exit(bad_data)
+        if isinstance(FX,(FunctionType, sp.Expr)): FX = make_array(X, FX)
+        if FP != 0:
+            if not isinstance(FP, (FunctionType, sp.Expr)):
+                if len(FP[0]) > 1 and len(FP[1]) > 1: sys.exit(bad_FP)
+                if len(X) != len(FP): sys.exit(bad_FP_data)
+            if isinstance(FP,(FunctionType, sp.Expr)): FP = make_array(X, FP)
+        if FP == 0:
+            if isinstance(FX,(FunctionType, sp.Expr)):
+                g = sp.diff(FX, sym_x)
+                FP = make_array(X, g)
+            else: print(missing_FP)
+        n = len(X)
+        i, Q, Z = 0, np.zeros((2*n+1,2*n+1)), np.zeros((n+1,1))
+        while i <= n:
+            Z[2*i], Z[2*i + 1] = X[i], X[i]
+            Q[2*i][0], Q[2*i + 1][0] = FX[i], FX[i]
+            Q[2*i + 1][1] = FP[i]
+            if i != 0: Q[2*i][1] = (Q[2*i][0] - Q[2*i - 1][0]) \
+                / (Z[2*i] - Z[2*i - 1])
+            i += 1
+        i = 2
+        while i <= 2*n + 1:
+            j = 2
+            while j <= i:
+                Q[i][j] = (Q[i][j - 1] - Q[i - 1][j - 1]) \
+                / (Z[i] - Z[i - j])
+                j += 1
+            i += 1
+        i, x, terms = 0, 1, []
+        while i <= n:
+            j, xi = 2*i, (sym_x - X[i])
+            qjj, qj1 = Q[j][j], Q[j + 1][j + 1]
+            terms.append(qjj*x)
+            x = x*xi
+            terms.append(qj1*x)
+            x = x*xi
+            i += 1
+        polynomial = simplify(sum(terms))
+        return polynomial
+    
+    def lagrange(X, Y):
         """Given a domain and range, construct a Lagrangian polynomial.
 
         Parameters
@@ -984,7 +1221,7 @@ class interpolations:           # use data set to build polynomial
         X : array
             Input domain.
         
-        Y : array
+        Y : array or expression
             Desired/Found range of interest.
         
         Returns
@@ -1012,10 +1249,32 @@ class interpolations:           # use data set to build polynomial
         bad_data : string
             If {`X`} and {`Y`} are of unequal length.
 
-        Warns
-        -----
-        func_func : string
-            Evaluate input expression for Lagrange interpolation.
+        Warnings
+        --------
+        Polynomial will quickly begin to oscillate for larger data sets.
+
+        See Also
+        --------
+        make_array() : Prints string that expression was used to make array.
+
+        Notes
+        --------
+        Finds a polynomial of degree n-1.
+
+        Polynomial is of the following form:
+        P(x) = f(x0)L_(n,0)(x) + ... + f(xn)L_(n,n)(x), where
+
+        L_(n,k) = prod_(i=0, i!=k)^(n) (x - xi)/(xk - xi)
+
+        Examples
+        --------
+        A Lagrange polynomial between (2,4) and (5,1) would be found as follows:
+        L_(0)(x) = (x - 5)/(2 - 5) = -(x - 5)/3
+
+        L_(1)(x) = (x - 2)/(5 - 2) = (x - 2)/3
+
+        =>  P(x)    = (4)*(-(x - 5)/3) + (1)*((x - 2)/3)
+                    = -x + 6
         """
         def term(xk, yk):
             num, den, L_k = [], [], []
@@ -1026,8 +1285,7 @@ class interpolations:           # use data set to build polynomial
             L_k = (np.divide(np.prod(num), np.prod(den)))
             return L_k * yk
         def error(n, xi):
-            roots, g, xi_error = [], [], []
-            i = 0
+            i, roots, g, xi_error = 0, [], [], []
             while i <= n:
                 root = X[i]
                 roots.append(sym_x - root)
@@ -1058,17 +1316,11 @@ class interpolations:           # use data set to build polynomial
         bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
         bad_Y = 'Input range was neither an n x 1 nor a 1 x n array.'
         bad_data = 'Arrays X and Y must be of equal length.'
-        func_func = 'Input expression used to find Lagrangian polynomial approximation.'
+        if len(X[0]) > 1 and len(X[1]) > 1: sys.exit(bad_X)
         if not isinstance(Y,(FunctionType, sp.Expr)):
-            if len(X[0]) > 1 and len(X[1]) > 1: sys.exit(bad_X)
             if len(Y[0]) > 1 and len(Y[1]) > 1: sys.exit(bad_Y)
             if len(X) != len(Y): sys.exit(bad_data)
-        if isinstance(Y,(FunctionType, sp.Expr)):
-            print(func_func)
-            f = np.zeros(len(X))
-            Y = Y(sym_x)
-            for xi in X: f[X.index(xi)] = Y.evalf(subs={sym_x: xi})
-            Y = f
+        if isinstance(Y,(FunctionType, sp.Expr)): Y = make_array(X, Y)
         yn, bound = [], []
         for xk in X:
             k = X.index(xk)
@@ -1084,7 +1336,7 @@ class interpolations:           # use data set to build polynomial
         X_i : array
             Input domain.
         
-        Y_i : array
+        Y_i : array or expression
             Desired/Found range of interest.
         
         n : int
@@ -1162,7 +1414,7 @@ class interpolations:           # use data set to build polynomial
             i += 1
         return polynomial, E
 
-    def newton_difference(X, FX, x, state):
+    def newton_difference(X, FX, x0, direction):
         """Given a domain and range, construct some polynomial by Newton's Divided Difference.
 
         Parameters
@@ -1170,13 +1422,13 @@ class interpolations:           # use data set to build polynomial
         X : array
             Input domain.
         
-        FX : array
+        FX : array or expression
             Desired/Found range of interest.
+
+        x0 : float
+            Point about which polynomial is evaluated.
         
-        x
-            Point at which polynomial is evaluated.
-        
-        state : string
+        direction : string
             `'forward'` or `'backward'` construction.
         
         Returns
@@ -1197,11 +1449,17 @@ class interpolations:           # use data set to build polynomial
         
         bad_data : string
             If {`X`} and {`FX`} are of unequal length.
+        
+        bad_direction : string
+            If `direction` is neither `'forward'` nor `'backward'`.
 
-        Warns
+        See Also
+        --------
+        make_array() : Prints string that expression was used to make array.
+
+        Notes
         -----
-        func_func : string
-            Evaluate input expression for Newton difference approximation.
+        Polynomials best made with even spacing in `X`; although, this is not completely necessary.
         """
         def fterm(i, j):
             fij = (fxn[i][j] - fxn[i-1][j])/(fxn[i][0] - fxn[i-j][0])
@@ -1209,30 +1467,27 @@ class interpolations:           # use data set to build polynomial
         bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
         bad_FX = 'Input range was neither an n x 1 nor a 1 x n array.'
         bad_data = 'Arrays X and FX must be of equal length.'
-        func_func = 'Input expression used to find Lagrangian polynomial approximation.'
+        bad_direction = "Supplied direction was not understood. Please specify 'forward' or 'backward'."
         if not isinstance(FX,(FunctionType, sp.Expr)):
             if len(X[0]) > 1 and len(X[1]) > 1: sys.exit(bad_X)
             if len(FX[0]) > 1 and len(FX[1]) > 1: sys.exit(bad_FX)
             if len(X) != len(FX): sys.exit(bad_data)
-        if isinstance(FX,(FunctionType, sp.Expr)):
-            print(func_func)
-            Y = np.zeros(len(X))
-            YP = FX(sym_x)
-            for xi in X: Y[X.index(xi)] = YP.evalf(subs={sym_x: xi})
-            FX = Y
+        if isinstance(FX,(FunctionType, sp.Expr)): FX = make_array(X, FX)
+        if direction != 'forward' or 'backward': sys.exit(bad_direction)
+        x0 = float(x0)
         m = len(X)
         n = m + 1
         fxn, coeff, term, poly = np.zeros((m,n)), [], [], []
         m, n = m - 1, n - 1     # change m and n from length to index
-        fxn[:m,0], fxn[:m,1], j = X, FX, 1
+        j, fxn[:m,0], fxn[:m,1] = 1, X, FX
         while j <= n:
             i = 1
             while i <= m:
                 fk = fterm(i, j)
                 fxn[i][j+1] = fk
-                if state == 'forward' and i == j:
+                if direction == 'forward' and i == j:
                     coeff.append(fk)
-                if state == 'backward' and i == m - 1:
+                if direction == 'backward' and i == m - 1:
                     coeff.append(fk)
                 i += 1
             j += 1
@@ -1240,9 +1495,9 @@ class interpolations:           # use data set to build polynomial
             k = coeff.index(c)
             term.append(sym_x - X[k])
             poly.append(c*np.prod(term))
-        if state == 'forward': polynomial = simplify(sum(poly) + FX[0])
-        if state == 'backward': polynomial = simplify(sum(poly) + FX[m])
-        px = polynomial.subs(sym_x, x)
+        if direction == 'forward': polynomial = simplify(sum(poly) + FX[0])
+        if direction == 'backward': polynomial = simplify(sum(poly) + FX[m])
+        px = polynomial.subs(sym_x, x0)
         return polynomial, px
 
 class num_diff_and_int:         # computational differentiation/integration
@@ -1256,13 +1511,17 @@ class num_diff_and_int:         # computational differentiation/integration
     composite_trapz : function
         Iterative techniques performed on functions/systems of equations of more than one variable.
     
-    endpoint : 
+    endpoint : function
+        Yields the derivative of a data set's endpoints.
     
-    gaussian_quadrature : 
+    gaussian_quadrature : function
+        Optimization of Simpson's Rule with Legendre polynomial.
     
-    integrate : 
+    integrate : function
+        Short-hand function that actually uses Gaussian Quadrature.
 
-    midpoint : 
+    midpoint : function
+        Yields the derivative at some point within the data set.
 
     richard_extrapolation : 
     """
@@ -1272,19 +1531,19 @@ class num_diff_and_int:         # computational differentiation/integration
 
         Parameters
         ----------
-        f
-            Range.
+        f : expression
+            Polynomial equation that defines graphical curve.
         
-        h
+        h : float
             Step-size through interval.
         
         X : list
             Domain over which `f` is evaluated.
         
-        a
+        a : float
             Left-hand bound of interval.
         
-        b
+        b : float
             Right-hand bound of interval.
         
         Returns
@@ -1295,7 +1554,7 @@ class num_diff_and_int:         # computational differentiation/integration
         YJ : list
             Evaluations of `f` from domain.
         
-        F
+        F : float
             Total area under curve, `f`.
 
         Raises
@@ -1316,15 +1575,23 @@ class num_diff_and_int:         # computational differentiation/integration
         `X = 0` if not a list nor n x 1 or 1 x n array.
 
         Unless specified and if `X` is defined, `a` and `b` will be the minimum and maximum, respectively, of `X`.
+
+        Theorem:
+        Let f be in C4[a,b], n be even, h = (b-a)/n, and xj = a + jh for j = 0, 1, ..., n. There exists a mu in (a,b) for which the quadrature for n sub-intervals can be written with its error term as:
+        int_(a)^(b)f(x)dx = h[f(a) + 2*[sum_(j=1)^(n/2 - 1){f(x_(2j))}] + 4*[sum_(j=1)^(n/2){f(x_(2j-1))}] + f(b)]/3 - (b-a)*(h^4)f''''(mu)/180.
+
+        Where: (b-a)*(h^4)f''''(mu)/180 -> O(h^4)
         """
         bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
         bad_f = 'Input range must be expression, not list or tuple.'
         func_func = 'Input expression used.'
+        if len(X[0]) > 1 and len(X[1]) > 1: sys.exit(bad_X)
         if not isinstance(f,(FunctionType, sp.Expr)):
-            if len(X[0]) > 1 and len(X[1]) > 1: sys.exit(bad_X)
+            if len(f[0]) > 1 and len(f[1]) > 1: sys.exit(bad_X)
             else: sys.exit(bad_f)
         if isinstance(f,(FunctionType, sp.Expr)): print(func_func)
         if X != 0: a, b = min(X), max(X)
+        h, a, b = float(h), float(a), float(b)
         n = math.ceil((b-a)/h)
         XJ1, XJ2, XJ, = [], [], []
         YJ1, YJ2, YJ, = [], [], []
@@ -1353,24 +1620,24 @@ class num_diff_and_int:         # computational differentiation/integration
         F = h/3*(f(a) + 2*z1 + 4*z2 + f(b))
         return XJ, YJ, F
 
-    def composite_trapz(f, h, X=0, a=0, b=0):
+    def composite_trapezoidal(f, h, X=0, a=0, b=0):
         """Find the integral of a function within some interval, using Trapezoidal Rule.
 
         Parameters
         ----------
-        f
-            Range.
+        f : expression
+            Polynomial equation that defines graphical curve.
         
-        h
+        h : float
             Step-size through interval.
         
         X : list
             Domain over which `f` is evaluated.
         
-        a
+        a : float
             Left-hand bound of interval.
         
-        b
+        b : float
             Right-hand bound of interval.
         
         Returns
@@ -1381,7 +1648,7 @@ class num_diff_and_int:         # computational differentiation/integration
         YJ : list
             Evaluations of `f` from domain.
         
-        F
+        F : float
             Total area under curve, `f`.
 
         Raises
@@ -1402,6 +1669,12 @@ class num_diff_and_int:         # computational differentiation/integration
         `X = 0` if not a list nor n x 1 or 1 x n array.
 
         Unless specified and if `X` is defined, `a` and `b` will be the minimum and maximum, respectively, of `X`.
+
+        Theorem:
+        Let f be in C2[a,b], h = (b-a)/n, and xj = a + jh for j = 0, 1, ..., n. There exists a mu in (a,b) for which the quadrature for n sub-intervals can be written with its error term as:
+        int_(a)^(b)f(x)dx = h[f(a) + 2*[sum_(j=1)^(n - 1){f(xj)}] + f(b)]/2 - (b-a)*(h^2)f''(mu)/12.
+
+        Where: (b-a)*(h^2)f''(mu)/12 -> O(h^2)
         """
         bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
         bad_f = 'Input range must be expression, not list or tuple.'
@@ -1411,6 +1684,7 @@ class num_diff_and_int:         # computational differentiation/integration
             else: sys.exit(bad_f)
         if isinstance(f,(FunctionType, sp.Expr)): print(func_func)
         if X != 0: a, b = min(X), max(X)
+        h, a, b = float(h), float(a), float(b)
         XJ, YJ = [], []
         XJ.append(a); YJ.append(f(a))
         j, n, z = 1, math.ceil((b-a)/h), 0
@@ -1433,10 +1707,10 @@ class num_diff_and_int:         # computational differentiation/integration
         X : list
             Domain of collected data.
         
-        Y
+        Y : array or expression
             Range of collected data.
         
-        h
+        h : float
             Step-size through interval.
         
         point_type : string
@@ -1447,7 +1721,7 @@ class num_diff_and_int:         # computational differentiation/integration
         
         Returns
         -------
-        dY
+        dY : float
             Evaluated derivative at point.
 
         Raises
@@ -1461,26 +1735,23 @@ class num_diff_and_int:         # computational differentiation/integration
         bad_data : string
             If `X` and `Y` are of unequal length.
 
-        Warns
+        See Also
+        --------
+        make_array() : Prints string that expression was used to make array.
+
+        Notes
         -----
-        func_func : string
-            Evaluate input expression for Newton difference approximation.
+        5 point is more accurate than 3 point; however, round-off error increases.
         """
         bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
         bad_Y = 'Input range was neither an n x 1 nor a 1 x n array.'
         bad_data = 'Arrays X_i and Y_i must be of equal length.'
-        func_func = 'Input expression used.'
-        if not isinstance(f,(FunctionType, sp.Expr)):
+        if not isinstance(Y,(FunctionType, sp.Expr)):
             if len(X[0]) > 1 and len(X[1]) > 1: sys.exit(bad_X)
             if len(Y[0]) > 1 and len(Y[1]) > 1: sys.exit(bad_Y)
             if len(X) != len(Y): sys.exit(bad_data)
-        if isinstance(Y,(FunctionType, sp.Expr)):
-            print(func_func)
-            f = np.zeros(len(X))
-            Y = Y(sym_x)
-            for xi in X: f[X.index(xi)] = Y.evalf(subs={sym_x: xi})
-            Y = f
-        dY = 0
+        if isinstance(Y,(FunctionType, sp.Expr)): Y = make_array(X, Y)
+        h, dY = float(h), 0
         if which_end == 'left':
             i = 0
             if point_type == 'three':
@@ -1499,25 +1770,24 @@ class num_diff_and_int:         # computational differentiation/integration
                         - 3*Y[i-4])/(12*h)
         return dY
 
-    def gaussian_quadrature(function, a, b):
-        return integrate(function, a, b)
+    def gaussian_legendre(function, a, b):
+        return quad(function, a, b)
 
     def integrate(function, a, b):
-        F, error = quad(function, a, b)
-        return F, error
+        return quad(function, a, b)
 
     def midpoint(X, Y, h, point_type, i):
-        """Find the derivative at a midpoint within data set.
+        """Find derivative information at some point within data set.
 
         Parameters
         ----------
         X : list
             Domain of collected data.
         
-        Y
+        Y : array or expression
             Range of collected data.
         
-        h
+        h : float
             Step-size through interval.
         
         point_type : string
@@ -1528,7 +1798,7 @@ class num_diff_and_int:         # computational differentiation/integration
         
         Returns
         -------
-        dY
+        dY : float
             Evaluated derivative at point.
 
         Raises
@@ -1544,55 +1814,59 @@ class num_diff_and_int:         # computational differentiation/integration
         
         bad_i : string
             `i` must be an integer and non-zero for indexing.
+        
+        bad_type : string
+            If `point_type` was not an acceptable option.
 
-        Warns
+        See Also
+        --------
+        make_array() : Prints string that expression was used to make array.
+
+        Notes
         -----
-        func_func : string
-            Evaluate input expression for Newton difference approximation.
+        5 point is more accurate than 3 point; however, round-off error increases.
         """
         bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
         bad_Y = 'Input range was neither an n x 1 nor a 1 x n array.'
         bad_data = 'Arrays X_i and Y_i must be of equal length.'
-        func_func = 'Input expression used.'
         bad_i = 'Index must be an integer.'
-        if not isinstance(f,(FunctionType, sp.Expr)):
+        bad_type = "I am sorry. The selected type was not understood. Please select: 'three', 'five', or '2nd_derivative'."
+        if not isinstance(Y,(FunctionType, sp.Expr)):
             if len(X[0]) > 1 and len(X[1]) > 1: sys.exit(bad_X)
             if len(Y[0]) > 1 and len(Y[1]) > 1: sys.exit(bad_Y)
             if len(X) != len(Y): sys.exit(bad_data)
-        if isinstance(Y,(FunctionType, sp.Expr)):
-            print(func_func)
-            f = np.zeros(len(X))
-            Y = Y(sym_x)
-            for xi in X: f[X.index(xi)] = Y.evalf(subs={sym_x: xi})
-            Y = f
-        if not isinstance(i,(int)): sys.exit(bad_i)
-        dY = 0
+        if isinstance(Y,(FunctionType, sp.Expr)): Y = make_array(X, Y)
+        if not isinstance(i,int): sys.exit(bad_i)
+        h, dY = float(h), 0
         if point_type == 'three':
             dY = (Y[i+1] - Y[i-1])/(2*h)
         if point_type == 'five':
             dY = (Y[i-2] - 8*Y[i-1] \
                 + 8*Y[i+1] - Y[i+2])/(12*h)
+        if point_type == '2nd_derivative':
+            dY = (Y[i-1] - 2*Y[i] + Y[i+1])/(h**2)
+        else: sys.exit(bad_type)
         return dY
 
-    def richard_extrapolation(function, x0, h, order, state):
-        """
+    def richard_extrapolation(function, x0, h, order, direction):
+        """Results in higher-accuracy of derivative at point in function with lower-order formulas to minimize round-off error and increase O(h) of truncation error.
 
         Parameters
         ----------
-        function
-            Range.
+        function : expression
+            Polynomial over which derivative must be calculated.
         
-        x0
+        x0 : float
             Point about which extrapolation centers
         
-        h
+        h : float
             Step-size through interval.
-        
-        point_type : string
-            Determines if 3 or 5 pt. method is used.
 
         order : int
             Order for rate of convergence.
+        
+        direction : string
+            `'forward'` or `'backward'` construction.
         
         Returns
         -------
@@ -1609,17 +1883,28 @@ class num_diff_and_int:         # computational differentiation/integration
         
         bad_order : string
             `order` must be an integer and non-zero.
+        
+        bad_direction : string
+            If `direction` is neither `'forward'` nor `'backward'`.
+        
+        Warns
+        -----
+        func_func : string
+            Evaluate input expression for Newton difference approximation.
         """
         bad_function = 'Function must be expression.'
+        func_func = 'Input expression used.'
         bad_order = 'Expected integer.'
+        bad_direction = "Supplied direction was not understood. Please specify 'forward' or 'backward'."
         if not isinstance(function,(FunctionType, sp.Expr)): 
             sys.exit(bad_function)
-        if isinstance(Y,(FunctionType, sp.Expr)): 
-            print(func_func)
-        if not isinstance(order,(int)): sys.exit(bad_order)
+        if isinstance(function,(FunctionType, sp.Expr)):  print(func_func)
+        if not isinstance(order,int): sys.exit(bad_order)
+        if direction != 'forward' or 'backward': sys.exit(bad_direction)
         def f(h):
             x = x0 + h
             return x, function(x)
+        x0, h = float(x0), float(h)
         i, X, FX = 0, [], []
         while i < order:
             dx = h / (2**order) * (2**i)
@@ -1628,7 +1913,7 @@ class num_diff_and_int:         # computational differentiation/integration
             i += 1
         m = len(X)
         n = m + 1
-        return interpolations.newton_difference(X, FX, x0, state)
+        return interpolations.newton_difference(X, FX, x0, direction)
 #   #   #   #   #   #   #   #   #
 
 
