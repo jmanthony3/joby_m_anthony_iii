@@ -3,6 +3,7 @@
 # import necessary modules/tools
 
 import math
+# import string
 import numpy as np
 from scipy.integrate import quad
 import sympy as sp
@@ -19,24 +20,28 @@ must_be_collection = 'I am sorry. The input function must be a collection.'
 opposite_signs = 'Initial guesses must yield opposite signs.'
 solution_not_found = 'Solution could not be found with initial guess or tolerance.'
 func_func = 'Input expression used.'
-bad_matrix_A = "Warning: Matrix, A of 'Ac = g' is not strictly, diagonally dominant. Solution may be inaccurate."
 # string outputs of polynomials
 sym_x = sp.Symbol('x')
 
 # common functions
-def make_array(X, f):
-    print(func_func)
-    g = []
-    for xi in X: g.append(f(xi))
-    return g
-
 def diagonality(A):
+    """Determines if matrix is strictly, diagonally dominant.
+
+    Parameters
+    ----------
+    A : array
+        Input matrix to be tested.
+
+    Warns
+    -----
+    good_matrix : string
+        Will print to console if strictly, diagonally dominant.
+    
+    bad_matrix : string
+        Matrix, `A` not being strictly, diagonally dominant could lead to poor solution of 'Ac = g'.
     """
-    Warnings
-    --------
-    bad_matrix_A : string
-        Printed string to say that matrix, A is not strictly, diagonally dominant. This could lead to poor solution of 'Ac = g'.'
-    """
+    good_matrix = "WARNING! Matrix, A of is strictly, diagonally dominant."
+    bad_matrix = "WARNING! Matrix, A is not strictly, diagonally dominant. Solution may be inaccurate."
     i, j, n, diags, long = 0, 0, len(A) - 1 , [], []
     for k in range(-A.shape[0] + 1, A.shape[1]):
         b = []
@@ -45,7 +50,292 @@ def diagonality(A):
         if i == j: long.append(b)
         else: diags.append(b)
         i += 1
-    if not np.sum(long) >= np.sum(diags): print(bad_matrix_A)
+    if np.sum(long) >= np.sum(diags): print(good_matrix)
+    else: print(bad_matrix)
+
+def eigen_values(A):
+    """Finds the eigen values of matrix.
+
+    Parameters
+    ----------
+    A : array
+        Matrix of interest.
+    
+    Returns
+    -------
+    lambdas : array
+        Eigen vector containing roots.
+
+    Raises
+    ------
+    bad_matrix : string
+        Matrix of interest must be square.
+    """
+    bad_matrix = 'Characteristic matrix, A must be square!'
+    if len(A) != len(A[0]): sys.exit(bad_matrix)
+    r_sym = sp.Symbol('r')
+    lambda_identity = np.identity(A)*r_sym
+    determinant = sp.det(A - lambda_identity)
+    lambdas = np.roots(determinant)
+    return lambdas
+# preceded by eigen_values
+def spectral_radius(A):
+    """Finds the spectral radius of matrix.
+
+    Parameters
+    ----------
+    A : array
+        Matrix of interest.
+    
+    Returns
+    -------
+    rho : float
+        Spectral radius.
+    
+    Raises
+    ------
+    bad_matrix : string
+        Matrix of interest must be square.
+    
+    See Also
+    --------
+    eigen_values() : method to find eigen vector of `A`.
+    """
+    bad_matrix = 'Characteristic matrix, A must be square!'
+    if len(A) != len(A[0]): sys.exit(bad_matrix)
+    rho = np.max(np.abs(eigen_values(A)))
+    return rho
+
+def l_2_norm(x, x0=0):
+    """Square root of sum of differences squared along i'th row.
+
+    Parameters
+    ----------
+    x : array
+        Newly approximated guess.
+    
+    x0 : array
+        Previously approximated guess.
+
+    Returns
+    -------
+    l2_norm : float
+        Scalar value.
+
+    Examples
+    --------
+    [x0] = (1, 1, 1)^(t)
+
+    [x] = (1.2001, 0.99991, 0.92538)^(t)
+
+    ||x0 - x|| = sqrt[ (1 - 1.2001)^2 \
+        + (1 - 0.99991)^2 + (1 - 0.92538)^2 ]
+
+    ||x0 - x|| = 0.21356
+    """
+    if x0 == 0:
+        # initialize loop
+        i, norm_i = 0, np.zeros_like(x)
+        while i < len(x):
+            j = 0
+            while j <= len(x[0]):
+                # evaluate and store norm, ||.||
+                norm_i[i] += x[i]**2
+                j += 1      # iterate to j + 1 column
+            i += 1          # iterate to i + 1
+        l2_norm = math.sqrt(np.sum(norm_i))
+    if x0 != 0:
+        xt = np.transpose(x)
+        l2_norm = math.sqrt(spectral_radius(x*xt))
+    return l2_norm
+
+def l_infinity_norm(x, x0=0):
+    """Maximum difference between absolute sum of i'th rows.
+
+    Parameters
+    ----------
+    x : array or vector
+        Newly approximated guess.
+    
+    x0 : array or vector
+        Previously approximated guess.
+
+    Returns
+    -------
+    `np.amax(norm_i)` : float
+        Scalar value.
+
+    Notes
+    -----
+    Best thought as "actual" distance between vectors.
+
+    Also calculates infinity norm of matrix(ces).
+
+    Examples
+    --------
+    [x0] = (1, 1, 1)^(t)
+
+    [x] = (1.2001, 0.99991, 0.92538)^(t)
+
+    ||x0 - x|| = max{|1 - 1.2001|, |1 - 0.99991|, |1 - 0.92538|}
+
+    ||x0 - x|| = 0.2001
+    """
+    # initialize loop
+    i, norm_i = 0, np.zeros_like(x)
+    while i < len(x):
+        j = 0
+        while j < len(x[0]):
+            # evaluate and store norm, ||.||
+            if x0 != 0: norm_i[i] += abs(x[i][j] - x0[i][j])
+            else: norm_i[i] += abs(x[i][j])
+            j += 1      # iterate to j + 1 column
+        i += 1          # iterate to i + 1 row
+    # return the l_infinity norm
+    return np.amax(norm_i)
+# preceded by l_2_norm and l_infinity_norm
+def condition_number(A, norm_type):
+    """Find the condition number of a given matrix and norm type.
+
+    Parameters
+    ----------
+    A : array
+        Input matrix for analysis.
+    
+    norm_type : string
+        Selects norm comparison.
+    
+    Returns
+    -------
+    k : float
+        Condition number of matrix, A.
+
+    Warnings
+    --------
+    Will output evaluation of condition number and show in console.
+
+    See Also
+    --------
+    l_2_norm() : Yields the l_2 norm.
+    
+    l_infinity_norm() : Yields the l_infinity norm.
+    """
+    A_inv = A**(-1)
+    if norm_type == 'l_2_norm': 
+        norm, abnorm = l_2_norm(A), l_2_norm(A_inv)
+    if norm_type == 'l_infinity_norm':
+        norm, abnorm = l_infinity_norm(A), l_infinity_norm(A_inv)
+    k = norm*abnorm
+    print('Condition Number K = ', k)
+    return k
+
+def make_array(X, f):
+    """Maps domain to range.
+
+    Parameters
+    ----------
+    X : array
+        Collection if input data.
+
+    f : expression
+        Equation which maps the domain to range.
+    
+    Returns
+    -------
+    g : array
+        Mapped range from equation.
+    
+    Warns
+    -----
+    func_func : string
+        Input expression was in fact used.
+    """
+    print(func_func)
+    i, g = 0, np.zeros_like(X)
+    while i < len(X):
+        j = 0
+        while j < len(X[0]):
+            g[i][j] = (f(X[i][j]))
+    return g
+
+def symmetry(A):
+    """Determines boolean truth value if symmetric or not.
+
+    Parameters
+    ----------
+    A : array
+        Matrix of interest.
+    
+    Returns
+    -------
+    value : int
+        Boolean truth value.
+    
+    Raises
+    ------
+    bad_matrix : string
+        Matrix of interest must be square.
+
+    Warns
+    -----
+    symmetric : string
+        Console print that `A` is symmetric.
+
+    asymmetric : string
+        Console print that `A` is not symmetric.
+    """
+    bad_matrix = 'Characteristic matrix, A must be square!'
+    symmetric = 'Matrix, A is symmetric.'
+    asymmetric = 'Matrix, A is not symmetric.'
+    if len(A) != len(A[0]): sys.exit(bad_matrix)
+    value = 0
+    if A == np.transpose(A): value = 1; print(symmetric)
+    if A != np.transpose(A): print(asymmetric)
+    return value
+
+def tridiagonality(A):
+    """Find the condition number of a given matrix and norm type.
+
+    Parameters
+    ----------
+    A : array
+        Input matrix for analysis.
+    
+    norm_type : string
+        Selects norm comparison.
+    
+    Returns
+    -------
+    value : int
+        Boolean state of truth.
+
+    Warns
+    -----
+    bad_matrix : string
+        Matrix is not tridiagonal.
+    
+    good_matrix : string
+        Matrix is tridiagonal.
+    """
+    bad_matrix = 'Matrix, A is not tridiagonal.'
+    good_matrix = 'Matrix, A is tridiagonal.'
+    value = 0
+    long, above, below = np.zeros_like(A), np.zeros_like(A), np.zeros_like(A)
+    i, n = 0, len(A)
+    while i < n:
+        j = 0
+        while j < n:
+            aij = A[i][j]
+            if i == j: long[i][j] = aij
+            if i == j + 1: above[i][j] = aij
+            if i == j - 1: below[i][j] = aij
+        i += 1 
+    non_A = A - (long + above + below)
+    for a in non_A:
+        if a == 0: test = 'Pass'
+        else: test = 'Fail'; print(bad_matrix); break
+    if test == 'Pass': print(good_matrix); value = 1
+    return value
 #   #   #   #   #   #   #   #   #
 
 
@@ -57,8 +347,8 @@ class test:                     # test class
     def test():                 # test function
         """Was the module loaded correctly?
 
-        Returns
-        -------
+        Raises
+        ------
         success : string
             Prints a message of successful function call.
         """
@@ -70,7 +360,7 @@ class iterative_techniques:     # solving equation(s)
 
     Attributes
     ----------
-    single_variable : function
+    single_variable : class
         Iterative techniques performed on functions of one variable.
     
     multi_variable : function
@@ -130,14 +420,16 @@ class iterative_techniques:     # solving equation(s)
 
             Raises
             ------
-            solution_not_found : string
-                If initial guess or tolerance were badly defined.
-            
             opposite_signs : string
                 If initial guesses did not evaluate to have opposite signs.
             
             must_be_expression : string
                 If input `f` was of array, list, tuple, etcetera...
+            
+            Warns
+            -----
+            solution_not_found : string
+                If initial guess or tolerance were badly defined.
 
             Notes
             -----
@@ -150,29 +442,28 @@ class iterative_techniques:     # solving equation(s)
             =>  f(x) = x**3 + 4*x**2 - 10 = 0
             """
             a, b, tol = float(a), float(b), float(tol)
-            i, error = 0, tol*10        # initialize
-            P, ERROR, I = [], [], []    # initialize lists
             # calculate if expression
             if isinstance(f,(FunctionType, sp.Expr)):
                 # check if f(a) and f(b) are opposite signs
                 if f(a)*f(b) < 0:
+                    P, ERROR, I = [], [], []    # initialize lists
+                    i, error = 0, tol*10        # initialize
                     # exit by whichever condition is TRUE first
                     if error >= tol or \
                         i <= max_iterations(a, b, tol, 'bisection'):
                         x = (b - a)/2
-                        p = a + x       # new value, p
+                        p = a + x               # new value, p
                         P.append(p)
-                        # adjust next bounds
-                        if f(a)*f(p) > 0: a = p
+                        if f(a)*f(p) > 0: a = p # adjust next bounds
                         else: b = p
-                        error = abs(x)  # error of new value, p
+                        error = abs(x)          # error of new value, p
                         ERROR.append(error); I.append(i)
-                        i += 1          # iterate to i + 1
-                    else: print(solution_not_found)
+                        i += 1                  # iterate to i + 1
+                    else: print('WARNING!\n' + solution_not_found)
                 # abort if f(a) is not opposite f(b)
-                else: sys.exit(opposite_signs)
+                else: sys.exit('ERROR!\n' + opposite_signs)
             # abort if not expression
-            else: sys.exit(must_be_expression)
+            else: sys.exit('ERROR!\n' + must_be_expression)
             return P, ERROR, I
 
         def false_position(f, k, a, b, p0, p1, tol):
@@ -218,15 +509,17 @@ class iterative_techniques:     # solving equation(s)
 
             Raises
             ------
-            solution_not_found : string
-                If initial guess or tolerance were badly defined.
-            
             opposite_signs : string
                 If initial guesses did not evaluate to have opposite signs.
             
             must_be_expression : string
                 If input `f` was of array, list, tuple, etcetera...
 
+            Warns
+            -----
+            solution_not_found : string
+                If initial guess or tolerance were badly defined.
+            
             Notes
             -----
             Check that |g'(x)| <= (leading coefficient of g'(x)) for all x in [`a`,`b`].
@@ -249,12 +542,12 @@ class iterative_techniques:     # solving equation(s)
             =>  p**2 - p - 2 = 0
             """
             k, a, b, p0, p1, tol = float(k), float(a), float(b), float(p0), float(p1), float(tol)
-            i, error = 0, tol*10        # initialize
-            P, ERROR, I = [], [], []    # initialize lists
             # calculate if expression
             if isinstance(f,(FunctionType, sp.Expr)):
                 # check if f(a) and f(b) are opposites signs
                 if f(p0)*f(p1) < 0:
+                    P, ERROR, I = [], [], []    # initialize lists
+                    i, error = 0, tol*10        # initialize
                     # exit by whichever condition is TRUE first
                     if error >= tol or \
                         i <= max_iterations(a, b, tol, 'false position', k, p0):
@@ -262,18 +555,16 @@ class iterative_techniques:     # solving equation(s)
                         # new value, p
                         p = p1 - q1*(p1 - p0)/(q1 - q0)
                         P.append(p)
-                        # error of new value, p
-                        error = abs(p - p0)
+                        error = abs(p - p0)     # error of new value, p
                         ERROR.append(error); I.append(i)
-                        # adjust next bounds
-                        if f(p)*q1 < 0: p0 = p1
+                        if f(p)*q1 < 0: p0 = p1 # adjust next bounds
                         p1 = p
-                        i += 1          # iterate to i + 1
-                    else: print(solution_not_found)
+                        i += 1                  # iterate to i + 1
+                    else: print('WARNING!\n' + solution_not_found)
                 # abort if f(a) is not opposite f(b)
-                else: sys.exit(opposite_signs)
+                else: sys.exit('ERROR!\n' + opposite_signs)
             # abort if not expression
-            else: sys.exit(must_be_expression)
+            else: sys.exit('ERROR!\n' + must_be_expression)
             return P, ERROR, I
 
         def fixed_point(f, k, a, b, p0, tol):
@@ -285,7 +576,6 @@ class iterative_techniques:     # solving equation(s)
 
             Parameters
             ----------
-            
             f : expression
                 Input function.
             
@@ -306,7 +596,6 @@ class iterative_techniques:     # solving equation(s)
             
             Returns
             -------
-            
             P : list
                 Aggregate collection of evaluated points, `p`.
             
@@ -318,12 +607,14 @@ class iterative_techniques:     # solving equation(s)
 
             Raises
             ------
-            solution_not_found : string
-                If initial guess or tolerance were badly defined.
-            
             must_be_expression : string
                 If input `f` was of array, list, tuple, etcetera...
 
+            Warns
+            -----
+            solution_not_found : string
+                If initial guess or tolerance were badly defined.
+            
             Notes
             -----
             Check that |g'(x)| <= (leading coefficient of g'(x)) for all x in [`a`,`b`].
@@ -346,22 +637,22 @@ class iterative_techniques:     # solving equation(s)
             =>  p**2 - p - 2 = 0
             """
             k, a, b, p0, tol = float(k), float(a), float(b), float(p0), float(tol)
-            i, error = 0, tol*10        # initialize
-            P, ERROR, I = [], [], []    # initialize lists
             # calculate if expression
             if isinstance(f,(FunctionType, sp.Expr)):
+                P, ERROR, I = [], [], []    # initialize lists
+                i, error = 0, tol*10        # initialize
                 # exit by whichever condition is TRUE first
                 if error >= tol or \
                     i <= max_iterations(a, b, tol, 'fixed point', k, p0):
-                    p = f(p0)           # new value, p
+                    p = f(p0)               # new value, p
                     P.append(p)
-                    error = abs(p - p0) # error of new value, p
+                    error = abs(p - p0)     # error of new value, p
                     ERROR.append(error); I.append(i)
-                    p0 = p              # set future previous value
-                    i += 1              # iterate to i + 1
-                else: print(solution_not_found)
+                    p0 = p                  # set future previous value
+                    i += 1                  # iterate to i + 1
+                else: print('WARNING!\n' + solution_not_found)
             # abort if not expression
-            else: sys.exit(must_be_expression)
+            else: sys.exit('ERROR!\n' + must_be_expression)
             return P, ERROR, I
 
         def max_iterations(a, b, tol, method, k=0, p0=0):
@@ -369,7 +660,6 @@ class iterative_techniques:     # solving equation(s)
 
             Parameters
             ----------
-            
             f : expression
                 Input function.
             
@@ -432,7 +722,7 @@ class iterative_techniques:     # solving equation(s)
                 N_max = math.ceil(-math.log(tol/(b - a))/math.log(2))
             elif method == ('fixed point', 'newton raphson', 'secant method', 'false position'):
                 N_max = math.ceil(math.log(tol/max(p0 - a, b - p0))/math.log(k))
-            else: sys.exit(bad_method)
+            else: sys.exit('ERROR!\n' + bad_method)
             return N_max
 
         def newton_raphson(f, x, k, a, b, p0, tol):
@@ -444,7 +734,6 @@ class iterative_techniques:     # solving equation(s)
 
             Parameters
             ----------
-            
             f : expression
                 Input function.
             
@@ -468,7 +757,6 @@ class iterative_techniques:     # solving equation(s)
             
             Returns
             -------
-            
             P : list
                 Aggregate collection of evaluated points, `p`.
             
@@ -480,22 +768,22 @@ class iterative_techniques:     # solving equation(s)
 
             Raises
             ------
-            solution_not_found : string
-                If initial guess or tolerance were badly defined.
-            
             must_be_expression : string
                 If input `f` was of array, list, tuple, etcetera...
 
-            Warnings
-            --------
+            Warns
+            -----
+            solution_not_found : string
+                If initial guess or tolerance were badly defined.
+
+            Notes
+            -----
             f'(x) != 0.
             
             Not root-bracketed.
 
             Initial guess must be close to real solution; else, will converge to different root or oscillate (if symmetric).
 
-            Notes
-            -----
             Check that |g'(x)| <= (leading coefficient of g'(x)) for all x in [`a`,`b`].
 
             Technique based on first Taylor polynomial expansion of `f` about `p0` and evaluated at x = p. |p - p0| is assumed small; therefore, 2nd order Taylor term, the error, is small.
@@ -522,26 +810,26 @@ class iterative_techniques:     # solving equation(s)
             =>  p**2 - p - 2 = 0
             """
             k, a, b, p0, tol = float(k), float(a), float(b), float(p0), float(tol)
-            i, error = 0, tol*10        # initialize
-            P, ERROR, I = [], [], []    # initialize lists
             # calculate if expression
             if isinstance(f,(FunctionType, sp.Expr)):
                 # determine form of derivative
                 df = sp.lambdify(x, sp.diff(f))
+                i, error = 0, tol*10        # initialize
+                P, ERROR, I = [], [], []    # initialize lists
                 # exit by whichever condition is TRUE first
                 if error >= tol or \
                     i <= max_iterations(a, b, tol, 'newton raphson', k, p0):
                     fp0 = f(p0)
                     dfp0 = df(p0)
-                    p = p0 - (fp0/dfp0) # new value, p
+                    p = p0 - (fp0/dfp0)     # new value, p
                     P.append(p)
-                    error = abs(p - p0) # error of new value, p
+                    error = abs(p - p0)     # error of new value, p
                     ERROR.append(error); I.append(i)
-                    p0 = p              # set future previous value
-                    i += 1              # iterate to i + 1
-                else: print(solution_not_found)
+                    p0 = p                  # set future previous value
+                    i += 1                  # iterate to i + 1
+                else: print('WARNING!\n' + solution_not_found)
             # abort if not expression
-            else: sys.exit(must_be_expression)
+            else: sys.exit('ERROR!\n' + must_be_expression)
             return P, ERROR, I
 
         def secant_method(f, k, a, b, p0, p1, tol):
@@ -552,7 +840,6 @@ class iterative_techniques:     # solving equation(s)
 
             Parameters
             ----------
-            
             f : expression
                 Input function.
             
@@ -587,21 +874,21 @@ class iterative_techniques:     # solving equation(s)
 
             Raises
             ------
-            solution_not_found : string
-                If initial guess or tolerance were badly defined.
-            
             opposite_signs : string
                 If initial guesses did not evaluate to have opposite signs.
             
             must_be_expression : string
                 If input `f` was of array, list, tuple, etcetera...
 
-            Warnings
-            --------
-            Not root-bracketed.
+            Warns
+            -----
+            solution_not_found : string
+                If initial guess or tolerance were badly defined.
 
             Notes
             -----
+            Not root-bracketed.
+
             Bypasses need to calculate derivative (as in Newton-Raphson).
 
             Check that |g'(x)| <= (leading coefficient of g'(x)) for all x in [`a`,`b`].
@@ -624,12 +911,12 @@ class iterative_techniques:     # solving equation(s)
             =>  p**2 - p - 2 = 0
             """
             k, a, b, p0, p1, tol = float(k), float(a), float(b), float(p0), float(p1), float(tol)
-            i, error = 0, tol*10        # initialize
-            P, ERROR, I = [], [], []    # initialize lists
             # calculate if expression
             if isinstance(f,(FunctionType, sp.Expr)):
                 # check if f(a) and f(b) are opposite signs
                 if f(p0)*f(p1) < 0:
+                    i, error = 0, tol*10        # initialize
+                    P, ERROR, I = [], [], []    # initialize lists
                     # exit by whichever condition is TRUE first
                     if error >= tol or \
                         i <= max_iterations(a, b, tol, 'secant method', k, p0):
@@ -637,252 +924,220 @@ class iterative_techniques:     # solving equation(s)
                         # new value, p
                         p = p1 - q1*(p1 - p0)/(q1 - q0)
                         P.append(p)
-                        # error of new value
-                        error = abs(p - p0)
+                        error = abs(p - p0)     # error of new value
                         ERROR.append(error); I.append(i)
-                        p0, p1 = p1, p  # set future previous values
-                        i += 1          # iterate to i + 1
-                    else: print(solution_not_found)
+                        p0, p1 = p1, p          # set future previous values
+                        i += 1                  # iterate to i + 1
+                    else: print('WARNING!\n' + solution_not_found)
                 # abort if f(a) is not opposite f(b)
-                else: sys.exit(opposite_signs)
+                else: sys.exit('ERROR!\n' + opposite_signs)
             # abort if not expression
-            else: sys.exit(must_be_expression)
+            else: sys.exit('ERROR!\n' + must_be_expression)
             return P, ERROR, I
 
-    class multi_variable:       # implicitly solve system of equations
-        """Techniques to find solutions of multi-variate equations or systems of equations.
+    def multi_variable(A, x0, b, N, tol, type, method, w=0):       # implicitly solve system of equations
+        """Given [`A`]*[`x`] = [`b`], use `method` and `type` to find [x].
 
-        Methods
+        Parameters
+        ----------
+        A : matrix
+            Characteristic matrix.
+        
+        x0 : vector
+            Dimensions of system of equations.
+        
+        b : vector
+            Input vector.
+        
+        N : int
+            Maximum number of iterations.
+        
+        tol : float
+            Power of desired constraint for final solution.
+        
+        type : string
+            Prescription of desired norm.
+        
+        method : string
+            Actual technique.
+        
+        w : float
+            Relaxation parameter.
+        
+        Returns
         -------
-        l_infinity_norm():
-            Returns l_infinity norm between two vectors.
+        X_matrix : array
+            Finally evaluated solution.
         
-        l_2_norm():
-            Returns l_2 norm between two vectors.
+        NORM : list
+            Aggregate of yielded norms.
         
+        K : list
+            Running collection of iterations through method.
+
+        Raises
+        ------
+        bad_matrix : string
+            If [`A`] is not square.
+        
+        bad_x0 : string
+            If {`x0`} is neither n x 1 nor 1 x n array.
+        
+        bad_b : string
+            If {`b`} is neither n x 1 nor 1 x n array.
+        
+        bad_N : string
+            If iterations constraints is not an integer.
+        
+        bad_omega : string
+            If omega was not given or less than zero or if a positive omega could not be found.
+
+        Warns
+        -----
+        non_triad : string
+            Matrix, `A` not being tridiagonal violates theorem.
+
+        incalculable : string
+            Matrix, `A` not being positive definite violates theorem.
+
+        calculate_omega : string
+            If `'successive_relaxation'` does not specify `w`, then an attempt will be made to find an optimal one.
+
+        optimal_omega : string
+            An ideal omega was found.
+
+        solution_not_found : string
+            If initial guess or tolerance were badly defined.
+
+        Notes
+        -----
         jacobi():
-            [x]_(k) = ( D^(-1)*(L + U) ) * [x]_(k - 1) + ( D^(-1) ) * [b]
-        
+        [x]_(k) = ( D^(-1)*(L + U) ) * [x]_(k - 1) + ( D^(-1) ) * [b]
+    
         gauss_seidel():
             [x]_(k) = ( (D - L)^(-1) * U ) * [x]_(k - 1) + ( (D - L)^(-1) )*[b]
         
-        successive_over_relaxation():
+        successive_relaxation():
             [x]_(k) = ( (D - wL)^(-1) * ((1 - w)*D + w*U) ) * [x]_(k - 1) + w*( (D - w*L)^(-1) )*[b]
+
+        Unless stated, `w = 0`.
         """
-        def l_infinity_norm(x, x0=0):
-            """Maximum difference between absolute sum of i'th rows.
-
-            Parameters
-            ----------
-            x : array or vector
-                Newly approximated guess.
-            
-            x0 : array or vector
-                Previously approximated guess.
-
-            Returns
-            -------
-            `np.amax(norm_i)`
-                Scalar value.
-
-            Notes
-            -----
-            Best thought as "actual" distance between vectors.
-
-            Also calculates infinity norm of matrix(ces).
-
-            Examples
-            --------
-            [x0] = (1, 1, 1)^(t)
-
-            [x] = (1.2001, 0.99991, 0.92538)^(t)
-
-            ||x0 - x|| = max{|1 - 1.2001|, |1 - 0.99991|, |1 - 0.92538|}
-
-            ||x0 - x|| = 0.2001
-            """
-            # initialize loop
-            i, norm_i = 0, np.zeros_like(x)
-            while i < len(x):
-                j = 0
-                while j < len(x[0]):
-                    # evaluate and store norm, ||.||
-                    if x0 != 0: norm_i[i] += abs(x[i][j] - x0[i][j])
-                    else: norm_i[i] += abs(x[i][j])
-                    j += 1      # iterate to j + 1 column
-                i += 1          # iterate to i + 1 row
-            # return the l_infinity norm
-            return np.amax(norm_i)
-
-        def l_2_norm(x, x0=0):
-            """Square root of sum of differences squared along i'th row.
-
-            Parameters
-            ----------
-            x : array
-                Newly approximated guess.
-            
-            x0 : array
-                Previously approximated guess.
-
-            Returns
-            -------
-            `math.sqrt(np.sum(norm_i))`
-                Scalar value.
-
-            Examples
-            --------
-            [x0] = (1, 1, 1)^(t)
-
-            [x] = (1.2001, 0.99991, 0.92538)^(t)
-
-            ||x0 - x|| = sqrt[ (1 - 1.2001)^2 \
-                + (1 - 0.99991)^2 + (1 - 0.92538)^2 ]
-
-            ||x0 - x|| = 0.21356
-            """
-            # initialize loop
-            i, norm_i = 0, np.zeros_like(x)
-            while i < len(x):
-                j = 0
-                while j <= len(x[0]):
-                    # evaluate and store norm, ||.||
-                    if x0 != 0: norm_i[i] += (x[i] - x0[i])**2
-                    else: norm_i[i] += x[i]**2
-                    j += 1      # iterate to j + 1 column
-                i += 1          # iterate to i + 1
-            # return the l_2 norm
-            return math.sqrt(np.sum(norm_i))
-
-        def eigen_values(A):
-            r_sym = sp.Symbol('r')
-            identity_matrix = np.identity(A)*r_sym
-            lambda_matrix = 
-
-        def vector_converge(A, x0, b, N, tol, type, method, w=0):
-            """Given [`A`]*[`x`] = [`b`], use `method` and `type` to find [x].
-
-            Parameters
-            ----------
-            A : matrix
-                Characteristic matrix.
-            
-            x0 : vector
-                Dimensions of system of equations.
-            
-            b : vector
-                Input vector.
-            
-            N : int
-                Maximum number of iterations.
-            
-            tol : float
-                Power of desired constraint for final solution.
-            
-            type : string
-                Prescription of desired norm.
-            
-            method : string
-                Actual technique.
-            
-            w : float
-                Relaxation parameter.
-            
-            Returns
-            -------
-            X_matrix : array
-                Finally evaluated solution.
-            
-            NORM : list
-                Aggregate of yielded norms.
-            
-            K : list
-                Running collection of iterations through method.
-
-            Raises
-            ------
-            bad_matrix : string
-                If [`A`] is not square.
-            
-            bad_x0 : string
-                If {`x0`} is neither n x 1 nor 1 x n array.
-            
-            bad_b : string
-                If {`b`} is neither n x 1 nor 1 x n array.
-            
-            bad_N : string
-                If iterations constraints is not an integer.
-
-            solution_not_found : string
-                If initial guess or tolerance were badly defined.
-
-            Notes
-            -----
-            Unless stated, `w = 0`.
-            """
-            def jacobi(x0):         
-                while i < n:
-                    j, y = 0, 0.
-                    while j < n:
-                        if j != i:
-                            y += A[i][j]*x0[j]
+        def jacobi(x0):         
+            while i < n:
+                j, y = 0, 0.
+                while j < n:
+                    if j != i:
+                        y += A[i][j]*x0[j]
+                        j += 1
+                xi[i] = (-y + b[i])/A[i][i]
+                i += 1
+            return xi
+        def find_omega():
+            will_converge = "According to Ostrowski-Reich's Theorem, the successive relaxation technique will converge."
+            non_triad = 'Matrix, A is not tridiagonal'
+            incalculable = 'I could not determine if matrix, A was positive definite'
+            omega = w
+            i, TEST = 0, []
+            while i < len(A):
+                xn = np.zeros_like(x0)
+                xn[i] = x0[i]
+                if xn == 0: continue
+                else: 
+                    y = np.reshape(xn)*A*x0
+                    if y > 0: state = 1
+                    else: state = 0; break
+                i += 1
+            if symmetry(A) == 1 and state == 1: theorem_6_22 = 1
+            i = 0
+            while i < len(A):
+                Ai = A[:i,:i]
+                if sp.det(Ai) > 0: theorem_6_25 = 1
+                else : theorem_6_25 = 0; break
+            if theorem_6_22 == 1 or theorem_6_25 == 1:
+                if 0 < w < 2: print(will_converge)
+                if tridiagonality(A) == 1:
+                    D, L, U = np.zeros_like(A), np.zeros_like(A), np.zeros_like(A)
+                    i, n = 0, len(A)
+                    while i < n:
+                        j = 0
+                        while j < n:
+                            aij = A[i][j]
+                            if i == j: D[i][j] = aij
+                            if i > j: L[i][j] = aij
+                            if i < j: U[i][j] = aij
                             j += 1
-                    xi[i] = (-y + b[i])/A[i][i]
-                    i += 1
-                return xi
-            def gauss_seidel(x0):
-                while i < n:
-                    j, y1, y2 = 0, 0., 0.
-                    while j < i-1:
-                        y1 += A[i][j]*xi[j]
-                        j += 1
-                    j = i + 1
-                    while j < n:
-                        y2 += A[i][j]*x0[j]
-                        j += 1
-                    xi[i] = (-y1 - y2 + b[i])/A[i][i]
-                    i += 1
-                return xi
-            def successive_over_relaxation(x0):
-                while i < n:
-                    gauss_seidel(x0)
-                    xi[i] = (1 - w)*x0[i] + w*gauss_seidel(x0)
-                    i += 1
-                return xi
-            bad_matrix = 'Characteristic matrix, A must be square!'
-            bad_x0 = 'Systems vector, x0 must be n x 1 or 1 x n array!'
-            bad_b = 'Input vector, b must be n x 1 or 1 x n array!'
-            bad_N = "Maximum iterations, N must be an integer greater than zero."
-            if len(A) != len(A[0]): sys.exit(bad_matrix)
-            if len(x0[0]) > 1 and len(x0[1]) > 1: sys.exit(bad_x0)
-            if len(b[0]) > 1 and len(b[1]) > 1: sys.exit(bad_b)
-            if N <= 0 or not isinstance(N, int): sys.exit(bad_N)
-            tol = float(tol)
-            n = len(x0)
-            k, x0, b, norm = 0, np.reshape(x0,(n,1)), np.reshape(b,(n,1)), tol*10
-            xi = np.zeros_like(x0)
-            X, NORM, K = [], [], [] 
-            X.append(x0); K.append(k)
-            if norm > tol or k <= N:
-                i = 0
-                if method == 'jacobi': xi = jacobi(x0)
-                if method == 'gauss_seidel': xi = gauss_seidel(x0)
-                if method == 'successive_over_relaxation': xi = successive_over_relaxation(x0)
-                if type == 'l_infinity': norm = l_infinity_norm(xi, x0)
-                if type == 'l_2': norm = l_2_norm(xi, x0)
-                X.append(xi); NORM.append(norm); K.append(k)
-                x0 = xi
-                k += 1
-            else: sys.exit(solution_not_found)
-            m, n = len(X[0]), len(X)
-            X_matrix, j = np.zeros((m,n)), 0
-            while j < n:
-                i = 0
-                while i < m:
-                    X_matrix[i][j] = float(X[j][i])
-                    i += 1
-                j += 1
-            return X_matrix, NORM, K
+                        i += 1
+                    Tg = ((D - L)**(-1))*U
+                    omega = 2 / (1 + math.sqrt(1 - Tg))
+                else: print('WARNING!\n' + non_triad)
+            else: print('WARNING!\n' + incalculable)
+            return omega
+        def gauss_seidel(x0):
+            while i < n:
+                j, y1, y2 = 0, 0., 0.
+                while j < i-1:
+                    y1 += A[i][j]*xi[j]
+                    j += 1
+                j = i + 1
+                while j < n:
+                    y2 += A[i][j]*x0[j]
+                    j += 1
+                xi[i] = (-y1 - y2 + b[i])/A[i][i]
+                i += 1
+            return xi
+        def successive_relaxation(x0):
+            while i < n:
+                gauss_seidel(x0)
+                xi[i] = (1 - w)*x0[i] + w*gauss_seidel(x0)
+                i += 1
+            return xi
+        bad_matrix = 'Characteristic matrix, A must be square!'
+        bad_x0 = 'Systems vector, x0 must be n x 1 or 1 x n array!'
+        bad_b = 'Input vector, b must be n x 1 or 1 x n array!'
+        bad_N = "Maximum iterations, N must be an integer greater than zero."
+        calculate_omega = 'w was not given; therefore, I will attempt to choose one.'
+        optimal_omega = 'w = ' + w + ' given. Which is not optimum: '
+        bad_omega = 'Either a positive omega was not given, or I could not choose one.'
+        if len(A) != len(A[0]): sys.exit('ERROR!\n' + bad_matrix)
+        if len(x0[0]) > 1 and len(x0[1]) > 1: sys.exit('ERROR!\n' + bad_x0)
+        if len(b[0]) > 1 and len(b[1]) > 1: sys.exit('ERROR!\n' + bad_b)
+        if N <= 0 or not isinstance(N, int): sys.exit('ERROR!\n' + bad_N)
+        diagonality(A)
+        if method == 'successive_relaxation': 
+            if w == 0: 
+                w = find_omega()
+                if w <= 0: sys.exit(bad_omega)
+                print('WARNING!\n' + calculate_omega + w + '.')
+            if w > 0:
+                omega = find_omega()
+                if omega == w: print('WARNING!\n' + optimal_omega + omega + '.')
+            else: sys.exit(bad_omega)
+        tol = float(tol)
+        n = len(x0)
+        k, x0, b, norm = 0, np.reshape(x0,(n,1)), np.reshape(b,(n,1)), tol*10
+        xi = np.zeros_like(x0)
+        X, NORM, K = [], [], [] 
+        X.append(x0); K.append(k)
+        if norm > tol or k > N:
+            i = 0
+            if method == 'jacobi': xi = jacobi(x0)
+            if method == 'gauss_seidel': xi = gauss_seidel(x0)
+            if method == 'successive_relaxation': xi = successive_relaxation(x0)
+            if type == 'l_infinity': norm = l_infinity_norm(xi, x0)
+            if type == 'l_2': norm = l_2_norm(xi, x0)
+            X.append(xi); NORM.append(norm); K.append(k)
+            x0 = xi
+            k += 1
+        else: print('WARNING!\n' + solution_not_found)
+        m, n = len(X[0]), len(X)
+        X_matrix, j = np.zeros((m,n)), 0
+        while j < n:
+            i = 0
+            while i < m:
+                X_matrix[i][j] = float(X[j][i])
+                i += 1
+            j += 1
+        return X_matrix, NORM, K
 
 class interpolations:           # use data set to build polynomial
     """Finding solutions to equation(s).
@@ -904,7 +1159,7 @@ class interpolations:           # use data set to build polynomial
     newton_difference : function
         Polynomial built direclty from data set.
     """
-    def cubic_spline(X, f, condition, fp=0):
+    def cubic_spline(X, f, condition, x=0, fp=0):
         """Given a domain and range, construct a spline polynomial within interval by some condition.
 
         Parameters
@@ -917,6 +1172,9 @@ class interpolations:           # use data set to build polynomial
         
         condition : string
             Method by which to construct spline polynomial.
+        
+        x : symbol
+            Respected variable in derivative of equation.
         
         fp : array or expression
             Derivative at each point in `f`.
@@ -952,18 +1210,18 @@ class interpolations:           # use data set to build polynomial
         bad_condition : string
             If indicated condition was neither `'clamped'` nor `'natural'`.
 
-        Warnings
-        --------
-        `fp` will be calculated if not specified.
-
         See Also
         --------
+        make_array() : Translates input expression to array from given `X`.
+
         num_diff_and_int.endpoint() : Relies on another technique to find derivatives at endpoints if not explicitly provided by data, `fp` nor an expression.
 
         diagonality() : Determines whether input matrix is strictly, diagonally dominant.
 
         Notes
         -----
+        `fp` will be calculated if not specified.
+
         Method uses many, low-ordered polynomials to fit larger data sets. This minimizes computational load, which conversely greatly increases for larger data sets that yield high-ordered polynomials.
 
         General form: 
@@ -1085,7 +1343,7 @@ class interpolations:           # use data set to build polynomial
             if isinstance(fp, (FunctionType, sp.Expr)): fp = make_array(X, fp)
         if fp == 0:
             if isinstance(f,(FunctionType, sp.Expr)):
-                g = sp.diff(f, sym_x)
+                g = sp.diff(f, x)
                 fp = make_array(X, g)
             if not isinstance(f,(FunctionType, sp.Expr)):
                 fp = []
@@ -1104,13 +1362,13 @@ class interpolations:           # use data set to build polynomial
         j, splines_j = 0, []
         while j <= n-1:
             xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
-            sj = aj + bj*(sym_x - xj) + cj*(sym_x - xj)**2 + dj*(sym_x - xj)**3
+            sj = aj + bj*(x - xj) + cj*(x - xj)**2 + dj*(x - xj)**3
             splines_j.append(sj)
             j += 1
         spline = sum(splines_j)
         return Y, splines_j, spline
 
-    def hermite(X, FX, FP=0):
+    def hermite(X, FX, x=0, FP=0):
         """Given a domain and range, construct a Hermetic polynomial.
 
         Parameters
@@ -1120,6 +1378,9 @@ class interpolations:           # use data set to build polynomial
         
         FX : array
             Desired/Found range of interest.
+        
+        x : symbol
+            Respected variable in derivative of equation.
         
         FP : array or expression
             Derivative at each point in `FX`.
@@ -1149,18 +1410,16 @@ class interpolations:           # use data set to build polynomial
         missing_FP : string
             If `FP = 0` and `FX` is not an expression, then missing derivative data or expression.
 
-        Warnings
-        --------
-        `FP` calculated if not specified.
-
-        Slow computation time for larger data sets.
-
         See Also
         --------
         make_array() : Prints string that expression was used to make array.
         
         Notes
         -----
+        `FP` calculated if not specified.
+
+        Slow computation time for larger data sets.
+
         Oscullating curve incorporates Taylor and Lagrangian polynomials to kiss the data and match each data point's derivatives. Which fits the curve to the shape of the data and its trend.
         """
         bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
@@ -1181,7 +1440,7 @@ class interpolations:           # use data set to build polynomial
             if isinstance(FP,(FunctionType, sp.Expr)): FP = make_array(X, FP)
         if FP == 0:
             if isinstance(FX,(FunctionType, sp.Expr)):
-                g = sp.diff(FX, sym_x)
+                g = sp.diff(FX, x)
                 FP = make_array(X, g)
             else: print(missing_FP)
         n = len(X)
@@ -1201,14 +1460,14 @@ class interpolations:           # use data set to build polynomial
                 / (Z[i] - Z[i - j])
                 j += 1
             i += 1
-        i, x, terms = 0, 1, []
+        i, y, terms = 0, 1, []
         while i <= n:
-            j, xi = 2*i, (sym_x - X[i])
+            j, xi = 2*i, (x - X[i])
             qjj, qj1 = Q[j][j], Q[j + 1][j + 1]
-            terms.append(qjj*x)
-            x = x*xi
-            terms.append(qj1*x)
-            x = x*xi
+            terms.append(qjj*y)
+            y = y*xi
+            terms.append(qj1*y)
+            y = y*xi
             i += 1
         polynomial = simplify(sum(terms))
         return polynomial
@@ -1249,16 +1508,14 @@ class interpolations:           # use data set to build polynomial
         bad_data : string
             If {`X`} and {`Y`} are of unequal length.
 
-        Warnings
-        --------
-        Polynomial will quickly begin to oscillate for larger data sets.
-
         See Also
         --------
         make_array() : Prints string that expression was used to make array.
 
         Notes
         --------
+        Polynomial will quickly begin to oscillate for larger data sets.
+
         Finds a polynomial of degree n-1.
 
         Polynomial is of the following form:
@@ -1891,6 +2148,10 @@ class num_diff_and_int:         # computational differentiation/integration
         -----
         func_func : string
             Evaluate input expression for Newton difference approximation.
+        
+        See Also
+        --------
+        interpolations.newton_difference() : relies on Newton Difference method to build extrapolation for function's derivative and order of error.
         """
         bad_function = 'Function must be expression.'
         func_func = 'Input expression used.'
