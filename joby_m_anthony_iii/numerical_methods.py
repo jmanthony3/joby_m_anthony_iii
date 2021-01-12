@@ -371,6 +371,9 @@ class iterative_techniques:     # solving equation(s)
 
         Methods
         -------
+        max_iterations():
+            Determines maximum number of iterations before exiting procedure.
+        
         bisection():
             Bracketed root-finding technique.
         
@@ -380,15 +383,84 @@ class iterative_techniques:     # solving equation(s)
         fixed_point():
             Fixed point technique.
         
-        max_iterations():
-            Determines maximum number of iterations before exiting procedure.
-        
         newton_raphson():
             Fixed point technique.
         
         secant_method():
             Fixed point technique.
         """
+        def max_iterations(a, b, tol, method, k=0, p0=0):
+            """Find greatest integer for maximum iterations for tolerance.
+
+            Parameters
+            ----------
+            f : expression
+                Input function.
+            
+            a : float
+                Left-hand bound of interval.
+            
+            b : float
+                Right-hand bound of interval.
+            
+            tol : float
+                Specified tolerance until satisfying method.
+            
+            method : string
+                Selection of iterative method for iterations are needed.
+            
+            k : float
+                Maximum possible slope of input function.
+            
+            p0 : float
+                Initial guess for function solution.
+            
+            Returns
+            -------
+            N_max : integer
+                Maximum number of iterations required for specified tolerance.
+
+            Raises
+            ------
+            bad_method : string
+                Prescribed method is not an available option.
+
+            Notes
+            -----
+            Will round away from zero to higher integers.
+
+            Examples
+            --------
+            If `method == 'bisection'` & a=1, b=2, and tol=-3, then:
+            `N_max` >= -log(`tol`/(`b` - `a`))/log(2)
+
+            `N_max` >= -log((10**(-3)/(2 - 1))/log(2)
+
+            `N_max` >= 9.96
+
+            `N_max` = 10
+
+            Else, if a=1, b=2, tol=-3, p0=1.5, nd k=0.9, then:
+            `N_max` >= log(`tol`/max('p0' - `a`, `b` - `p0`))/log(k)
+            
+            `N_max` >= log(10**(-3)/max(1.5 - 1, 2 - 1.5))/log(0.9)
+            
+            `N_max` >= log(10**(-3)/0.5)/log(0.9)
+            
+            `N_max` >= 58.98
+            
+            `N_max` >= 59
+            """
+            bad_method = 'I am sorry. The desired method must be: bisection, fixed point, newton raphson, secant method, or false position.'
+            if method == 'bisection':
+                N_max = math.ceil(-math.log(tol/(b - a))/math.log(2))
+            elif method == ('fixed point', 'newton raphson', 'secant method', 'false position'):
+                N_max = math.ceil(math.log(tol/max(p0 - a, b - p0))/math.log(k))
+            else: sys.exit('ERROR!\n' + bad_method)
+            return N_max
+        
+        # the following are preceded by max_iterations
+
         def bisection(f, a, b, tol):
             """Given f(x) in [`a`,`b`] find x within tolerance, `tol`.
             Root-finding method: f(x) = 0.
@@ -654,76 +726,6 @@ class iterative_techniques:     # solving equation(s)
             # abort if not expression
             else: sys.exit('ERROR!\n' + must_be_expression)
             return P, ERROR, I
-
-        def max_iterations(a, b, tol, method, k=0, p0=0):
-            """Find greatest integer for maximum iterations for tolerance.
-
-            Parameters
-            ----------
-            f : expression
-                Input function.
-            
-            a : float
-                Left-hand bound of interval.
-            
-            b : float
-                Right-hand bound of interval.
-            
-            tol : float
-                Specified tolerance until satisfying method.
-            
-            method : string
-                Selection of iterative method for iterations are needed.
-            
-            k : float
-                Maximum possible slope of input function.
-            
-            p0 : float
-                Initial guess for function solution.
-            
-            Returns
-            -------
-            N_max : integer
-                Maximum number of iterations required for specified tolerance.
-
-            Raises
-            ------
-            bad_method : string
-                Prescribed method is not an available option.
-
-            Notes
-            -----
-            Will round away from zero to higher integers.
-
-            Examples
-            --------
-            If `method == 'bisection'` & a=1, b=2, and tol=-3, then:
-            `N_max` >= -log(`tol`/(`b` - `a`))/log(2)
-
-            `N_max` >= -log((10**(-3)/(2 - 1))/log(2)
-
-            `N_max` >= 9.96
-
-            `N_max` = 10
-
-            Else, if a=1, b=2, tol=-3, p0=1.5, nd k=0.9, then:
-            `N_max` >= log(`tol`/max('p0' - `a`, `b` - `p0`))/log(k)
-            
-            `N_max` >= log(10**(-3)/max(1.5 - 1, 2 - 1.5))/log(0.9)
-            
-            `N_max` >= log(10**(-3)/0.5)/log(0.9)
-            
-            `N_max` >= 58.98
-            
-            `N_max` >= 59
-            """
-            bad_method = 'I am sorry. The desired method must be: bisection, fixed point, newton raphson, secant method, or false position.'
-            if method == 'bisection':
-                N_max = math.ceil(-math.log(tol/(b - a))/math.log(2))
-            elif method == ('fixed point', 'newton raphson', 'secant method', 'false position'):
-                N_max = math.ceil(math.log(tol/max(p0 - a, b - p0))/math.log(k))
-            else: sys.exit('ERROR!\n' + bad_method)
-            return N_max
 
         def newton_raphson(f, x, k, a, b, p0, tol):
             """Given f(x) and initial guess, `p0` in [`a`,`b`], find x within tolerance, `tol`.
