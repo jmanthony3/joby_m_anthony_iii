@@ -22,13 +22,13 @@ func_func = 'Input expression used.'
 sym_x = sp.Symbol('x')
 
 # common functions
-def varname(obj, callingGlobals=globals()):
+def varname(obj, callingLocals=locals()):
     """
     quick function to print name of input and value. 
     If not for the default-Valued callingLocals, the function would always
     get the name as "obj", which is not what I want.    
     """
-    for k, v in list(callingGlobals.items()):
+    for k, v in list(callingLocals.items()):
          if v is obj:
             name = k
             return name
@@ -83,7 +83,7 @@ def eigen_values(A):
     bad_matrix : string
         Matrix of interest must be square.
     """
-    sym_A = varname(A)
+    sym_A = 'A' # varname(A)
     bad_matrix = 'WARNING! Matrix, ' + sym_A + ' must be square!'
     if len(A) != len(A[0]): sys.exit(bad_matrix)
     A = np.array(A)
@@ -127,7 +127,7 @@ def spectral_radius(A):
     --------
     eigen_values() : method to find eigen vector of `A`.
     """
-    sym_A = varname(A)
+    sym_A = 'A' # varname(A)
     bad_matrix = 'Matrix, ' + A + ' must be square!'
     if len(A) != len(A[0]): sys.exit(bad_matrix)
     rho = np.max(np.abs(eigen_values(A)))
@@ -247,6 +247,7 @@ def condition_number(A, norm_type):
     
     l_infinity_norm() : Yields the l_infinity norm.
     """
+    sym_A = 'A' # varname(A)
     A = np.array(A)
     i, A_inv = 0, np.zeros_like(A)
     while i < len(A):
@@ -261,7 +262,7 @@ def condition_number(A, norm_type):
     if norm_type == 'l_infinity_norm':
         norm, abnorm = l_infinity_norm(A), l_infinity_norm(A_inv)
     k = norm*abnorm
-    print('Condition Number K(' + varname(A) + ') = ', k)
+    print('Condition Number K(' + sym_A + ') = ', k)
     return k
 
 def make_array(X, f):
@@ -324,7 +325,7 @@ def symmetry(A):
     asymmetric : string
         Console print that `A` is not symmetric.
     """
-    sym_A = varname(A)
+    sym_A = 'A' # varname(A)
     bad_matrix = 'ERROR! Matrix, ' + sym_A + ' must be square!'
     symmetric = 'Matrix, ' + sym_A + ' is symmetric.'
     asymmetric = 'Matrix, ' + sym_A + ' is not symmetric.'
@@ -365,7 +366,7 @@ def tridiagonality(A):
     good_matrix : string
         Matrix is tridiagonal.
     """
-    sym_A = varname(A)
+    sym_A = 'A' # varname(A)
     bad_matrix = 'Matrix, ' + sym_A + ' is not tridiagonal.'
     good_matrix = 'Matrix, ' + sym_A + ' is tridiagonal.'
     A = np.array(A)
@@ -1054,7 +1055,7 @@ def jacobi(A, x0, b, N, power, norm_type):
     jacobi():
     [x]_(k) = ( D^(-1)*(L + U) ) * [x]_(k - 1) + ( D^(-1) ) * [b]
     """
-    sym_A, sym_x0, sym_b = varname(A), varname(x0), varname(b)
+    sym_A, sym_x0, sym_b = 'A', 'x0', 'b' # varname(A), varname(x0), varname(b)
     bad_matrix = 'Characteristic matrix, ' + sym_A + ' must be square!'
     bad_x0 = 'Systems vector, ' + sym_x0 + ' must be n x 1 or 1 x n array!'
     bad_b = 'Input vector, ' + sym_b + ' must be n x 1 or 1 x n array!'
@@ -1178,7 +1179,7 @@ def gauss_seidel(A, x0, b, N, power, norm_type):
     gauss_seidel():
         [x]_(k) = ( (D - L)^(-1) * U ) * [x]_(k - 1) + ( (D - L)^(-1) )*[b]
     """
-    sym_A, sym_x0, sym_b = varname(A), varname(x0), varname(b)
+    sym_A, sym_x0, sym_b = 'A', 'x0', 'b' # varname(A), varname(x0), varname(b)
     bad_matrix = 'Characteristic matrix, ' + sym_A + ' must be square!'
     bad_x0 = 'Systems vector, ' + sym_x0 + ' must be n x 1 or 1 x n array!'
     bad_b = 'Input vector, ' + sym_b + ' must be n x 1 or 1 x n array!'
@@ -1267,7 +1268,7 @@ def find_omega(A, x0, w=0):
     -----
     Unless specified, `w` will be zero and chosen, if possible.
     """
-    sym_A = varname(A)
+    sym_A = 'A' # varname(A)
     will_converge = "According to Ostrowski-Reich's Theorem, the successive relaxation technique will converge."
     non_triad = 'Matrix, ' + sym_A + ' is not tridiagonal.'
     incalculable = 'I could not determine if matrix, ' + sym_A + ' was positive definite.'
@@ -1414,7 +1415,7 @@ def successive_relaxation(A, x0, b, N, power, norm_type, w=0):
     
     `w` will be analyzed independent of assigned value. Which will be used if not specified in assignment.
     """
-    sym_A, sym_x0, sym_b = varname(A), varname(x0), varname(b)
+    sym_A, sym_x0, sym_b = 'A', 'x0', 'b' # varname(A), varname(x0), varname(b)
     bad_matrix = 'Characteristic matrix, ' + sym_A + ' must be square!'
     bad_x0 = 'Systems vector, ' + sym_x0 + ' must be n x 1 or 1 x n array!'
     bad_b = 'Input vector, ' + sym_b + ' must be n x 1 or 1 x n array!'
@@ -1596,7 +1597,7 @@ class cubic_spline:
                 D[j] = (C[j+1] - C[j])/(3*H[j])
                 i += 1
             return Y, A, B, C, D
-        sym_X, sym_f, sym_fp = varname(X), varname(f), varname(fp)
+        sym_X, sym_f, sym_fp = 'X', 'f', 'fp' # varname(X), varname(f), varname(fp)
         bad_X = 'Input domain, ' + sym_x + ' was neither an n x 1 nor a 1 x n array.'
         bad_f = 'Input range, ' + sym_f + ' was neither function nor expression and not an n x 1 or 1 x n array.'
         bad_data = 'Arrays ' + sym_X + ' and ' + sym_f + ' must be of equal length.'
@@ -1747,7 +1748,7 @@ class cubic_spline:
                 D[j] = (C[j+1] - C[j])/(3*H[j])
                 i += 1
             return Y, A, B, C, D
-        sym_X, sym_f = varname(X), varname(f)
+        sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
         bad_X = 'Input domain, ' + sym_x + ' was neither an n x 1 nor a 1 x n array.'
         bad_f = 'Input range, ' + sym_f + ' was neither function nor expression and not an n x 1 or 1 x n array.'
         bad_data = 'Arrays ' + sym_X + ' and ' + sym_f + ' must be of equal length.'
@@ -1828,7 +1829,7 @@ def hermite(X, FX, x=sp.Symbol('x'), FP=0):
 
     Oscullating curve incorporates Taylor and Lagrangian polynomials to kiss the data and match each data point's derivatives. Which fits the curve to the shape of the data and its trend.
     """
-    sym_X, sym_FX, sym_FP = varname(X), varname(FX), varname(FP)
+    sym_X, sym_FX, sym_FP = 'X', 'FX', 'FP' # varname(X), varname(FX), varname(FP)
     bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
     bad_FX = 'Input range, ' + sym_FX + ' was neither an n x 1 nor a 1 x n array.'
     bad_data = 'Arrays ' + sym_X + ' and ' + sym_FX + ' must be of equal length.'
@@ -1986,7 +1987,7 @@ def lagrange(X, Y, x=sp.Symbol('x')):
                 gx = np.amax(np.abs(R))
             i += 1
         return np.abs(xi_err*gx)
-    sym_X, sym_Y = varname(X), varname(Y)
+    sym_X, sym_Y = 'X', 'Y' # varname(X), varname(Y)
     bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
     bad_Y = 'Input range, ' + sym_Y + ' was neither an n x 1 nor a 1 x n array.'
     bad_data = 'Arrays ' + sym_X + ' and ' + sym_Y + ' must be of equal length.'
@@ -2058,9 +2059,9 @@ def linear_least_squares(X_i, Y_i, n):
             err += (Y_i[i] - px)**2
             i += 1
         return p, err
-    sym_X_i, sym_Y = varname(X_i), varname(Y_i)
+    sym_X_i, sym_Y_i = 'X_i', 'Y_i' # varname(X_i), varname(Y_i)
     bad_X = 'Input domain, ' + sym_X_i + ' was neither an n x 1 nor a 1 x n array.'
-    bad_Y_i = 'Input range, ' + sym_Y_i + ' was neither an n x 1 nor a 1 x n array.'
+    bad_Y = 'Input range, ' + sym_Y_i + ' was neither an n x 1 nor a 1 x n array.'
     bad_data = 'Arrays ' + sym_X_i + ' and ' + sym_Y_i + ' must be of equal length.'
     bad_n = 'Degree of polynomial must be integer and non-zero.'
     made_poly = 'I have found your requested polynomial! P = '
@@ -2157,7 +2158,7 @@ def newton_difference(X, FX, x0, direction=0):
     def fterm(i, j):
         fij = (fxn[i][j] - fxn[i-1][j])/(fxn[i][0] - fxn[i-j][0])
         return fij
-    sym_X, sym_FX = varname(X), varname(FX)
+    sym_X, sym_FX = 'X', 'FX' # varname(X), varname(FX)
     bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
     bad_FX = 'Input range, ' + sym_FX + ' was neither an n x 1 nor a 1 x n array.'
     bad_data = 'Arrays ' + sym_X + ' and ' + sym_FX + ' must be of equal length.'
@@ -2260,7 +2261,7 @@ def composite_simpson(f, X, h, a=0, b=0):
 
     Where: (b-a)*(h^4)f''''(mu)/180 -> O(h^4)
     """
-    sym_X, sym_f = varname(X), varname(f)
+    sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
     bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
     bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
     func_func = 'Input expression used.'
@@ -2356,7 +2357,7 @@ def composite_trapezoidal(f, X, h, a=0, b=0):
 
     Where: (b-a)*(h^2)f''(mu)/12 -> O(h^2)
     """
-    sym_X, sym_f = varname(X), varname(f)
+    sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
     bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
     bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
     func_func = 'Input expression used.'
@@ -2425,7 +2426,7 @@ def endpoint(X, Y, h, point_type, which_end):
     -----
     5 point is more accurate than 3 point; however, round-off error increases.
     """
-    sym_x, sym_Y = varname(X), varname(Y)
+    sym_x, sym_Y = 'X', 'Y' # varname(X), varname(Y)
     bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
     bad_Y = 'Input range, ' + sym_Y + ' was neither an n x 1 nor a 1 x n array.'
     bad_data = 'Arrays ' + sym_X + ' and ' + sym_Y + ' must be of equal length.'
@@ -2509,7 +2510,7 @@ def midpoint(X, Y, h, point_type, i):
     -----
     5 point is more accurate than 3 point; however, round-off error increases.
     """
-    sym_x, sym_Y = varname(X), varname(Y)
+    sym_x, sym_Y = 'X', 'Y' # varname(X), varname(Y)
     bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
     bad_Y = 'Input range, ' + sym_Y + ' was neither an n x 1 nor a 1 x n array.'
     bad_data = 'Arrays ' + sym_X + ' and ' + sym_Y + ' must be of equal length.'
@@ -2580,7 +2581,7 @@ def richard_extrapolation(function, x0, h, order, direction=0):
     --------
     newton_difference() : Newton Difference method to build extrapolation for function's derivative and order of error.
     """
-    sym_function = varname(function)
+    sym_function = 'function' # varname(function)
     bad_function = 'Function, ' + sym_function + ' must be expression.'
     bad_order = 'Expected integer.'
     bad_direction = "Supplied direction was not understood. Please specify 'forward' or 'backward'."
@@ -2658,7 +2659,7 @@ class ode:
         --------
         Outputs to console the solution steps.
         """
-        sym_f = varname(f)
+        sym_f = 'f' # varname(f)
         bad_f = 'Input, ' + sym_f + ' was not an expression.'
         bad_N = 'Desired number of iterations must be integer and non-zero.'
         if not isinstance(f,(FunctionType, sp.Expr)): sys.exit('ERROR! ' + bad_f)
