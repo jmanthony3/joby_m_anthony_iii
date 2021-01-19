@@ -22,13 +22,13 @@ func_func = 'Input expression used.'
 sym_x = sp.Symbol('x')
 
 # common functions
-def varname(obj, callingLocals=locals()):
+def varname(obj, callingGlobals=globals()):
     """
     quick function to print name of input and value. 
     If not for the default-Valued callingLocals, the function would always
     get the name as "obj", which is not what I want.    
     """
-    for k, v in list(callingLocals.items()):
+    for k, v in list(callingGlobals.items()):
          if v is obj:
             name = k
             return name
