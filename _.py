@@ -22,16 +22,16 @@ func_func = 'Input expression used.'
 sym_x = sp.Symbol('x')
 
 # common functions
-# def varname(obj, callingLocals=locals()):
-#     """
-#     quick function to print name of input and value. 
-#     If not for the default-Valued callingLocals, the function would always
-#     get the name as "obj", which is not what I want.    
-#     """
-#     for k, v in list(callingLocals.items()):
-#          if v is obj:
-#             name = k
-#             return name
+def varname(obj, callingLocals=locals()):
+    """
+    quick function to print name of input and value. 
+    If not for the default-Valued callingLocals, the function would always
+    get the name as "obj", which is not what I want.    
+    """
+    for k, v in list(callingLocals.items()):
+         if v is obj:
+            name = k
+            return name
 # preceded by varname()
 def diagonality(A):
     """Determines if matrix is strictly, diagonally dominant.
@@ -2695,11 +2695,10 @@ class test:                     # test class
 ## End of Code
 # test.test()     # 'Test complete.'
 #   #   #   #   #   #   #   #   #
-function = lambda x,y: x+y
-x0, y0, xn = 0, 1, 1
-X, Y, I = ode.runge_kutta(function, x0, y0, xn, 2)
-import matplotlib.pyplot as plt
-plt.plot(X, Y)
-plt.plot(X, I)
-plt.plot(Y, I)
-plt.show()
+A = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+A3 = np.array(A)
+B_list = np.arange(1, 10, 1)
+B_array = np.array(B_list)
+C_mat = sp.Matrix(A)
+print(varname(C_mat))
+print(type(varname(C_mat)))
