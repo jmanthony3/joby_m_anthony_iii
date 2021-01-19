@@ -261,7 +261,7 @@ def condition_number(A, norm_type):
     if norm_type == 'l_infinity_norm':
         norm, abnorm = l_infinity_norm(A), l_infinity_norm(A_inv)
     k = norm*abnorm
-    print('Condition Number K(' + varname(A) + ')' = ', k)
+    print('Condition Number K(' + varname(A) + ') = ', k)
     return k
 
 def make_array(X, f):
