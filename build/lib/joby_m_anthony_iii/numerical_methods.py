@@ -2,6 +2,7 @@
 ## Preamble
 # import necessary modules/tools
 
+from _typeshed import OpenTextMode
 import math
 import numpy as np
 from scipy.integrate import quad
@@ -2205,182 +2206,348 @@ def newton_difference(X, FX, x0, direction=0):
 # --------------------
 # numerical differentiation
 # and integration
-def composite_simpson(f, X, h, a=0, b=0):
-    """Find the integral of a function within some interval, using Simpson's Rule.
+class simpson:
+    def open(f, X, h=0, a=0, b=0):
+        """Find the integral of a function within some interval, using Simpson's Rule.
 
-    Parameters
-    ----------
-    f : expression
-        Polynomial equation that defines graphical curve.
-    
-    X : list
-        Domain over which `f` is evaluated.
-    
-    h : float
-        Step-size through interval.
-    
-    a : float
-        Left-hand bound of interval.
-    
-    b : float
-        Right-hand bound of interval.
-    
-    Returns
-    -------
-    XJ : list
-        Values of domain at which `f` was analyzed.
-    
-    YJ : list
-        Evaluations of `f` from domain.
-    
-    F : float
-        Total area under curve, `f`.
+        Parameters
+        ----------
+        f : expression
+            Polynomial equation that defines graphical curve.
+        
+        X : list
+            Domain over which `f` is evaluated.
+        
+        h : float
+            Step-size through interval.
+        
+        a : float
+            Left-hand bound of interval.
+        
+        b : float
+            Right-hand bound of interval.
+        
+        Returns
+        -------
+        XJ : list
+            Values of domain at which `f` was analyzed.
+        
+        YJ : list
+            Evaluations of `f` from domain.
+        
+        F : float
+            Total area under curve, `f`.
 
-    Raises
-    ------
-    bad_X : string
-        If {`X_i`} is neither n x 1 nor 1 x n array.
-    
-    bad_f : string
-        If {`f`} is not an expression.
+        Raises
+        ------
+        bad_X : string
+            If {`X_i`} is neither n x 1 nor 1 x n array.
+        
+        bad_f : string
+            If {`f`} is not an expression.
 
-    Warns
-    -----
-    func_func : string
-        Evaluate input expression for Newton difference approximation.
-    
-    Notes
-    -----
-    `X = 0` if not a list nor n x 1 or 1 x n array.
+        Warns
+        -----
+        func_func : string
+            Evaluate input expression for Newton difference approximation.
+        
+        Notes
+        -----
+        `X = 0` if not a list nor n x 1 or 1 x n array.
 
-    Unless specified and if `X` is defined, `a` and `b` will be the minimum and maximum, respectively, of `X`.
+        Unless specified and if `X` is defined, `a` and `b` will be the minimum and maximum, respectively, of `X`.
 
-    Theorem:
-    Let f be in C4[a,b], n be even, h = (b-a)/n, and xj = a + jh for j = 0, 1, ..., n. There exists a mu in (a,b) for which the quadrature for n sub-intervals can be written with its error term as:
-    int_(a)^(b)f(x)dx = h[f(a) + 2*[sum_(j=1)^(n/2 - 1){f(x_(2j))}] + 4*[sum_(j=1)^(n/2){f(x_(2j-1))}] + f(b)]/3 - (b-a)*(h^4)f''''(mu)/180.
+        Theorem:
+        Let f be in C4[a,b], n be even, h = (b-a)/n, and xj = a + jh for j = 0, 1, ..., n. There exists a mu in (a,b) for which the quadrature for n sub-intervals can be written with its error term as:
+        int_(a)^(b)f(x)dx = h[f(a) + 2*[sum_(j=1)^(n/2 - 1){f(x_(2j))}] + 4*[sum_(j=1)^(n/2){f(x_(2j-1))}] + f(b)]/3 - (b-a)*(h^4)f''''(mu)/180.
 
-    Where: (b-a)*(h^4)f''''(mu)/180 -> O(h^4)
-    """
-    sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
-    bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
-    bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
-    func_func = 'Input expression used.'
-    if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
-    if not isinstance(f,(FunctionType, sp.Expr)):
-        if np.sum(f.shape) > np.sum(f.shape[0]): sys.exit(bad_X)
-        else: sys.exit(bad_f)
-    if isinstance(f,(FunctionType, sp.Expr)): print(func_func)
-    if a == 0: a = min(X)
-    if b == 0: b = max(X)
-    h, a, b = float(h), float(a), float(b)
-    n = math.ceil((b-a)/h)
-    XJ1, XJ2, XJ, = [], [], []
-    YJ1, YJ2, YJ, = [], [], []
-    XJ.append(a); YJ.append(f(a))
-    j, z1 = 1, 0
-    while j <= (n/2)-1:
-        xj = a + 2*j*h
-        yj = f(xj)
-        XJ1.append(xj); YJ1.append(yj)
-        z1 += yj
-        j += 1
-    k, z2 = 1, 0
-    while k <= n/2:
-        xj = a + (2*k - 1)*h
-        yj = f(xj)
-        XJ2.append(xj); YJ2.append(yj)
-        z2 += yj
-        k += 1
-    l = 0
-    while l < len(XJ1):
-        XJ.append(XJ2[l]); YJ.append(YJ2[l])
-        XJ.append(XJ1[l]); YJ.append(YJ1[l])
-        l += 1
-    XJ.append(XJ2[l]); YJ.append(YJ2[l])
-    XJ.append(b); YJ.append(f(b))
-    F = h/3*(f(a) + 2*z1 + 4*z2 + f(b))
-    return XJ, YJ, F
-
-def composite_trapezoidal(f, X, h, a=0, b=0):
-    """Find the integral of a function within some interval, using Trapezoidal Rule.
-
-    Parameters
-    ----------
-    f : expression
-        Polynomial equation that defines graphical curve.
-    
-    X : list
-        Domain over which `f` is evaluated.
-
-    h : float
-        Step-size through interval.
-    
-    a : float
-        Left-hand bound of interval.
-    
-    b : float
-        Right-hand bound of interval.
-    
-    Returns
-    -------
-    XJ : list
-        Values of domain at which `f` was analyzed.
-    
-    YJ : list
-        Evaluations of `f` from domain.
-    
-    F : float
-        Total area under curve, `f`.
-
-    Raises
-    ------
-    bad_X : string
-        If {`X_i`} is neither n x 1 nor 1 x n array.
-    
-    bad_f : string
-        If {`f`} is not an expression.
-
-    Warns
-    -----
-    func_func : string
-        Evaluate input expression for Newton difference approximation.
-    
-    Notes
-    -----
-    `X = 0` if not a list nor n x 1 or 1 x n array.
-
-    Unless specified and if `X` is defined, `a` and `b` will be the minimum and maximum, respectively, of `X`.
-
-    Theorem:
-    Let f be in C2[a,b], h = (b-a)/n, and xj = a + jh for j = 0, 1, ..., n. There exists a mu in (a,b) for which the quadrature for n sub-intervals can be written with its error term as:
-    int_(a)^(b)f(x)dx = h[f(a) + 2*[sum_(j=1)^(n - 1){f(xj)}] + f(b)]/2 - (b-a)*(h^2)f''(mu)/12.
-
-    Where: (b-a)*(h^2)f''(mu)/12 -> O(h^2)
-    """
-    sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
-    bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
-    bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
-    func_func = 'Input expression used.'
-    if not isinstance(f,(FunctionType, sp.Expr)):
+        Where: (b-a)*(h^4)f''''(mu)/180 -> O(h^4)
+        """
+        X = np.array(X)
+        sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
+        bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+        bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
+        func_func = 'Input expression used.'
         if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
-        else: sys.exit(bad_f)
-    if isinstance(f,(FunctionType, sp.Expr)): print(func_func)
-    if a == 0: a = min(X)
-    if b == 0: b = max(X)
-    h, a, b = float(h), float(a), float(b)
-    XJ, YJ = [], []
-    XJ.append(a); YJ.append(f(a))
-    j, n, z = 1, math.ceil((b-a)/h), 0
-    while j <= n-1:
-        x_j = a + j*h
-        XJ.append(x_j)
-        y_j = f(x_j)
-        YJ.append(y_j)
-        z += y_j
-        j += 1
-    XJ.append(b); YJ.append(f(b))
-    F = h/2*(f(a) + 2*z + f(b))
-    return XJ, YJ, F
+        if not isinstance(f,(FunctionType, sp.Expr)):
+            if np.sum(f.shape) > np.sum(f.shape[0]): sys.exit(bad_X)
+            else: sys.exit(bad_f)
+        if isinstance(f,(FunctionType, sp.Expr)): print(func_func)
+        if h == 0: h = X[1]-X[0]
+        if a == 0: a = min(X)
+        if b == 0: b = max(X)
+        h, a, b = float(h), float(a), float(b)
+        n = math.ceil((b-a)/h)
+        XJ1, XJ2, XJ, = [], [], []
+        YJ1, YJ2, YJ, = [], [], []
+        XJ.append(a); YJ.append(f(a))
+        j, z1 = 1, 0
+        while j <= (n/2)-1:
+            xj = a + 2*j*h
+            yj = f(xj)
+            XJ1.append(xj); YJ1.append(yj)
+            z1 += yj
+            j += 1
+        k, z2 = 1, 0
+        while k <= n/2:
+            xj = a + (2*k - 1)*h
+            yj = f(xj)
+            XJ2.append(xj); YJ2.append(yj)
+            z2 += yj
+            k += 1
+        l = 0
+        while l < np.array(XJ1).shape[0]:
+            XJ.append(XJ2[l]); YJ.append(YJ2[l])
+            XJ.append(XJ1[l]); YJ.append(YJ1[l])
+            l += 1
+        XJ.append(XJ2[l]); YJ.append(YJ2[l])
+        XJ.append(b); YJ.append(f(b))
+        F = h/3*(f(a) + 2*z1 + 4*z2 + f(b))
+        return XJ, YJ, F
+    
+    def closed(f, X, h=0, a=0, b=0):
+        """Find the integral of a function within some interval, using Simpson's Rule.
+
+        Parameters
+        ----------
+        f : expression
+            Polynomial equation that defines graphical curve.
+        
+        X : list
+            Domain over which `f` is evaluated.
+        
+        h : float
+            Step-size through interval.
+        
+        a : float
+            Left-hand bound of interval.
+        
+        b : float
+            Right-hand bound of interval.
+        
+        Returns
+        -------
+        XJ : list
+            Values of domain at which `f` was analyzed.
+        
+        YJ : list
+            Evaluations of `f` from domain.
+        
+        F : float
+            Total area under curve, `f`.
+
+        Raises
+        ------
+        bad_X : string
+            If {`X_i`} is neither n x 1 nor 1 x n array.
+        
+        bad_f : string
+            If {`f`} is not an expression.
+
+        Warns
+        -----
+        func_func : string
+            Evaluate input expression for Newton difference approximation.
+        
+        Notes
+        -----
+        `X = 0` if not a list nor n x 1 or 1 x n array.
+
+        Unless specified and if `X` is defined, `a` and `b` will be the minimum and maximum, respectively, of `X`.
+
+        Theorem:
+        Let f be in C4[a,b], n be even, h = (b-a)/n, and xj = a + jh for j = 0, 1, ..., n. There exists a mu in (a,b) for which the quadrature for n sub-intervals can be written with its error term as:
+        int_(a)^(b)f(x)dx = h[f(a) + 2*[sum_(j=1)^(n/2 - 1){f(x_(2j))}] + 4*[sum_(j=1)^(n/2){f(x_(2j-1))}] + f(b)]/3 - (b-a)*(h^4)f''''(mu)/180.
+
+        Where: (b-a)*(h^4)f''''(mu)/180 -> O(h^4)
+        """
+        X = np.array(X)
+        sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
+        bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+        other_bad_X = 'Input domain, ' + sym_X + ' must be only 4 elements!'
+        bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
+        func_func = 'Input expression used.'
+        if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
+        if np.sum(X.shape[0]) != 4: sys.exit('ERROR! ' + other_bad_X)
+        if not isinstance(f,(FunctionType, sp.Expr)):
+            if np.sum(f.shape) > np.sum(f.shape[0]): sys.exit(bad_X)
+            else: sys.exit(bad_f)
+        if h == 0: h = X[1]-X[0]
+        if a == 0: a = min(X)
+        if b == 0: b = max(X)
+        if isinstance(f,(FunctionType, sp.Expr)): 
+            print(func_func)
+            Y = make_array(X, f)
+            if a < np.min(X): Y[0] = f(a)
+            if b > np.max(X): Y[3] = f(b)
+        h, a, b = float(h), float(a), float(b)
+        F = 3*h/8*(Y[0] + 3*(Y[1] + Y[2]) + Y[3])
+        return X, Y, F
+
+class trapezoidal:
+
+    def open(f, X, h=0, a=0, b=0):
+        """Find the integral of a function within some interval, using Trapezoidal Rule.
+
+        Parameters
+        ----------
+        f : expression
+            Polynomial equation that defines graphical curve.
+        
+        X : list
+            Domain over which `f` is evaluated.
+
+        h : float
+            Step-size through interval.
+        
+        a : float
+            Left-hand bound of interval.
+        
+        b : float
+            Right-hand bound of interval.
+        
+        Returns
+        -------
+        XJ : list
+            Values of domain at which `f` was analyzed.
+        
+        YJ : list
+            Evaluations of `f` from domain.
+        
+        F : float
+            Total area under curve, `f`.
+
+        Raises
+        ------
+        bad_X : string
+            If {`X_i`} is neither n x 1 nor 1 x n array.
+        
+        bad_f : string
+            If {`f`} is not an expression.
+
+        Warns
+        -----
+        func_func : string
+            Evaluate input expression for Newton difference approximation.
+        
+        Notes
+        -----
+        `X = 0` if not a list nor n x 1 or 1 x n array.
+
+        Unless specified and if `X` is defined, `a` and `b` will be the minimum and maximum, respectively, of `X`.
+
+        Theorem:
+        Let f be in C2[a,b], h = (b-a)/n, and xj = a + jh for j = 0, 1, ..., n. There exists a mu in (a,b) for which the quadrature for n sub-intervals can be written with its error term as:
+        int_(a)^(b)f(x)dx = h[f(a) + 2*[sum_(j=1)^(n - 1){f(xj)}] + f(b)]/2 - (b-a)*(h^2)f''(mu)/12.
+
+        Where: (b-a)*(h^2)f''(mu)/12 -> O(h^2)
+        """
+        X = np.array(X)
+        sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
+        bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+        bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
+        func_func = 'Input expression used.'
+        if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
+        if not isinstance(f,(FunctionType, sp.Expr)):
+            if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
+            else: sys.exit(bad_f)
+        if isinstance(f,(FunctionType, sp.Expr)): print(func_func)
+        if h == 0: h = X[1]-X[0]
+        if a == 0: a = min(X)
+        if b == 0: b = max(X)
+        h, a, b = float(h), float(a), float(b)
+        XJ, YJ = [], []
+        XJ.append(a); YJ.append(f(a))
+        j, n, z = 1, math.ceil((b-a)/h), 0
+        while j <= n-1:
+            x_j = a + j*h
+            XJ.append(x_j)
+            y_j = f(x_j)
+            YJ.append(y_j)
+            z += y_j
+            j += 1
+        XJ.append(b); YJ.append(f(b))
+        F = h/2*(f(a) + 2*z + f(b))
+        return XJ, YJ, F
+    
+    def closed(f, X, h=0, a=0, b=0):
+        """Find the integral of a function within some interval, using Trapezoidal Rule.
+
+        Parameters
+        ----------
+        f : expression
+            Polynomial equation that defines graphical curve.
+        
+        X : list
+            Domain over which `f` is evaluated.
+
+        h : float
+            Step-size through interval.
+        
+        a : float
+            Left-hand bound of interval.
+        
+        b : float
+            Right-hand bound of interval.
+        
+        Returns
+        -------
+        XJ : list
+            Values of domain at which `f` was analyzed.
+        
+        YJ : list
+            Evaluations of `f` from domain.
+        
+        F : float
+            Total area under curve, `f`.
+
+        Raises
+        ------
+        bad_X : string
+            If {`X_i`} is neither n x 1 nor 1 x n array.
+        
+        bad_f : string
+            If {`f`} is not an expression.
+
+        Warns
+        -----
+        func_func : string
+            Evaluate input expression for Newton difference approximation.
+        
+        Notes
+        -----
+        `X = 0` if not a list nor n x 1 or 1 x n array.
+
+        Unless specified and if `X` is defined, `a` and `b` will be the minimum and maximum, respectively, of `X`.
+
+        Theorem:
+        Let f be in C2[a,b], h = (b-a)/n, and xj = a + jh for j = 0, 1, ..., n. There exists a mu in (a,b) for which the quadrature for n sub-intervals can be written with its error term as:
+        int_(a)^(b)f(x)dx = h[f(a) + 2*[sum_(j=1)^(n - 1){f(xj)}] + f(b)]/2 - (b-a)*(h^2)f''(mu)/12.
+
+        Where: (b-a)*(h^2)f''(mu)/12 -> O(h^2)
+        """
+        X = np.array(X)
+        sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
+        bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+        other_bad_X = 'Input domain, ' + sym_X + ' must be only 2 elements!'
+        bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
+        func_func = 'Input expression used.'
+        if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
+        if np.sum(X.shape[0]) != 2: sys.exit('ERROR! ' + other_bad_X)
+        if not isinstance(f,(FunctionType, sp.Expr)):
+            if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
+            else: sys.exit(bad_f)
+        if h == 0: h = X[1]-X[0]
+        if a == 0: a = min(X)
+        if b == 0: b = max(X)
+        if isinstance(f,(FunctionType, sp.Expr)): 
+            print(func_func)
+            Y = make_array(X, f)
+            if a < np.min(X): Y[0] = f(a)
+            if b > np.max(X): Y[1] = f(b)
+        h, a, b = float(h), float(a), float(b)
+        F = h/2*(Y[0] + Y[1])
+        return X, Y, F
 
 def endpoint(X, Y, h, point_type, which_end):
     """Find the derivative at an endpoint of data set.

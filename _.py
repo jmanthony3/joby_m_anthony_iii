@@ -247,6 +247,7 @@ def condition_number(A, norm_type):
     
     l_infinity_norm() : Yields the l_infinity norm.
     """
+    sym_A = 'A' # varname(A)
     A = np.array(A)
     i, A_inv = 0, np.zeros_like(A)
     while i < len(A):
@@ -261,7 +262,7 @@ def condition_number(A, norm_type):
     if norm_type == 'l_infinity_norm':
         norm, abnorm = l_infinity_norm(A), l_infinity_norm(A_inv)
     k = norm*abnorm
-    print('Condition Number K = ', k)
+    print('Condition Number K(' + sym_A + ') = ', k)
     return k
 
 def make_array(X, f):
@@ -325,9 +326,9 @@ def symmetry(A):
         Console print that `A` is not symmetric.
     """
     sym_A = 'A' # varname(A)
-    bad_matrix = 'ERROR! Matrix, ' + A + ' must be square!'
-    symmetric = 'Matrix, ' + A + ' is symmetric.'
-    asymmetric = 'Matrix, ' + A + ' is not symmetric.'
+    bad_matrix = 'ERROR! Matrix, ' + sym_A + ' must be square!'
+    symmetric = 'Matrix, ' + sym_A + ' is symmetric.'
+    asymmetric = 'Matrix, ' + sym_A + ' is not symmetric.'
     if len(A) != len(A[0]): sys.exit(bad_matrix)
     A = np.array(A)
     i, At, value = 0, np.transpose(A), 0
@@ -366,8 +367,8 @@ def tridiagonality(A):
         Matrix is tridiagonal.
     """
     sym_A = 'A' # varname(A)
-    bad_matrix = 'Matrix, ' + A + ' is not tridiagonal.'
-    good_matrix = 'Matrix, ' + A + ' is tridiagonal.'
+    bad_matrix = 'Matrix, ' + sym_A + ' is not tridiagonal.'
+    good_matrix = 'Matrix, ' + sym_A + ' is tridiagonal.'
     A = np.array(A)
     long, above, below = np.zeros_like(A), np.zeros_like(A), np.zeros_like(A)
     i = 0
@@ -396,7 +397,6 @@ def tridiagonality(A):
 
 # --------------------
 # iterative techniques
-
 def max_iterations(a, b, power, method, k=0, p0=0):
     """Find greatest integer for maximum iterations for tolerance.
 
@@ -477,7 +477,7 @@ def max_iterations(a, b, power, method, k=0, p0=0):
     print(number_of_iter, N_max)
     return N_max
 
-# the following are preceded by max_iterations
+# the following 5 functions are preceded by max_iterations
 
 def bisection(f, a, b, power):
     """Given f(x) in [`a`,`b`] find x within tolerance, `tol`.
@@ -975,495 +975,498 @@ def secant_method(f, k, a, b, p0, p1, power):
     else: sys.exit('ERROR! ', must_be_expression)
     return P, ERROR, I
 
-# implicitly solve system of equations
-class iterative_solvers:
+# systems of equations
 
-    def jacobi(A, x0, b, N, power, norm_type):
-        """Given [`A`]*[`x`] = [`b`], use `norm_type` to find [x].
+def jacobi(A, x0, b, N, power, norm_type):
+    """Given [`A`]*[`x`] = [`b`], use `norm_type` to find [x].
 
-        Parameters
-        ----------
-        A : matrix
-            Characteristic matrix.
-        
-        x0 : vector
-            Dimensions of system of equations.
-        
-        b : vector
-            Input vector.
-        
-        N : int
-            Maximum number of iterations.
-        
-        power : float
-            Signed, specified power of tolerance until satisfying method.
-        
-        norm_type : string
-            Prescription of desired norm.
-        
-        Returns
-        -------
-        X_matrix : array
-            Finally evaluated solution.
-        
-        NORM : list
-            Aggregate of yielded norms.
-        
-        K : list
-            Running collection of iterations through method.
-
-        Raises
-        ------
-        bad_matrix : string
-            If [`A`] is not square.
-        
-        bad_x0 : string
-            If {`x0`} is neither n x 1 nor 1 x n array.
-        
-        bad_b : string
-            If {`b`} is neither n x 1 nor 1 x n array.
-        
-        bad_N : string
-            If iterations constraints is not an integer.
-        
-        bad_type : string
-            If desired norm method was neither `'l_infinity'` nor `'l_2'`.
-
-        Warns
-        -----
-        non_triad : string
-            Matrix, `A` not being tridiagonal violates theorem.
-
-        incalculable : string
-            Matrix, `A` not being positive definite violates theorem.
-
-        solution_found : string
-            Inform user that solution was indeed found.
-
-        solution_not_found : string
-            If initial guess or tolerance were badly defined.
-        
-        See Also
-        --------
-        diagonality() : Informs user if matrix, `A` is strictly, diagonally dominant. Solution will proceed even if not, but with a caveat that final solution may be inaccurate.
-
-        l_infinity_norm() : Will find the l_infinity norm between `x0` and `xi`.
-
-        l_2_norm() : Will find the l_2 norm between `x0` and `xi`.
-
-        Notes
-        -----
-        jacobi():
-        [x]_(k) = ( D^(-1)*(L + U) ) * [x]_(k - 1) + ( D^(-1) ) * [b]
-        """
-        bad_matrix = 'Characteristic matrix, A must be square!'
-        bad_x0 = 'Systems vector, x0 must be n x 1 or 1 x n array!'
-        bad_b = 'Input vector, b must be n x 1 or 1 x n array!'
-        bad_N = "Maximum iterations, N must be an integer greater than zero."
-        bad_type = "Desired norm type was not understood. Please choose 'l_infinity' or 'l_2'."
-        A = np.array(A)
-        if len(A) != len(A[0]): sys.exit('ERROR! ', bad_matrix)
-        if np.sum(x0.shape) > np.sum(x0.shape[0]): sys.exit('ERROR! ', bad_x0)
-        if np.sum(b.shape) > np.sum(b.shape[0]): sys.exit('ERROR! ', bad_b)
-        if N <= 0 or not isinstance(N, int): sys.exit('ERROR! ', bad_N)
-        if norm_type != 'l_infinity' and norm_type != 'l_2': sys.exit('ERROR! ', bad_type)
-        diagonality(A)
-        tol = float(10**power)
-        n = len(x0)
-        k, x0, b, norm = 0, np.reshape(x0,(n,1)), np.reshape(b,(n,1)), tol*10
-        xi = np.zeros_like(x0)
-        X, NORM, K = [], [], [] 
-        X.append(x0); K.append(k)
-        if norm > tol and k >= N:
-            i = 0
-            while i < n:
-                j, y = 0, 0.
-                while j < n:
-                    if j != i:
-                        y += A[i][j]*x0[j]
-                        j += 1
-                xi[i] = (-y + b[i])/A[i][i]
-                i += 1
-            if norm_type == 'l_infinity': norm = l_infinity_norm(xi, x0)
-            if norm_type == 'l_2': norm = l_2_norm(xi, x0)
-            X.append(xi); NORM.append(norm); K.append(k)
-            x0 = xi
-            k += 1
-        if k < N: print('Congratulations! ', solution_found)
-        else: print('Warning! ' + solution_not_found)
-        m, n = len(X[0]), len(X)
-        X_matrix, j = np.zeros((m,n)), 0
-        while j < n:
-            i = 0
-            while i < m:
-                X_matrix[i][j] = float(X[j][i])
-                i += 1
-            j += 1
-        return X_matrix, NORM, K
-
-    def gauss_seidel(A, x0, b, N, power, norm_type):
-        """Given [`A`]*[`x`] = [`b`], use `norm_type` to find [x].
-
-        Parameters
-        ----------
-        A : matrix
-            Characteristic matrix.
-        
-        x0 : vector
-            Dimensions of system of equations.
-        
-        b : vector
-            Input vector.
-        
-        N : int
-            Maximum number of iterations.
-        
-        power : float
-            Signed, specified power of tolerance until satisfying method.
-        
-        norm_type : string
-            Prescription of desired norm.
-        
-        Returns
-        -------
-        X_matrix : array
-            Finally evaluated solution.
-        
-        NORM : list
-            Aggregate of yielded norms.
-        
-        K : list
-            Running collection of iterations through method.
-
-        Raises
-        ------
-        bad_matrix : string
-            If [`A`] is not square.
-        
-        bad_x0 : string
-            If {`x0`} is neither n x 1 nor 1 x n array.
-        
-        bad_b : string
-            If {`b`} is neither n x 1 nor 1 x n array.
-        
-        bad_N : string
-            If iterations constraints is not an integer.
-        
-        bad_type : string
-            If desired norm method was neither `'l_infinity'` nor `'l_2'`.
-
-        Warns
-        -----
-        non_triad : string
-            Matrix, `A` not being tridiagonal violates theorem.
-
-        incalculable : string
-            Matrix, `A` not being positive definite violates theorem.
-
-        solution_found : string
-            Inform user that solution was indeed found.
-
-        solution_not_found : string
-            If initial guess or tolerance were badly defined.
-
-        See Also
-        --------
-        diagonality() : Informs user if matrix, `A` is strictly, diagonally dominant. Solution will proceed even if not, but with a caveat that final solution may be inaccurate.
-
-        l_infinity_norm() : Will find the l_infinity norm between `x0` and `xi`.
-
-        l_2_norm() : Will find the l_2 norm between `x0` and `xi`.
-
-        Notes
-        -----
-        gauss_seidel():
-            [x]_(k) = ( (D - L)^(-1) * U ) * [x]_(k - 1) + ( (D - L)^(-1) )*[b]
-        """
-        bad_matrix = 'Characteristic matrix, A must be square!'
-        bad_x0 = 'Systems vector, x0 must be n x 1 or 1 x n array!'
-        bad_b = 'Input vector, b must be n x 1 or 1 x n array!'
-        bad_N = "Maximum iterations, N must be an integer greater than zero."
-        bad_type = "Desired norm type was not understood. Please choose 'l_infinity' or 'l_2'."
-        A = np.array(A)
-        if len(A) != len(A[0]): sys.exit('ERROR! ', bad_matrix)
-        if np.sum(x0.shape) > np.sum(x0.shape[0]): sys.exit('ERROR! ', bad_x0)
-        if np.sum(b.shape) > np.sum(b.shape[0]): sys.exit('ERROR! ', bad_b)
-        if N <= 0 or not isinstance(N, int): sys.exit('ERROR! ', bad_N)
-        if norm_type != 'l_infinity' and norm_type != 'l_2': sys.exit('ERROR! ', bad_type)
-        diagonality(A)
-        tol = float(10**power)
-        n = len(x0)
-        k, x0, b, norm = 0, np.reshape(x0,(n,1)), np.reshape(b,(n,1)), tol*10
-        xi = np.zeros_like(x0)
-        X, NORM, K = [], [], [] 
-        X.append(x0); K.append(k)
-        if norm > tol and k >= N:
-            i = 0
-            while i < n:
-                j, y1, y2 = 0, 0., 0.
-                while j < i-1:
-                    y1 += A[i][j]*xi[j]
-                    j += 1
-                j = i + 1
-                while j < n:
-                    y2 += A[i][j]*x0[j]
-                    j += 1
-                xi[i] = (-y1 - y2 + b[i])/A[i][i]
-                i += 1
-            if norm_type == 'l_infinity': norm = l_infinity_norm(xi, x0)
-            if norm_type == 'l_2': norm = l_2_norm(xi, x0)
-            X.append(xi); NORM.append(norm); K.append(k)
-            x0 = xi
-            k += 1
-        if k < N: print('Congratulations! ', solution_found)
-        else: print('Warning! ' + solution_not_found)
-        m, n = len(X[0]), len(X)
-        X_matrix, j = np.zeros((m,n)), 0
-        while j < n:
-            i = 0
-            while i < m:
-                X_matrix[i][j] = float(X[j][i])
-                i += 1
-            j += 1
-        return X_matrix, NORM, K
-
-    def find_omega(A, x0, w=0):
-        """Given the characteristic matrix and solution vector, determine if prescribed `w` is the optimum choice.
-
-        Parameters
-        ----------
-        A : array
-            Characteristic matrix of system of equations.
-        
-        x0 : vector
-            Dimensions of systems of equations.
-        
-        w : float
-            Relaxation parameter.
-        
-        Returns
-        -------
-        omega : float
-            If found, is the optimum choice of `w`.
-        
-        Warns
-        -----
-        will_converege : string
-            If 0<w<2, then method will converge regardless of choice for `x0`.
-        
-        non_triad : string
-            Will inform user that matrix, `A` is not tridiagonal, but will proceed with calculation all the same.
+    Parameters
+    ----------
+    A : matrix
+        Characteristic matrix.
     
-        incalculable : string
-            If matrix, `A` is poorly defined and not found to be positive definite, then user is informed but calculation proceeds.
+    x0 : vector
+        Dimensions of system of equations.
+    
+    b : vector
+        Input vector.
+    
+    N : int
+        Maximum number of iterations.
+    
+    power : float
+        Signed, specified power of tolerance until satisfying method.
+    
+    norm_type : string
+        Prescription of desired norm.
+    
+    Returns
+    -------
+    X_matrix : array
+        Finally evaluated solution.
+    
+    NORM : list
+        Aggregate of yielded norms.
+    
+    K : list
+        Running collection of iterations through method.
 
-        See Also
-        --------
-        tridiagonality() : Determines if matrix, `A` is tridiagonal or not.
+    Raises
+    ------
+    bad_matrix : string
+        If [`A`] is not square.
+    
+    bad_x0 : string
+        If {`x0`} is neither n x 1 nor 1 x n array.
+    
+    bad_b : string
+        If {`b`} is neither n x 1 nor 1 x n array.
+    
+    bad_N : string
+        If iterations constraints is not an integer.
+    
+    bad_type : string
+        If desired norm method was neither `'l_infinity'` nor `'l_2'`.
 
-        spectral_radius() : Uses the spectral radius of Gauss-Seidel's T-matrix to calculate omega.
+    Warns
+    -----
+    non_triad : string
+        Matrix, `A` not being tridiagonal violates theorem.
 
-        Notes
-        -----
-        Unless specified, `w` will be zero and chosen, if possible.
-        """
-        will_converge = "According to Ostrowski-Reich's Theorem, the successive relaxation technique will converge."
-        non_triad = 'Matrix, A is not tridiagonal.'
-        incalculable = 'I could not determine if matrix, A was positive definite.'
-        A, omega = np.array(A), float(w)
-        xn = sp.Matrix(np.reshape(np.zeros_like(x0), (len(x0), 1)))
-        xt = sp.Matrix(np.reshape(np.zeros_like(x0), (1, len(x0))))
+    incalculable : string
+        Matrix, `A` not being positive definite violates theorem.
+
+    solution_found : string
+        Inform user that solution was indeed found.
+
+    solution_not_found : string
+        If initial guess or tolerance were badly defined.
+    
+    See Also
+    --------
+    diagonality() : Informs user if matrix, `A` is strictly, diagonally dominant. Solution will proceed even if not, but with a caveat that final solution may be inaccurate.
+
+    l_infinity_norm() : Will find the l_infinity norm between `x0` and `xi`.
+
+    l_2_norm() : Will find the l_2 norm between `x0` and `xi`.
+
+    Notes
+    -----
+    jacobi():
+    [x]_(k) = ( D^(-1)*(L + U) ) * [x]_(k - 1) + ( D^(-1) ) * [b]
+    """
+    sym_A, sym_x0, sym_b = 'A', 'x0', 'b' # varname(A), varname(x0), varname(b)
+    bad_matrix = 'Characteristic matrix, ' + sym_A + ' must be square!'
+    bad_x0 = 'Systems vector, ' + sym_x0 + ' must be n x 1 or 1 x n array!'
+    bad_b = 'Input vector, ' + sym_b + ' must be n x 1 or 1 x n array!'
+    bad_N = "Maximum iterations, N must be an integer greater than zero."
+    bad_type = "Desired norm type was not understood. Please choose 'l_infinity' or 'l_2'."
+    A = np.array(A)
+    if len(A) != len(A[0]): sys.exit('ERROR! ', bad_matrix)
+    if np.sum(x0.shape) > np.sum(x0.shape[0]): sys.exit('ERROR! ', bad_x0)
+    if np.sum(b.shape) > np.sum(b.shape[0]): sys.exit('ERROR! ', bad_b)
+    if N <= 0 or not isinstance(N, int): sys.exit('ERROR! ', bad_N)
+    if norm_type != 'l_infinity' and norm_type != 'l_2': sys.exit('ERROR! ', bad_type)
+    diagonality(A)
+    tol = float(10**power)
+    n = len(x0)
+    k, x0, b, norm = 0, np.reshape(x0,(n,1)), np.reshape(b,(n,1)), tol*10
+    xi = np.zeros_like(x0)
+    X, NORM, K = [], [], [] 
+    X.append(x0); K.append(k)
+    if norm > tol and k >= N:
         i = 0
-        for x in np.array(x0): xn[i], xt[i] = x, x; i += 1
-        y = xt*sp.Matrix(A)*xn
-        if y[0] > 0: state = 1
-        else: state = 0
-        if symmetry(A) == 1 and state == 1: theorem_6_22 = 1
-        i = 1
-        while i <= len(A):
-            Ai = sp.Matrix(A[:i,:i])
-            if sp.det(Ai) > 0: theorem_6_25 = 1
-            else : theorem_6_25 = 0; break
+        while i < n:
+            j, y = 0, 0.
+            while j < n:
+                if j != i:
+                    y += A[i][j]*x0[j]
+                    j += 1
+            xi[i] = (-y + b[i])/A[i][i]
             i += 1
-        if theorem_6_22 == 1 or theorem_6_25 == 1:
-            if 0 < w and w < 2: print(will_converge)
-            if tridiagonality(A) == 1:
-                D, L, U = np.zeros_like(A), np.zeros_like(A), np.zeros_like(A)
-                i, n = 0, len(A)
-                while i < n:
-                    j = 0
-                    while j < n:
-                        aij = A[i][j]
-                        if i == j: D[i][j] = aij
-                        if i > j: L[i][j] = aij
-                        if i < j: U[i][j] = aij
-                        j += 1
-                    i += 1
-                DL = D - L
-                i, inv_DL = 0, np.zeros_like(DL)
-                while i < len(inv_DL):
-                    j = 0
-                    while j < len(inv_DL[0]):
-                        dl = DL[i][j]
-                        if dl != 0: inv_DL[i][j] = 1/(dl)
-                        j += 1
-                    i += 1
-                Tg = inv_DL*U
-                omega = 2 / (1 + math.sqrt(1 - spectral_radius(Tg)))
-            else: print('Warning! ', non_triad)
-        else: print('Warning! ', incalculable)
-        return omega
+        if norm_type == 'l_infinity': norm = l_infinity_norm(xi, x0)
+        if norm_type == 'l_2': norm = l_2_norm(xi, x0)
+        X.append(xi); NORM.append(norm); K.append(k)
+        x0 = xi
+        k += 1
+    if k < N: print('Congratulations! ', solution_found)
+    else: print('Warning! ' + solution_not_found)
+    m, n = len(X[0]), len(X)
+    X_matrix, j = np.zeros((m,n)), 0
+    while j < n:
+        i = 0
+        while i < m:
+            X_matrix[i][j] = float(X[j][i])
+            i += 1
+        j += 1
+    return X_matrix, NORM, K
 
-    def successive_relaxation(A, x0, b, N, power, norm_type, w=0):
-        """Given [`A`]*[`x`] = [`b`], use `norm_type` to find [x].
+def gauss_seidel(A, x0, b, N, power, norm_type):
+    """Given [`A`]*[`x`] = [`b`], use `norm_type` to find [x].
 
-        Parameters
-        ----------
-        A : matrix
-            Characteristic matrix.
-        
-        x0 : vector
-            Dimensions of system of equations.
-        
-        b : vector
-            Input vector.
-        
-        N : int
-            Maximum number of iterations.
-        
-        power : float
-            Signed, specified power of tolerance until satisfying method.
-        
-        norm_type : string
-            Prescription of desired norm.
-        
-        w : float
-            Relaxation parameter.
-        
-        Returns
-        -------
-        X_matrix : array
-            Finally evaluated solution.
-        
-        NORM : list
-            Aggregate of yielded norms.
-        
-        K : list
-            Running collection of iterations through method.
+    Parameters
+    ----------
+    A : matrix
+        Characteristic matrix.
+    
+    x0 : vector
+        Dimensions of system of equations.
+    
+    b : vector
+        Input vector.
+    
+    N : int
+        Maximum number of iterations.
+    
+    power : float
+        Signed, specified power of tolerance until satisfying method.
+    
+    norm_type : string
+        Prescription of desired norm.
+    
+    Returns
+    -------
+    X_matrix : array
+        Finally evaluated solution.
+    
+    NORM : list
+        Aggregate of yielded norms.
+    
+    K : list
+        Running collection of iterations through method.
 
-        Raises
-        ------
-        bad_matrix : string
-            If [`A`] is not square.
-        
-        bad_x0 : string
-            If {`x0`} is neither n x 1 nor 1 x n array.
-        
-        bad_b : string
-            If {`b`} is neither n x 1 nor 1 x n array.
-        
-        bad_N : string
-            If iterations constraints is not an integer.
-        
-        bad_omega : string
-            If omega was not given or less than zero or if a positive omega could not be found.
-        
-        bad_type : string
-            If desired norm method was neither `'l_infinity'` nor `'l_2'`.
+    Raises
+    ------
+    bad_matrix : string
+        If [`A`] is not square.
+    
+    bad_x0 : string
+        If {`x0`} is neither n x 1 nor 1 x n array.
+    
+    bad_b : string
+        If {`b`} is neither n x 1 nor 1 x n array.
+    
+    bad_N : string
+        If iterations constraints is not an integer.
+    
+    bad_type : string
+        If desired norm method was neither `'l_infinity'` nor `'l_2'`.
 
-        Warns
-        -----
-        non_triad : string
-            Matrix, `A` not being tridiagonal violates theorem.
+    Warns
+    -----
+    non_triad : string
+        Matrix, `A` not being tridiagonal violates theorem.
 
-        incalculable : string
-            Matrix, `A` not being positive definite violates theorem.
+    incalculable : string
+        Matrix, `A` not being positive definite violates theorem.
 
-        calculate_omega : string
-            If `'successive_relaxation'` does not specify `w`, then an attempt will be made to find an optimal one.
+    solution_found : string
+        Inform user that solution was indeed found.
 
-        optimal_omega : string
-            An ideal omega was found.
+    solution_not_found : string
+        If initial guess or tolerance were badly defined.
 
-        solution_found : string
-            Inform user that solution was indeed found.
+    See Also
+    --------
+    diagonality() : Informs user if matrix, `A` is strictly, diagonally dominant. Solution will proceed even if not, but with a caveat that final solution may be inaccurate.
 
-        solution_not_found : string
-            If initial guess or tolerance were badly defined.
-        
-        See Also
-        --------
-        diagonality() : Informs user if matrix, `A` is strictly, diagonally dominant. Solution will proceed even if not, but with a caveat that final solution may be inaccurate.
-        
-        find_omega() : Will analyze system of equation to find an optimal omega, if possible, and inform user.
+    l_infinity_norm() : Will find the l_infinity norm between `x0` and `xi`.
 
-        gauss_seidel() : Technique is Gauss-Seidel's modified by omega.
+    l_2_norm() : Will find the l_2 norm between `x0` and `xi`.
 
-        l_infinity_norm() : Will find the l_infinity norm between `x0` and `xi`.
+    Notes
+    -----
+    gauss_seidel():
+        [x]_(k) = ( (D - L)^(-1) * U ) * [x]_(k - 1) + ( (D - L)^(-1) )*[b]
+    """
+    sym_A, sym_x0, sym_b = 'A', 'x0', 'b' # varname(A), varname(x0), varname(b)
+    bad_matrix = 'Characteristic matrix, ' + sym_A + ' must be square!'
+    bad_x0 = 'Systems vector, ' + sym_x0 + ' must be n x 1 or 1 x n array!'
+    bad_b = 'Input vector, ' + sym_b + ' must be n x 1 or 1 x n array!'
+    bad_N = "Maximum iterations, N must be an integer greater than zero."
+    bad_type = "Desired norm type was not understood. Please choose 'l_infinity' or 'l_2'."
+    A = np.array(A)
+    if len(A) != len(A[0]): sys.exit('ERROR! ', bad_matrix)
+    if np.sum(x0.shape) > np.sum(x0.shape[0]): sys.exit('ERROR! ', bad_x0)
+    if np.sum(b.shape) > np.sum(b.shape[0]): sys.exit('ERROR! ', bad_b)
+    if N <= 0 or not isinstance(N, int): sys.exit('ERROR! ', bad_N)
+    if norm_type != 'l_infinity' and norm_type != 'l_2': sys.exit('ERROR! ', bad_type)
+    diagonality(A)
+    tol = float(10**power)
+    n = len(x0)
+    k, x0, b, norm = 0, np.reshape(x0,(n,1)), np.reshape(b,(n,1)), tol*10
+    xi = np.zeros_like(x0)
+    X, NORM, K = [], [], [] 
+    X.append(x0); K.append(k)
+    if norm > tol and k >= N:
+        i = 0
+        while i < n:
+            j, y1, y2 = 0, 0., 0.
+            while j < i-1:
+                y1 += A[i][j]*xi[j]
+                j += 1
+            j = i + 1
+            while j < n:
+                y2 += A[i][j]*x0[j]
+                j += 1
+            xi[i] = (-y1 - y2 + b[i])/A[i][i]
+            i += 1
+        if norm_type == 'l_infinity': norm = l_infinity_norm(xi, x0)
+        if norm_type == 'l_2': norm = l_2_norm(xi, x0)
+        X.append(xi); NORM.append(norm); K.append(k)
+        x0 = xi
+        k += 1
+    if k < N: print('Congratulations! ', solution_found)
+    else: print('Warning! ' + solution_not_found)
+    m, n = len(X[0]), len(X)
+    X_matrix, j = np.zeros((m,n)), 0
+    while j < n:
+        i = 0
+        while i < m:
+            X_matrix[i][j] = float(X[j][i])
+            i += 1
+        j += 1
+    return X_matrix, NORM, K
 
-        l_2_norm() : Will find the l_2 norm between `x0` and `xi`.
+def find_omega(A, x0, w=0):
+    """Given the characteristic matrix and solution vector, determine if prescribed `w` is the optimum choice.
 
-        Notes
-        -----
-        gauss_seidel():
-            [x]_(k) = ( (D - L)^(-1) * U ) * [x]_(k - 1) + ( (D - L)^(-1) )*[b]
-        
-        successive_relaxation():
-            [x]_(k) = ( (D - wL)^(-1) * ((1 - w)*D + w*U) ) * [x]_(k - 1) + w*( (D - w*L)^(-1) )*[b]
-        
-        `w` will be analyzed independent of assigned value. Which will be used if not specified in assignment.
-        """
-        bad_matrix = 'Characteristic matrix, A must be square!'
-        bad_x0 = 'Systems vector, x0 must be n x 1 or 1 x n array!'
-        bad_b = 'Input vector, b must be n x 1 or 1 x n array!'
-        bad_N = "Maximum iterations, N must be an integer greater than zero."
-        bad_type = "Desired norm type was not understood. Please choose 'l_infinity' or 'l_2'."
-        calculate_omega = 'w was not given; therefore, I will attempt to choose one.'
-        optimal_omega = 'w = ' + str(w) + ' given. Which is not optimum: '
-        bad_omega = 'Either a positive omega was not given, or I could not choose one.'
-        A = np.array(A)
-        if len(A) != len(A[0]): sys.exit('ERROR! ', bad_matrix)
-        if np.sum(x0.shape) > np.sum(x0.shape[0]): sys.exit('ERROR! ', bad_x0)
-        if np.sum(b.shape) > np.sum(b.shape[0]): sys.exit('ERROR! ', bad_b)
-        if N <= 0 or not isinstance(N, int): sys.exit('ERROR! ', bad_N)
-        if norm_type != 'l_infinity' and norm_type != 'l_2': sys.exit('ERROR! ', bad_type)
-        diagonality(A)
-        if w == 0: 
-            w = find_omega(A, x0)
-            if w <= 0: sys.exit(bad_omega)
-            print('Warning!', calculate_omega, str(w), sep=' ', end='.\n')
-        elif w > 0:
-            omega = find_omega(A, x0, w)
-            print('Warning!', optimal_omega, str(omega), sep=' ', end='.\n')
-        else: sys.exit(bad_omega)
-        tol = float(10**power)
-        n = len(x0)
-        k, x0, b, norm = 0, np.reshape(x0,(n,1)), np.reshape(b,(n,1)), tol*10
-        xi = np.zeros_like(x0)
-        X, NORM, K = [], [], [] 
-        X.append(x0); K.append(k)
-        if norm > tol and k >= N:
-            i = 0
-            xgs = gauss_seidel(x0)
+    Parameters
+    ----------
+    A : array
+        Characteristic matrix of system of equations.
+    
+    x0 : vector
+        Dimensions of systems of equations.
+    
+    w : float
+        Relaxation parameter.
+    
+    Returns
+    -------
+    omega : float
+        If found, is the optimum choice of `w`.
+    
+    Warns
+    -----
+    will_converege : string
+        If 0<w<2, then method will converge regardless of choice for `x0`.
+    
+    non_triad : string
+        Will inform user that matrix, `A` is not tridiagonal, but will proceed with calculation all the same.
+
+    incalculable : string
+        If matrix, `A` is poorly defined and not found to be positive definite, then user is informed but calculation proceeds.
+
+    See Also
+    --------
+    tridiagonality() : Determines if matrix, `A` is tridiagonal or not.
+
+    spectral_radius() : Uses the spectral radius of Gauss-Seidel's T-matrix to calculate omega.
+
+    Notes
+    -----
+    Unless specified, `w` will be zero and chosen, if possible.
+    """
+    sym_A = 'A' # varname(A)
+    will_converge = "According to Ostrowski-Reich's Theorem, the successive relaxation technique will converge."
+    non_triad = 'Matrix, ' + sym_A + ' is not tridiagonal.'
+    incalculable = 'I could not determine if matrix, ' + sym_A + ' was positive definite.'
+    A, omega = np.array(A), float(w)
+    xn = sp.Matrix(np.reshape(np.zeros_like(x0), (len(x0), 1)))
+    xt = sp.Matrix(np.reshape(np.zeros_like(x0), (1, len(x0))))
+    i = 0
+    for x in np.array(x0): xn[i], xt[i] = x, x; i += 1
+    y = xt*sp.Matrix(A)*xn
+    if y[0] > 0: state = 1
+    else: state = 0
+    if symmetry(A) == 1 and state == 1: theorem_6_22 = 1
+    i = 1
+    while i <= len(A):
+        Ai = sp.Matrix(A[:i,:i])
+        if sp.det(Ai) > 0: theorem_6_25 = 1
+        else : theorem_6_25 = 0; break
+        i += 1
+    if theorem_6_22 == 1 or theorem_6_25 == 1:
+        if 0 < w and w < 2: print(will_converge)
+        if tridiagonality(A) == 1:
+            D, L, U = np.zeros_like(A), np.zeros_like(A), np.zeros_like(A)
+            i, n = 0, len(A)
             while i < n:
-                xi[i] = (1 - w)*x0[i] + w*xgs[i]
+                j = 0
+                while j < n:
+                    aij = A[i][j]
+                    if i == j: D[i][j] = aij
+                    if i > j: L[i][j] = aij
+                    if i < j: U[i][j] = aij
+                    j += 1
                 i += 1
-            if norm_type == 'l_infinity': norm = l_infinity_norm(xi, x0)
-            if norm_type == 'l_2': norm = l_2_norm(xi, x0)
-            X.append(xi); NORM.append(norm); K.append(k)
-            x0 = xi
-            k += 1
-        if k < N: print('Congratulations! ', solution_found)
-        else: print('Warning! ' + solution_not_found)
-        m, n = len(X[0]), len(X)
-        X_matrix, j = np.zeros((m,n)), 0
-        while j < n:
-            i = 0
-            while i < m:
-                X_matrix[i][j] = float(X[j][i])
+            DL = D - L
+            i, inv_DL = 0, np.zeros_like(DL)
+            while i < len(inv_DL):
+                j = 0
+                while j < len(inv_DL[0]):
+                    dl = DL[i][j]
+                    if dl != 0: inv_DL[i][j] = 1/(dl)
+                    j += 1
                 i += 1
-            j += 1
-        return X_matrix, NORM, K
+            Tg = inv_DL*U
+            omega = 2 / (1 + math.sqrt(1 - spectral_radius(Tg)))
+        else: print('Warning! ', non_triad)
+    else: print('Warning! ', incalculable)
+    return omega
+# preceded by find_omega
+def successive_relaxation(A, x0, b, N, power, norm_type, w=0):
+    """Given [`A`]*[`x`] = [`b`], use `norm_type` to find [x].
+
+    Parameters
+    ----------
+    A : matrix
+        Characteristic matrix.
+    
+    x0 : vector
+        Dimensions of system of equations.
+    
+    b : vector
+        Input vector.
+    
+    N : int
+        Maximum number of iterations.
+    
+    power : float
+        Signed, specified power of tolerance until satisfying method.
+    
+    norm_type : string
+        Prescription of desired norm.
+    
+    w : float
+        Relaxation parameter.
+    
+    Returns
+    -------
+    X_matrix : array
+        Finally evaluated solution.
+    
+    NORM : list
+        Aggregate of yielded norms.
+    
+    K : list
+        Running collection of iterations through method.
+
+    Raises
+    ------
+    bad_matrix : string
+        If [`A`] is not square.
+    
+    bad_x0 : string
+        If {`x0`} is neither n x 1 nor 1 x n array.
+    
+    bad_b : string
+        If {`b`} is neither n x 1 nor 1 x n array.
+    
+    bad_N : string
+        If iterations constraints is not an integer.
+    
+    bad_omega : string
+        If omega was not given or less than zero or if a positive omega could not be found.
+    
+    bad_type : string
+        If desired norm method was neither `'l_infinity'` nor `'l_2'`.
+
+    Warns
+    -----
+    non_triad : string
+        Matrix, `A` not being tridiagonal violates theorem.
+
+    incalculable : string
+        Matrix, `A` not being positive definite violates theorem.
+
+    calculate_omega : string
+        If `'successive_relaxation'` does not specify `w`, then an attempt will be made to find an optimal one.
+
+    optimal_omega : string
+        An ideal omega was found.
+
+    solution_found : string
+        Inform user that solution was indeed found.
+
+    solution_not_found : string
+        If initial guess or tolerance were badly defined.
+    
+    See Also
+    --------
+    diagonality() : Informs user if matrix, `A` is strictly, diagonally dominant. Solution will proceed even if not, but with a caveat that final solution may be inaccurate.
+    
+    find_omega() : Will analyze system of equation to find an optimal omega, if possible, and inform user.
+
+    gauss_seidel() : Technique is Gauss-Seidel's modified by omega.
+
+    l_infinity_norm() : Will find the l_infinity norm between `x0` and `xi`.
+
+    l_2_norm() : Will find the l_2 norm between `x0` and `xi`.
+
+    Notes
+    -----
+    gauss_seidel():
+        [x]_(k) = ( (D - L)^(-1) * U ) * [x]_(k - 1) + ( (D - L)^(-1) )*[b]
+    
+    successive_relaxation():
+        [x]_(k) = ( (D - wL)^(-1) * ((1 - w)*D + w*U) ) * [x]_(k - 1) + w*( (D - w*L)^(-1) )*[b]
+    
+    `w` will be analyzed independent of assigned value. Which will be used if not specified in assignment.
+    """
+    sym_A, sym_x0, sym_b = 'A', 'x0', 'b' # varname(A), varname(x0), varname(b)
+    bad_matrix = 'Characteristic matrix, ' + sym_A + ' must be square!'
+    bad_x0 = 'Systems vector, ' + sym_x0 + ' must be n x 1 or 1 x n array!'
+    bad_b = 'Input vector, ' + sym_b + ' must be n x 1 or 1 x n array!'
+    bad_N = "Maximum iterations, N must be an integer greater than zero."
+    bad_type = "Desired norm type was not understood. Please choose 'l_infinity' or 'l_2'."
+    calculate_omega = 'w was not given; therefore, I will attempt to choose one.'
+    optimal_omega = 'w = ' + str(w) + ' given. Which is not optimum: '
+    bad_omega = 'Either a positive omega was not given, or I could not choose one.'
+    A = np.array(A)
+    if len(A) != len(A[0]): sys.exit('ERROR! ', bad_matrix)
+    if np.sum(x0.shape) > np.sum(x0.shape[0]): sys.exit('ERROR! ', bad_x0)
+    if np.sum(b.shape) > np.sum(b.shape[0]): sys.exit('ERROR! ', bad_b)
+    if N <= 0 or not isinstance(N, int): sys.exit('ERROR! ', bad_N)
+    if norm_type != 'l_infinity' and norm_type != 'l_2': sys.exit('ERROR! ', bad_type)
+    diagonality(A)
+    if w == 0: 
+        w = find_omega(A, x0)
+        if w <= 0: sys.exit(bad_omega)
+        print('Warning!', calculate_omega, str(w), sep=' ', end='.\n')
+    elif w > 0:
+        omega = find_omega(A, x0, w)
+        print('Warning!', optimal_omega, str(omega), sep=' ', end='.\n')
+    else: sys.exit(bad_omega)
+    tol = float(10**power)
+    n = len(x0)
+    k, x0, b, norm = 0, np.reshape(x0,(n,1)), np.reshape(b,(n,1)), tol*10
+    xi = np.zeros_like(x0)
+    X, NORM, K = [], [], [] 
+    X.append(x0); K.append(k)
+    if norm > tol and k >= N:
+        i = 0
+        xgs = gauss_seidel(x0)
+        while i < n:
+            xi[i] = (1 - w)*x0[i] + w*xgs[i]
+            i += 1
+        if norm_type == 'l_infinity': norm = l_infinity_norm(xi, x0)
+        if norm_type == 'l_2': norm = l_2_norm(xi, x0)
+        X.append(xi); NORM.append(norm); K.append(k)
+        x0 = xi
+        k += 1
+    if k < N: print('Congratulations! ', solution_found)
+    else: print('Warning! ' + solution_not_found)
+    m, n = len(X[0]), len(X)
+    X_matrix, j = np.zeros((m,n)), 0
+    while j < n:
+        i = 0
+        while i < m:
+            X_matrix[i][j] = float(X[j][i])
+            i += 1
+        j += 1
+    return X_matrix, NORM, K
 # --------------------
 
 # --------------------
@@ -1594,11 +1597,12 @@ class cubic_spline:
                 D[j] = (C[j+1] - C[j])/(3*H[j])
                 i += 1
             return Y, A, B, C, D
-        bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
-        bad_f = 'Input range was neither function nor expression and not an n x 1 or 1 x n array.'
-        bad_data = 'Arrays X and f must be of equal length.'
+        sym_X, sym_f, sym_fp = 'X', 'f', 'fp' # varname(X), varname(f), varname(fp)
+        bad_X = 'Input domain, ' + sym_x + ' was neither an n x 1 nor a 1 x n array.'
+        bad_f = 'Input range, ' + sym_f + ' was neither function nor expression and not an n x 1 or 1 x n array.'
+        bad_data = 'Arrays ' + sym_X + ' and ' + sym_f + ' must be of equal length.'
         bad_fp = 'Derivative range was neither function nor expression and not an n x 1 or 1 x n array.'
-        bad_fp_data = 'Arrays X, f, and fp must be of equal length.'
+        bad_fp_data = 'Arrays ' + sym_X + ', ' + sym_f + ', and ' + sym_fp + ' must be of equal length.'
         missing_fp = 'Missing derivative data or expression.'
         if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
         if not isinstance(f, (FunctionType, sp.Expr)):
@@ -1744,9 +1748,10 @@ class cubic_spline:
                 D[j] = (C[j+1] - C[j])/(3*H[j])
                 i += 1
             return Y, A, B, C, D
-        bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
-        bad_f = 'Input range was neither function nor expression and not an n x 1 or 1 x n array.'
-        bad_data = 'Arrays X and f must be of equal length.'
+        sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
+        bad_X = 'Input domain, ' + sym_x + ' was neither an n x 1 nor a 1 x n array.'
+        bad_f = 'Input range, ' + sym_f + ' was neither function nor expression and not an n x 1 or 1 x n array.'
+        bad_data = 'Arrays ' + sym_X + ' and ' + sym_f + ' must be of equal length.'
         if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
         if not isinstance(f, (FunctionType, sp.Expr)):
             if np.sum(f.shape) > np.sum(f.shape[0]): sys.exit(bad_f)
@@ -1824,11 +1829,12 @@ def hermite(X, FX, x=sp.Symbol('x'), FP=0):
 
     Oscullating curve incorporates Taylor and Lagrangian polynomials to kiss the data and match each data point's derivatives. Which fits the curve to the shape of the data and its trend.
     """
-    bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
-    bad_FX = 'Input range was neither an n x 1 nor a 1 x n array.'
-    bad_data = 'Arrays X and FX must be of equal length.'
+    sym_X, sym_FX, sym_FP = 'X', 'FX', 'FP' # varname(X), varname(FX), varname(FP)
+    bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+    bad_FX = 'Input range, ' + sym_FX + ' was neither an n x 1 nor a 1 x n array.'
+    bad_data = 'Arrays ' + sym_X + ' and ' + sym_FX + ' must be of equal length.'
     bad_FP = 'Derivative range was neither function nor expression and not an n x 1 or 1 x n array.'
-    bad_FP_data = 'Arrays X, FX, and FP must be of equal length.'
+    bad_FP_data = 'Arrays ' + sym_X + ', ' + sym_FX + ', and ' + sym_FP + ' must be of equal length.'
     missing_FP = 'Missing derivative data or expression.'
     made_poly = 'I have found your requested polynomial! P = '
     if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
@@ -1981,9 +1987,10 @@ def lagrange(X, Y, x=sp.Symbol('x')):
                 gx = np.amax(np.abs(R))
             i += 1
         return np.abs(xi_err*gx)
-    bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
-    bad_Y = 'Input range was neither an n x 1 nor a 1 x n array.'
-    bad_data = 'Arrays X and Y must be of equal length.'
+    sym_X, sym_Y = 'X', 'Y' # varname(X), varname(Y)
+    bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+    bad_Y = 'Input range, ' + sym_Y + ' was neither an n x 1 nor a 1 x n array.'
+    bad_data = 'Arrays ' + sym_X + ' and ' + sym_Y + ' must be of equal length.'
     made_poly = 'I have found your requested polynomial! P = '
     if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
     if not isinstance(Y,(FunctionType, sp.Expr)):
@@ -2052,9 +2059,10 @@ def linear_least_squares(X_i, Y_i, n):
             err += (Y_i[i] - px)**2
             i += 1
         return p, err
-    bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
-    bad_Y = 'Input range was neither an n x 1 nor a 1 x n array.'
-    bad_data = 'Arrays X_i and Y_i must be of equal length.'
+    sym_X_i, sym_Y_i = 'X_i', 'Y_i' # varname(X_i), varname(Y_i)
+    bad_X = 'Input domain, ' + sym_X_i + ' was neither an n x 1 nor a 1 x n array.'
+    bad_Y = 'Input range, ' + sym_Y_i + ' was neither an n x 1 nor a 1 x n array.'
+    bad_data = 'Arrays ' + sym_X_i + ' and ' + sym_Y_i + ' must be of equal length.'
     bad_n = 'Degree of polynomial must be integer and non-zero.'
     made_poly = 'I have found your requested polynomial! P = '
     if np.sum(X_i.shape) > np.sum(X_i.shape[0]): sys.exit(bad_X)
@@ -2150,9 +2158,10 @@ def newton_difference(X, FX, x0, direction=0):
     def fterm(i, j):
         fij = (fxn[i][j] - fxn[i-1][j])/(fxn[i][0] - fxn[i-j][0])
         return fij
-    bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
-    bad_FX = 'Input range was neither an n x 1 nor a 1 x n array.'
-    bad_data = 'Arrays X and FX must be of equal length.'
+    sym_X, sym_FX = 'X', 'FX' # varname(X), varname(FX)
+    bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+    bad_FX = 'Input range, ' + sym_FX + ' was neither an n x 1 nor a 1 x n array.'
+    bad_data = 'Arrays ' + sym_X + ' and ' + sym_FX + ' must be of equal length.'
     bad_direction = "Supplied direction was not understood. Please specify 'forward' or 'backward', or let me choose."
     made_poly = 'I have found your requested polynomial! P = '
     X, x0 = np.array(X), float(x0)
@@ -2186,8 +2195,8 @@ def newton_difference(X, FX, x0, direction=0):
         k = coeff.index(c)
         term.append(sym_x - X[k])
         poly.append(c*np.prod(term))
-    if direction == 'forward': polynomial = simplify(sum(poly) + FX[0])
-    if direction == 'backward': polynomial = simplify(sum(poly) + FX[m])
+    if direction == 'forward': polynomial = sp.simplify(sum(poly) + FX[0])
+    if direction == 'backward': polynomial = sp.simplify(sum(poly) + FX[m])
     print(made_poly, str(polynomial))
     p = sp.lambdify(sym_x, polynomial)
     return p, p(x0)
@@ -2196,8 +2205,7 @@ def newton_difference(X, FX, x0, direction=0):
 # --------------------
 # numerical differentiation
 # and integration
-
-def composite_simpson(f, X, h, a=0, b=0):
+def composite_simpson(f, X, h=0, a=0, b=0):
     """Find the integral of a function within some interval, using Simpson's Rule.
 
     Parameters
@@ -2253,14 +2261,17 @@ def composite_simpson(f, X, h, a=0, b=0):
 
     Where: (b-a)*(h^4)f''''(mu)/180 -> O(h^4)
     """
-    bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
-    bad_f = 'Input range must be expression, not list or tuple.'
+    X = np.array(X)
+    sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
+    bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+    bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
     func_func = 'Input expression used.'
     if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
     if not isinstance(f,(FunctionType, sp.Expr)):
         if np.sum(f.shape) > np.sum(f.shape[0]): sys.exit(bad_X)
         else: sys.exit(bad_f)
     if isinstance(f,(FunctionType, sp.Expr)): print(func_func)
+    if h == 0: h = X[1]-X[0]
     if a == 0: a = min(X)
     if b == 0: b = max(X)
     h, a, b = float(h), float(a), float(b)
@@ -2283,7 +2294,7 @@ def composite_simpson(f, X, h, a=0, b=0):
         z2 += yj
         k += 1
     l = 0
-    while l < len(XJ1):
+    while l < np.array(XJ1).shape[0]:
         XJ.append(XJ2[l]); YJ.append(YJ2[l])
         XJ.append(XJ1[l]); YJ.append(YJ1[l])
         l += 1
@@ -2348,8 +2359,10 @@ def composite_trapezoidal(f, X, h, a=0, b=0):
 
     Where: (b-a)*(h^2)f''(mu)/12 -> O(h^2)
     """
-    bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
-    bad_f = 'Input range must be expression, not list or tuple.'
+    X = np.array(X)
+    sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
+    bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+    bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
     func_func = 'Input expression used.'
     if not isinstance(f,(FunctionType, sp.Expr)):
         if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
@@ -2416,9 +2429,10 @@ def endpoint(X, Y, h, point_type, which_end):
     -----
     5 point is more accurate than 3 point; however, round-off error increases.
     """
-    bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
-    bad_Y = 'Input range was neither an n x 1 nor a 1 x n array.'
-    bad_data = 'Arrays X_i and Y_i must be of equal length.'
+    sym_x, sym_Y = 'X', 'Y' # varname(X), varname(Y)
+    bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+    bad_Y = 'Input range, ' + sym_Y + ' was neither an n x 1 nor a 1 x n array.'
+    bad_data = 'Arrays ' + sym_X + ' and ' + sym_Y + ' must be of equal length.'
     if not isinstance(Y,(FunctionType, sp.Expr)):
         if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
         if np.sum(Y.shape) > np.sum(Y.shape[0]): sys.exit(bad_Y)
@@ -2499,9 +2513,10 @@ def midpoint(X, Y, h, point_type, i):
     -----
     5 point is more accurate than 3 point; however, round-off error increases.
     """
-    bad_X = 'Input domain was neither an n x 1 nor a 1 x n array.'
-    bad_Y = 'Input range was neither an n x 1 nor a 1 x n array.'
-    bad_data = 'Arrays X_i and Y_i must be of equal length.'
+    sym_x, sym_Y = 'X', 'Y' # varname(X), varname(Y)
+    bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+    bad_Y = 'Input range, ' + sym_Y + ' was neither an n x 1 nor a 1 x n array.'
+    bad_data = 'Arrays ' + sym_X + ' and ' + sym_Y + ' must be of equal length.'
     bad_i = 'Index must be an integer.'
     bad_type = "I am sorry. The selected type was not understood. Please select: 'three', 'five', or '2nd_derivative'."
     if not isinstance(Y,(FunctionType, sp.Expr)):
@@ -2569,8 +2584,8 @@ def richard_extrapolation(function, x0, h, order, direction=0):
     --------
     newton_difference() : Newton Difference method to build extrapolation for function's derivative and order of error.
     """
-    bad_function = 'Function must be expression.'
-    func_func = 'Input expression used.'
+    sym_function = 'function' # varname(function)
+    bad_function = 'Function, ' + sym_function + ' must be expression.'
     bad_order = 'Expected integer.'
     bad_direction = "Supplied direction was not understood. Please specify 'forward' or 'backward'."
     made_poly = 'I have found your requested polynomial! P = '
@@ -2645,9 +2660,10 @@ class ode:
         
         Warnings
         --------
-        
+        Outputs to console the solution steps.
         """
-        bad_f = "Input 'f' was not an expression."
+        sym_f = 'f' # varname(f)
+        bad_f = 'Input, ' + sym_f + ' was not an expression.'
         bad_N = 'Desired number of iterations must be integer and non-zero.'
         if not isinstance(f,(FunctionType, sp.Expr)): sys.exit('ERROR! ' + bad_f)
         if not isinstance(N,(int)) or N == 0: sys.exit('ERROR!\n' + bad_N)
@@ -2695,10 +2711,7 @@ class test:                     # test class
 ## End of Code
 # test.test()     # 'Test complete.'
 #   #   #   #   #   #   #   #   #
-A = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
-A3 = np.array(A)
-B_list = np.arange(1, 10, 1)
-B_array = np.array(B_list)
-C_mat = sp.Matrix(A)
-print(varname(C_mat))
-print(type(varname(C_mat)))
+A = [0.4933861111111111, 0.5196611111111111, 0.5722111111111111, 0.6773111111111111]
+function = lambda x: x**2 + x + 1
+X, Y, F = composite_simpson(function, A)
+print(F)
