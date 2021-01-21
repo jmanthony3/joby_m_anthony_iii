@@ -2,7 +2,6 @@
 ## Preamble
 # import necessary modules/tools
 
-from _typeshed import OpenTextMode
 import math
 import numpy as np
 from scipy.integrate import quad
@@ -2207,6 +2206,7 @@ def newton_difference(X, FX, x0, direction=0):
 # numerical differentiation
 # and integration
 class simpson:
+
     def open(f, X, h=0, a=0, b=0):
         """Find the integral of a function within some interval, using Simpson's Rule.
 
@@ -2831,7 +2831,7 @@ class ode:
         bad_N = 'Desired number of iterations must be integer and non-zero.'
         if not isinstance(f,(FunctionType, sp.Expr)): sys.exit('ERROR! ' + bad_f)
         if not isinstance(N,(int)) or N == 0: sys.exit('ERROR!\n' + bad_N)
-        h, t, w, T, W, I = (tn - t0) / N, float(x0), float(w0), [], [], []
+        h, t, w, T, W, I = (tn - t0) / N, float(t0), float(w0), [], [], []
         T.append(t); W.append(w)
         print('\n-----------SOLUTION-----------')
         print('------------------------------')    
