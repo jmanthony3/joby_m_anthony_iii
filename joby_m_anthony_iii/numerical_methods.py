@@ -4,6 +4,7 @@
 
 import math
 import numpy as np
+from numpy.lib.arraysetops import isin
 from scipy.integrate import quad
 import sympy as sp
 import sys
@@ -757,116 +758,162 @@ def fixed_point(f, k, a, b, p0, power):
     else: sys.exit('ERROR! ', must_be_expression)
     return P, ERROR, I
 
-def newton_raphson(f, k, a, b, p0, power, x=sp.Symbol('x')):
-    """Given f(x) and initial guess, `p0` in [`a`,`b`], find x within tolerance, `tol`.
-    
-    Root-finding problem: f(x) = 0. 
-    
-    !!! Use lowest k !!!
+class newton_raphson:
 
-    Parameters
-    ----------
-    f : expression
-        Input function.
-    
-    k : float
-        Absolute maximum slope of `f`.
-    
-    a : float
-        Left-hand bound of interval.
-    
-    b : float
-        Right-hand bound of interval.
-    
-    p0 : float
-        Initial guess.
-    
-    power : float
-        Signed, specified power of tolerance until satisfying method.
-    
-    x : symbol
-        Respected variable in derivative. Assumed to be `'x'` if not stated.
-    
-    Returns
-    -------
-    P : list
-        Aggregate collection of evaluated points, `p`.
-    
-    ERROR : list
-        Propogation of `error` through method.
-    
-    I : list
-        Running collection of iterations through method.
+    def single_variable(f, k, a, b, p0, power, x=sp.Symbol('x')):
+        """Given f(x) and initial guess, `p0` in [`a`,`b`], find x within tolerance, `tol`.
+        
+        Root-finding problem: f(x) = 0. 
+        
+        !!! Use lowest k !!!
 
-    Raises
-    ------
-    must_be_expression : string
-        If input `f` was of array, list, tuple, etcetera...
+        Parameters
+        ----------
+        f : expression
+            Input function.
+        
+        k : float
+            Absolute maximum slope of `f`.
+        
+        a : float
+            Left-hand bound of interval.
+        
+        b : float
+            Right-hand bound of interval.
+        
+        p0 : float
+            Initial guess.
+        
+        power : float
+            Signed, specified power of tolerance until satisfying method.
+        
+        x : symbol
+            Respected variable in derivative. Assumed to be `'x'` if not stated.
+        
+        Returns
+        -------
+        P : list
+            Aggregate collection of evaluated points, `p`.
+        
+        ERROR : list
+            Propogation of `error` through method.
+        
+        I : list
+            Running collection of iterations through method.
 
-    Warns
-    -----
-    solution_found : string
-        Inform user that solution was indeed found.
+        Raises
+        ------
+        must_be_expression : string
+            If input `f` was of array, list, tuple, etcetera...
+
+        Warns
+        -----
+        solution_found : string
+            Inform user that solution was indeed found.
+        
+        solution_not_found : string
+            If initial guess or tolerance were badly defined.
+
+        Notes
+        -----
+        f'(x) != 0.
+        
+        Not root-bracketed.
+
+        Initial guess must be close to real solution; else, will converge to different root or oscillate (if symmetric).
+
+        Check that |g'(x)| <= (leading coefficient of g'(x)) for all x in [`a`,`b`].
+
+        Technique based on first Taylor polynomial expansion of `f` about `p0` and evaluated at x = p. |p - p0| is assumed small; therefore, 2nd order Taylor term, the error, is small.
+
+        Newton-Raphson has quickest convergence rate.
+
+        This method can be viewed as fixed-point iteration.
+
+        Theorem:
+        1) Existence of a fixed-point:
+            If g in C[`a`,`b`] and g(x) in C[`a`,`b`] for all x in [`a`,`b`], then function, g has a fixed point in [`a`,`b`].
+        
+        2) Uniqueness of a fixed point:
+            If g'(x) exists on [`a`,`b`] and a positive constant, `k` < 1 exist with {|g'(x)| <= k  |  x in (`a`,`b`)}, then there is exactly one fixed-point, `p` in [`a`,`b`].
+
+        Converges by O(linear) if g'(p) != 0, and O(quadratic) if g'(p) = 0 and g''(p) < M, where M = g''(xi) that is the error function.
+
+        Examples 
+        --------
+        If  g(x) = x**2 - 2
+
+        Then    p = g(p) = p**2 - 2
+        
+        =>  p**2 - p - 2 = 0
+        """
+        k, a, b, p0, tol = float(k), float(a), float(b), float(p0), float(10**power)
+        # calculate if expression
+        if isinstance(f,(FunctionType, sp.Expr)):
+            # determine form of derivative
+            df = sp.lambdify(x, sp.diff(f(x)))
+            P, ERROR, I = [], [], []    # initialize lists
+            N = max_iterations(a, b, power, 'newton raphson', k, p0)
+            i, error = 0, tol*10        # initialize
+            # exit by whichever condition is TRUE first
+            while error >= tol and i <= N:
+                fp0 = f(p0)
+                dfp0 = df(p0)
+                p = p0 - (fp0/dfp0)     # new value, p
+                P.append(p)
+                error = abs(p - p0)     # error of new value, p
+                ERROR.append(error); I.append(i)
+                p0 = p                  # set future previous value
+                i += 1                  # iterate to i + 1
+            if i < N: print('Congratulations! ', solution_found)
+            else: print('Warning! ', solution_not_found)
+        # abort if not expression
+        else: sys.exit('ERROR! ', must_be_expression)
+        return P, ERROR, I
     
-    solution_not_found : string
-        If initial guess or tolerance were badly defined.
-
-    Notes
-    -----
-    f'(x) != 0.
-    
-    Not root-bracketed.
-
-    Initial guess must be close to real solution; else, will converge to different root or oscillate (if symmetric).
-
-    Check that |g'(x)| <= (leading coefficient of g'(x)) for all x in [`a`,`b`].
-
-    Technique based on first Taylor polynomial expansion of `f` about `p0` and evaluated at x = p. |p - p0| is assumed small; therefore, 2nd order Taylor term, the error, is small.
-
-    Newton-Raphson has quickest convergence rate.
-
-    This method can be viewed as fixed-point iteration.
-
-    Theorem:
-    1) Existence of a fixed-point:
-        If g in C[`a`,`b`] and g(x) in C[`a`,`b`] for all x in [`a`,`b`], then function, g has a fixed point in [`a`,`b`].
-    
-    2) Uniqueness of a fixed point:
-        If g'(x) exists on [`a`,`b`] and a positive constant, `k` < 1 exist with {|g'(x)| <= k  |  x in (`a`,`b`)}, then there is exactly one fixed-point, `p` in [`a`,`b`].
-
-    Converges by O(linear) if g'(p) != 0, and O(quadratic) if g'(p) = 0 and g''(p) < M, where M = g''(xi) that is the error function.
-
-    Examples 
-    --------
-    If  g(x) = x**2 - 2
-
-    Then    p = g(p) = p**2 - 2
-    
-    =>  p**2 - p - 2 = 0
-    """
-    k, a, b, p0, tol = float(k), float(a), float(b), float(p0), float(10**power)
-    # calculate if expression
-    if isinstance(f,(FunctionType, sp.Expr)):
-        # determine form of derivative
-        df = sp.lambdify(x, sp.diff(f(x)))
-        P, ERROR, I = [], [], []    # initialize lists
-        N = max_iterations(a, b, power, 'newton raphson', k, p0)
-        i, error = 0, tol*10        # initialize
-        # exit by whichever condition is TRUE first
-        while error >= tol and i <= N:
-            fp0 = f(p0)
-            dfp0 = df(p0)
-            p = p0 - (fp0/dfp0)     # new value, p
-            P.append(p)
-            error = abs(p - p0)     # error of new value, p
-            ERROR.append(error); I.append(i)
-            p0 = p                  # set future previous value
-            i += 1                  # iterate to i + 1
-        if i < N: print('Congratulations! ', solution_found)
-        else: print('Warning! ', solution_not_found)
-    # abort if not expression
-    else: sys.exit('ERROR! ', must_be_expression)
-    return P, ERROR, I
+    def multi_variate(f, symbols, x0, powers, N, normType=0):
+    def jacobian(g, sym_x, x):
+        n = len(x)
+        jacMatrix = np.zeros((n, n))
+        for i in range(0, n):
+            for j in range(0, n):
+                J_ij = sp.diff(g[i](*sym_x), sym_x[j])
+                temp = sp.lambdify(sym_x, J_ij)(*x)
+                if isinstance(temp, type(np.array([1]))): temp = temp[0]
+                jacMatrix[i][j] = temp
+        return jacMatrix
+    f, x0 = np.array(f), np.array(x0)
+    for each in symbols:
+        if isinstance(each, type(sp.Symbol('x'))): continue
+        else: sys.exit('')
+    if not isinstance(N, int): sys.exit('')
+    n = len(x0)
+    if normType == 0:
+        tol = []
+        for p in powers: tol.append(10**p)
+    else: tol = 10**powers
+    f, x0 = np.reshape(f, (1, n))[0], np.reshape(x0, (n, 1))
+    for k in range(1, N):
+        J = jacobian(f, symbols, x0)
+        xk, g = np.zeros_like(x0), np.zeros_like(x0)
+        for i in range(0, n): 
+            g[i] = sp.lambdify(symbols, f[i](*symbols))(*x0)
+        y0 = np.linalg.solve(J, -g)
+        xk = x0 + y0
+        if normType == 0:
+            boolean = []
+            for i in range(0, n-1):
+                if abs(xk[i] - x0[i])[0] <= tol[i]: boolean.append(1)
+                else: boolean.append(0)
+            x0 = xk
+            if sum(boolean) < n: continue
+            else: break
+        elif normType == 'infinity':
+            norm = l_infinity_norm(xk, x0)
+            if norm <= tol: return xk
+            else: x0 = xk
+        else: sys.exit('')
+    return x0
 
 def secant_method(f, k, a, b, p0, p1, power):
     """Given f(x) and initial guesses, `p0` and `p1` in [`a`,`b`], find x within tolerance, `tol`.

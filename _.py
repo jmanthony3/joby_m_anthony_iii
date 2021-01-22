@@ -4,7 +4,9 @@
 
 import math
 import numpy as np
+from numpy.linalg.linalg import inv
 from scipy.integrate import quad
+import symbol
 import sympy as sp
 import sys
 from types import FunctionType
@@ -160,7 +162,7 @@ def l_2_norm(x, x0=0):
 
     ||x0 - x|| = 0.21356
     """
-    if x0 == 0:
+    if isinstance(x0, int):
         # initialize loop
         i, norm_i = 0, np.zeros_like(x)
         while i < len(x):
@@ -171,7 +173,7 @@ def l_2_norm(x, x0=0):
                 j += 1      # iterate to j + 1 column
             i += 1          # iterate to i + 1
         l2_norm = math.sqrt(np.sum(norm_i))
-    if x0 != 0:
+    elif not isinstance(x0, int):
         xt = np.transpose(x)
         l2_norm = math.sqrt(spectral_radius(x*xt))
     return l2_norm
@@ -214,8 +216,9 @@ def l_infinity_norm(x, x0=0):
         j = 0
         while j < len(x[0]):
             # evaluate and store norm, ||.||
-            if x0 != 0: norm_i[i] += abs(x[i][j] - x0[i][j])
-            else: norm_i[i] += abs(x[i][j])
+            # if np.sum(x0.shape)
+            if x0.shape[0] < sum(x0.shape): norm_i[i] = abs(x[i][j] - x0[i][j])
+            else: norm_i[i] = abs(x[i][j])
             j += 1      # iterate to j + 1 column
         i += 1          # iterate to i + 1 row
     # return the l_infinity norm
@@ -2711,7 +2714,57 @@ class test:                     # test class
 ## End of Code
 # test.test()     # 'Test complete.'
 #   #   #   #   #   #   #   #   #
-A = [0.4933861111111111, 0.5196611111111111, 0.5722111111111111, 0.6773111111111111]
-function = lambda x: x**2 + x + 1
-X, Y, F = composite_simpson(function, A)
-print(F)
+def multi_variate(f, symbols, x0, powers, N, normType=0):
+    def jacobian(g, sym_x, x):
+        n = len(x)
+        jacMatrix = np.zeros((n, n))
+        for i in range(0, n):
+            for j in range(0, n):
+                J_ij = sp.diff(g[i](*sym_x), sym_x[j])
+                temp = sp.lambdify(sym_x, J_ij)(*x)
+                if isinstance(temp, type(np.array([1]))): temp = temp[0]
+                jacMatrix[i][j] = temp
+        return jacMatrix
+    f, x0 = np.array(f), np.array(x0)
+    for each in symbols:
+        if isinstance(each, type(sp.Symbol('x'))): continue
+        else: sys.exit('')
+    if not isinstance(N, int): sys.exit('')
+    n = len(x0)
+    if normType == 0:
+        tol = []
+        for p in powers: tol.append(10**p)
+    else: tol = 10**powers
+    f, x0 = np.reshape(f, (1, n))[0], np.reshape(x0, (n, 1))
+    for k in range(1, N):
+        J = jacobian(f, symbols, x0)
+        xk, g = np.zeros_like(x0), np.zeros_like(x0)
+        for i in range(0, n): 
+            g[i] = sp.lambdify(symbols, f[i](*symbols))(*x0)
+        y0 = np.linalg.solve(J, -g)
+        xk = x0 + y0
+        if normType == 0:
+            boolean = []
+            for i in range(0, n-1):
+                if abs(xk[i] - x0[i])[0] <= tol[i]: boolean.append(1)
+                else: boolean.append(0)
+            x0 = xk
+            if sum(boolean) < n: continue
+            else: break
+        elif normType == 'infinity':
+            norm = l_infinity_norm(xk, x0)
+            if norm <= tol: return xk
+            else: x0 = xk
+        else: sys.exit('')
+    return x0
+f1 = lambda x1, x2, x3: \
+    3*x1 - sp.cos(x2*x3) - 0.5
+f2 = lambda x1, x2, x3: \
+    x1**2 - 81*(x2 + 0.1)**2 + sp.sin(x3) + 1.06
+f3 = lambda x1, x2, x3: \
+    sp.exp(-x1*x2) + 20*x3 + (10*sp.pi - 3)/3
+F = [f1, f2, f3]
+X0 = [0.1, 0.1, -0.1]
+sym_X0 = [sp.Symbol('x1'), sp.Symbol('x2'), sp.Symbol('x3')]
+tol = [-6, -6, -6]
+print(multi_variate(F, sym_X0, X0, -6, 6, 'infinity'))
