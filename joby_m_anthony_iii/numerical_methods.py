@@ -2148,6 +2148,9 @@ def linear_least_squares(X_i, Y_i, n):
         i += 1
     return P, E
 
+def linear_interpolation(x0, x1, y0, y1, x):
+    return y0 + (x - x0)*(y1 - y0)/(x1 - x0)
+
 def newton_difference(X, FX, x0, direction=0):
     """Given a domain and range, construct some polynomial by Newton's Divided Difference.
 
@@ -2891,7 +2894,7 @@ class ode:
             K3 = h*f(t + h/2, w + K2/2)
             K4 = h*f(t + h, w + K3)
             w += (K1 + 2*K2 + 2*K3 + K4) / 6
-            t += i*h
+            t += h
             T.append(t); W.append(w); I.append(i)
             print('%.0f\t%.4f\t%.4f\t%.4f'% (i,t,w0,w) )
         print('------------------------------')
