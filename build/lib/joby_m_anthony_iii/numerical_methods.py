@@ -872,48 +872,48 @@ class newton_raphson:
         return P, ERROR, I
     
     def multi_variate(f, symbols, x0, powers, N, normType=0):
-    def jacobian(g, sym_x, x):
-        n = len(x)
-        jacMatrix = np.zeros((n, n))
-        for i in range(0, n):
-            for j in range(0, n):
-                J_ij = sp.diff(g[i](*sym_x), sym_x[j])
-                temp = sp.lambdify(sym_x, J_ij)(*x)
-                if isinstance(temp, type(np.array([1]))): temp = temp[0]
-                jacMatrix[i][j] = temp
-        return jacMatrix
-    f, x0 = np.array(f), np.array(x0)
-    for each in symbols:
-        if isinstance(each, type(sp.Symbol('x'))): continue
-        else: sys.exit('')
-    if not isinstance(N, int): sys.exit('')
-    n = len(x0)
-    if normType == 0:
-        tol = []
-        for p in powers: tol.append(10**p)
-    else: tol = 10**powers
-    f, x0 = np.reshape(f, (1, n))[0], np.reshape(x0, (n, 1))
-    for k in range(1, N):
-        J = jacobian(f, symbols, x0)
-        xk, g = np.zeros_like(x0), np.zeros_like(x0)
-        for i in range(0, n): 
-            g[i] = sp.lambdify(symbols, f[i](*symbols))(*x0)
-        y0 = np.linalg.solve(J, -g)
-        xk = x0 + y0
+        def jacobian(g, sym_x, x):
+            n = len(x)
+            jacMatrix = np.zeros((n, n))
+            for i in range(0, n):
+                for j in range(0, n):
+                    J_ij = sp.diff(g[i](*sym_x), sym_x[j])
+                    temp = sp.lambdify(sym_x, J_ij)(*x)
+                    if isinstance(temp, type(np.array([1]))): temp = temp[0]
+                    jacMatrix[i][j] = temp
+            return jacMatrix
+        f, x0 = np.array(f), np.array(x0)
+        for each in symbols:
+            if isinstance(each, type(sp.Symbol('x'))): continue
+            else: sys.exit('')
+        if not isinstance(N, int): sys.exit('')
+        n = len(x0)
         if normType == 0:
-            boolean = []
-            for i in range(0, n-1):
-                if abs(xk[i] - x0[i])[0] <= tol[i]: boolean.append(1)
-                else: boolean.append(0)
-            x0 = xk
-            if sum(boolean) < n: continue
-            else: break
-        elif normType == 'infinity':
-            norm = l_infinity_norm(xk, x0)
-            if norm <= tol: return xk
-            else: x0 = xk
-        else: sys.exit('')
-    return x0
+            tol = []
+            for p in powers: tol.append(10**p)
+        else: tol = 10**powers
+        f, x0 = np.reshape(f, (1, n))[0], np.reshape(x0, (n, 1))
+        for k in range(1, N):
+            J = jacobian(f, symbols, x0)
+            xk, g = np.zeros_like(x0), np.zeros_like(x0)
+            for i in range(0, n): 
+                g[i] = sp.lambdify(symbols, f[i](*symbols))(*x0)
+            y0 = np.linalg.solve(J, -g)
+            xk = x0 + y0
+            if normType == 0:
+                boolean = []
+                for i in range(0, n-1):
+                    if abs(xk[i] - x0[i])[0] <= tol[i]: boolean.append(1)
+                    else: boolean.append(0)
+                x0 = xk
+                if sum(boolean) < n: continue
+                else: break
+            elif normType == 'infinity':
+                norm = l_infinity_norm(xk, x0)
+                if norm <= tol: return xk
+                else: x0 = xk
+            else: sys.exit('')
+        return x0
 
 def secant_method(f, k, a, b, p0, p1, power):
     """Given f(x) and initial guesses, `p0` and `p1` in [`a`,`b`], find x within tolerance, `tol`.

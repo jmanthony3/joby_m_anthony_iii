@@ -2757,14 +2757,11 @@ def multi_variate(f, symbols, x0, powers, N, normType=0):
             else: x0 = xk
         else: sys.exit('')
     return x0
-f1 = lambda x1, x2, x3: \
-    3*x1 - sp.cos(x2*x3) - 0.5
-f2 = lambda x1, x2, x3: \
-    x1**2 - 81*(x2 + 0.1)**2 + sp.sin(x3) + 1.06
-f3 = lambda x1, x2, x3: \
-    sp.exp(-x1*x2) + 20*x3 + (10*sp.pi - 3)/3
-F = [f1, f2, f3]
-X0 = [0.1, 0.1, -0.1]
-sym_X0 = [sp.Symbol('x1'), sp.Symbol('x2'), sp.Symbol('x3')]
+e, plate_vx, ball_vx = 0.85, -1.4155756416657377, 0
+plate_vx_new = lambda x, y: x + e*(plate_vx - ball_vx) - y
+ball_vx_new = lambda x, y: x - e*(plate_vx - ball_vx) - y
+F = [plate_vx_new, ball_vx_new]
+syms = [sp.Symbol('va2'), sp.Symbol('vb2')]
+x0 = [0, 0]
 tol = [-6, -6, -6]
-print(multi_variate(F, sym_X0, X0, -6, 6, 'infinity'))
+print(multi_variate(F, syms, x0, -6, 6, 'infinity'))
