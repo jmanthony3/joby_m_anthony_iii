@@ -17,6 +17,7 @@ from types import FunctionType
 must_be_expression = 'I am sorry. The input function must be an expression.'
 must_be_collection = 'I am sorry. The input function must be a collection.'
 opposite_signs = 'Initial guesses must yield opposite signs.'
+solution_found = 'Solution found!'
 solution_not_found = 'Solution could not be found with initial guess or tolerance.'
 func_func = 'Input expression used.'
 # string outputs of polynomials

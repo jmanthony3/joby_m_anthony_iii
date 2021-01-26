@@ -18,6 +18,7 @@ from types import FunctionType
 must_be_expression = 'I am sorry. The input function must be an expression.'
 must_be_collection = 'I am sorry. The input function must be a collection.'
 opposite_signs = 'Initial guesses must yield opposite signs.'
+solution_found = 'Solution found!'
 solution_not_found = 'Solution could not be found with initial guess or tolerance.'
 func_func = 'Input expression used.'
 # string outputs of polynomials
@@ -2758,4 +2759,6 @@ def multi_variate(f, symbols, x0, powers, N, normType=0):
         else: sys.exit('')
     return x0
 
-print(np.sum(np.array([0]).shape))
+y = lambda x: x - 4 - x
+P, E, I = fixed_point(y, 0.99, 0, 8, 3, -6)
+print(P[-1])
