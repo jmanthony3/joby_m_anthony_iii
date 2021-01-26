@@ -2882,7 +2882,7 @@ class ode:
         bad_N = 'Desired number of iterations must be integer and non-zero.'
         if not isinstance(f,(FunctionType, sp.Expr)): sys.exit('ERROR! ' + bad_f)
         if not isinstance(N,(int)) or N == 0: sys.exit('ERROR!\n' + bad_N)
-        h, t, w, T, W, I = (tn - t0) / N, float(t0), float(w0), [], [], []
+        h, t, w, T, W, I = (tn - t0) / N, t0, float(w0), [], [], []
         T.append(t); W.append(w)
         print('\n-----------SOLUTION-----------')
         print('------------------------------')    
@@ -2897,7 +2897,8 @@ class ode:
             w += (K1 + 2*K2 + 2*K3 + K4) / 6
             t += h
             T.append(t); W.append(w); I.append(i)
-            print('%.0f\t%.4f\t%.4f\t%.4f'% (i,t,w0,w) )
+            if isinstance(t, (FunctionType, sp.Expr)): print('%s\t%s\t%s\t%s'% (i,t,w0,w) )
+            else: print('%.0f\t%.4f\t%.4f\t%.4f'% (i,t,w0,w) )
         print('------------------------------')
         I.append(N)
         return T, W, I
