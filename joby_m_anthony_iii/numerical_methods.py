@@ -2643,7 +2643,7 @@ def endpoint(X, Y, h, point_type, which_end):
     -----
     5 point is more accurate than 3 point; however, round-off error increases.
     """
-    sym_x, sym_Y = 'X', 'Y' # varname(X), varname(Y)
+    sym_X, sym_Y = 'X', 'Y' # varname(X), varname(Y)
     bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
     bad_Y = 'Input range, ' + sym_Y + ' was neither an n x 1 nor a 1 x n array.'
     bad_data = 'Arrays ' + sym_X + ' and ' + sym_Y + ' must be of equal length.'
