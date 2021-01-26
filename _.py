@@ -2757,11 +2757,5 @@ def multi_variate(f, symbols, x0, powers, N, normType=0):
             else: x0 = xk
         else: sys.exit('')
     return x0
-e, plate_vx, ball_vx = 0.85, -1.4155756416657377, 0
-plate_vx_new = lambda x, y: x + e*(plate_vx - ball_vx) - y
-ball_vx_new = lambda x, y: x - e*(plate_vx - ball_vx) - y
-F = [plate_vx_new, ball_vx_new]
-syms = [sp.Symbol('va2'), sp.Symbol('vb2')]
-x0 = [0, 0]
-tol = [-6, -6, -6]
-print(multi_variate(F, syms, x0, -6, 6, 'infinity'))
+
+print(np.sum(np.array([0]).shape))

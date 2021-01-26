@@ -1657,7 +1657,7 @@ class cubic_spline:
             elif len(X) != len(f): sys.exit(bad_data)
             else: g = f
         elif isinstance(f, (FunctionType, sp.Expr)): g = make_array(X, f)
-        if fp != 0:
+        if np.sum(fp.shape) != 0:
             if not isinstance(fp, (FunctionType, sp.Expr)):
                 if np.sum(fp.shape) > np.sum(fp.shape[0]): sys.exit(bad_fp)
                 elif len(X) != len(fp): sys.exit(bad_fp_data)
