@@ -2759,6 +2759,4 @@ def multi_variate(f, symbols, x0, powers, N, normType=0):
         else: sys.exit('')
     return x0
 
-y = lambda x: x - 4 - x
-P, E, I = fixed_point(y, 0.99, 0, 8, 3, -6)
-print(P[-1])
+if isinstance(sym_x, (FunctionType, sp.Expr)): print('True')
