@@ -2421,7 +2421,9 @@ class simpson:
         if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
         if np.sum(X.shape[0]) != 4: sys.exit('ERROR! ' + other_bad_X)
         if not isinstance(f,(FunctionType, sp.Expr)):
-            if np.sum(f.shape) > np.sum(f.shape[0]): sys.exit(bad_X)
+            f = np.array(f)
+            if np.sum(f.shape) == np.sum(f.shape[0]) and np.sum(f.shape) == 4: Y = np.array(f)
+            elif np.sum(f.shape) > np.sum(f.shape[0]): sys.exit(bad_X)
             else: sys.exit(bad_f)
         if h == 0: h = X[1]-X[0]
         if a == 0: a = min(X)
@@ -2586,7 +2588,9 @@ class trapezoidal:
         if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
         if np.sum(X.shape[0]) != 2: sys.exit('ERROR! ' + other_bad_X)
         if not isinstance(f,(FunctionType, sp.Expr)):
-            if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
+            f = np.array(f)
+            if np.sum(f.shape) == np.sum(f.shape[0]) and np.sum(f.shape) == 2: Y = np.array(f)
+            elif np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
             else: sys.exit(bad_f)
         if h == 0: h = X[1]-X[0]
         if a == 0: a = min(X)
