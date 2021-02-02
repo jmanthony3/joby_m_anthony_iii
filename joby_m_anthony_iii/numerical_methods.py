@@ -2149,7 +2149,7 @@ def linear_least_squares(X_i, Y_i, n):
         i += 1
     return P, E
 
-def linear_interpolation(x0, x1, y0, y1, x):
+def linear_interpolation(x0, y0, x1, y1, x):
     return y0 + (x - x0)*(y1 - y0)/(x1 - x0)
 
 def newton_difference(X, FX, x0, direction=0):
