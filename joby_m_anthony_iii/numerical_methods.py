@@ -89,7 +89,7 @@ def eigen_values(A):
     bad_matrix = 'WARNING! Matrix, ' + sym_A + ' must be square!'
     if len(A) != len(A[0]): sys.exit(bad_matrix)
     A = np.array(A)
-    r_sym = sp.Symbol('r')
+    sym_r = sp.Symbol('r')
     i, identityA = 0, np.zeros_like(A)
     while i < len(A):
         j = 0
@@ -97,7 +97,7 @@ def eigen_values(A):
             if i == j: identityA[i][j] = 1
             j += 1
         i += 1
-    lambda_identity = np.identityA*r_sym
+    lambda_identity = identityA*sym_r
     determinant = sp.det(sp.Matrix(A - lambda_identity))
     roots = sp.solve(determinant)
     lambdas = []
@@ -130,7 +130,7 @@ def spectral_radius(A):
     eigen_values() : method to find eigen vector of `A`.
     """
     sym_A = 'A' # varname(A)
-    bad_matrix = 'Matrix, ' + A + ' must be square!'
+    bad_matrix = 'Matrix, ' + sym_A + ' must be square!'
     if len(A) != len(A[0]): sys.exit(bad_matrix)
     rho = np.max(np.abs(eigen_values(A)))
     return rho
@@ -162,7 +162,8 @@ def l_2_norm(x, x0=0):
 
     ||x0 - x|| = 0.21356
     """
-    if x0 == 0:
+    x, x0 = np.array(x), np.array(x0)
+    if x0.shape[0] == 0:
         # initialize loop
         i, norm_i = 0, np.zeros_like(x)
         while i < len(x):
@@ -173,9 +174,16 @@ def l_2_norm(x, x0=0):
                 j += 1      # iterate to j + 1 column
             i += 1          # iterate to i + 1
         l2_norm = math.sqrt(np.sum(norm_i))
-    if x0 != 0:
-        xt = np.transpose(x)
-        l2_norm = math.sqrt(spectral_radius(x*xt))
+    elif len(x) == len(x0):
+        if np.sum(x0.shape) > x0.shape[0]:
+            x0 = np.reshape(x0, (x0.shape[0], x0.shape[1]))
+            xt = np.reshape(x, (x0.shape[1], x0.shape[0]))
+        else: 
+            x0 = np.reshape(x0, (len(x0), 1))
+            xt = np.reshape(x, (1, len(x0)))
+            # xt = np.reshape(x, (1, x.shape[0]))
+        l2_norm = math.sqrt(spectral_radius(x0*xt))
+    else: sys.exit("ERROR! 'x', and 'x0' must be the same size!")
     return l2_norm
 
 def l_infinity_norm(x, x0=0):
@@ -216,8 +224,9 @@ def l_infinity_norm(x, x0=0):
         j = 0
         while j < len(x[0]):
             # evaluate and store norm, ||.||
-            if x0 != 0: norm_i[i] += abs(x[i][j] - x0[i][j])
-            else: norm_i[i] += abs(x[i][j])
+            if np.sum(x0.shape) > np.sum(x0.shape[0]):
+                norm_i[i] = abs(x[i][j] - x0[i][j])
+            else: norm_i[i] = abs(x[i][j])
             j += 1      # iterate to j + 1 column
         i += 1          # iterate to i + 1 row
     # return the l_infinity norm

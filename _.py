@@ -4,9 +4,8 @@
 
 import math
 import numpy as np
-from numpy.linalg.linalg import inv
+from numpy.lib.arraysetops import isin
 from scipy.integrate import quad
-import symbol
 import sympy as sp
 import sys
 from types import FunctionType
@@ -90,7 +89,7 @@ def eigen_values(A):
     bad_matrix = 'WARNING! Matrix, ' + sym_A + ' must be square!'
     if len(A) != len(A[0]): sys.exit(bad_matrix)
     A = np.array(A)
-    r_sym = sp.Symbol('r')
+    sym_r = sp.Symbol('r')
     i, identityA = 0, np.zeros_like(A)
     while i < len(A):
         j = 0
@@ -98,7 +97,7 @@ def eigen_values(A):
             if i == j: identityA[i][j] = 1
             j += 1
         i += 1
-    lambda_identity = np.identityA*r_sym
+    lambda_identity = identityA*sym_r
     determinant = sp.det(sp.Matrix(A - lambda_identity))
     roots = sp.solve(determinant)
     lambdas = []
@@ -131,7 +130,7 @@ def spectral_radius(A):
     eigen_values() : method to find eigen vector of `A`.
     """
     sym_A = 'A' # varname(A)
-    bad_matrix = 'Matrix, ' + A + ' must be square!'
+    bad_matrix = 'Matrix, ' + sym_A + ' must be square!'
     if len(A) != len(A[0]): sys.exit(bad_matrix)
     rho = np.max(np.abs(eigen_values(A)))
     return rho
@@ -163,7 +162,8 @@ def l_2_norm(x, x0=0):
 
     ||x0 - x|| = 0.21356
     """
-    if isinstance(x0, int):
+    x, x0 = np.array(x), np.array(x0)
+    if x0.shape[0] == 0:
         # initialize loop
         i, norm_i = 0, np.zeros_like(x)
         while i < len(x):
@@ -174,9 +174,16 @@ def l_2_norm(x, x0=0):
                 j += 1      # iterate to j + 1 column
             i += 1          # iterate to i + 1
         l2_norm = math.sqrt(np.sum(norm_i))
-    elif not isinstance(x0, int):
-        xt = np.transpose(x)
-        l2_norm = math.sqrt(spectral_radius(x*xt))
+    elif len(x) == len(x0):
+        if np.sum(x0.shape) > x0.shape[0]:
+            x0 = np.reshape(x0, (x0.shape[0], x0.shape[1]))
+            xt = np.reshape(x, (x0.shape[1], x0.shape[0]))
+        else: 
+            x0 = np.reshape(x0, (len(x0), 1))
+            xt = np.reshape(x, (1, len(x0)))
+            # xt = np.reshape(x, (1, x.shape[0]))
+        l2_norm = math.sqrt(spectral_radius(x0*xt))
+    else: sys.exit("ERROR! 'x', and 'x0' must be the same size!")
     return l2_norm
 
 def l_infinity_norm(x, x0=0):
@@ -217,8 +224,8 @@ def l_infinity_norm(x, x0=0):
         j = 0
         while j < len(x[0]):
             # evaluate and store norm, ||.||
-            # if np.sum(x0.shape)
-            if x0.shape[0] < sum(x0.shape): norm_i[i] = abs(x[i][j] - x0[i][j])
+            if np.sum(x0.shape) > np.sum(x0.shape[0]):
+                norm_i[i] = abs(x[i][j] - x0[i][j])
             else: norm_i[i] = abs(x[i][j])
             j += 1      # iterate to j + 1 column
         i += 1          # iterate to i + 1 row
@@ -761,116 +768,162 @@ def fixed_point(f, k, a, b, p0, power):
     else: sys.exit('ERROR! ', must_be_expression)
     return P, ERROR, I
 
-def newton_raphson(f, k, a, b, p0, power, x=sp.Symbol('x')):
-    """Given f(x) and initial guess, `p0` in [`a`,`b`], find x within tolerance, `tol`.
-    
-    Root-finding problem: f(x) = 0. 
-    
-    !!! Use lowest k !!!
+class newton_raphson:
 
-    Parameters
-    ----------
-    f : expression
-        Input function.
-    
-    k : float
-        Absolute maximum slope of `f`.
-    
-    a : float
-        Left-hand bound of interval.
-    
-    b : float
-        Right-hand bound of interval.
-    
-    p0 : float
-        Initial guess.
-    
-    power : float
-        Signed, specified power of tolerance until satisfying method.
-    
-    x : symbol
-        Respected variable in derivative. Assumed to be `'x'` if not stated.
-    
-    Returns
-    -------
-    P : list
-        Aggregate collection of evaluated points, `p`.
-    
-    ERROR : list
-        Propogation of `error` through method.
-    
-    I : list
-        Running collection of iterations through method.
+    def single_variable(f, k, a, b, p0, power, x=sp.Symbol('x')):
+        """Given f(x) and initial guess, `p0` in [`a`,`b`], find x within tolerance, `tol`.
+        
+        Root-finding problem: f(x) = 0. 
+        
+        !!! Use lowest k !!!
 
-    Raises
-    ------
-    must_be_expression : string
-        If input `f` was of array, list, tuple, etcetera...
+        Parameters
+        ----------
+        f : expression
+            Input function.
+        
+        k : float
+            Absolute maximum slope of `f`.
+        
+        a : float
+            Left-hand bound of interval.
+        
+        b : float
+            Right-hand bound of interval.
+        
+        p0 : float
+            Initial guess.
+        
+        power : float
+            Signed, specified power of tolerance until satisfying method.
+        
+        x : symbol
+            Respected variable in derivative. Assumed to be `'x'` if not stated.
+        
+        Returns
+        -------
+        P : list
+            Aggregate collection of evaluated points, `p`.
+        
+        ERROR : list
+            Propogation of `error` through method.
+        
+        I : list
+            Running collection of iterations through method.
 
-    Warns
-    -----
-    solution_found : string
-        Inform user that solution was indeed found.
+        Raises
+        ------
+        must_be_expression : string
+            If input `f` was of array, list, tuple, etcetera...
+
+        Warns
+        -----
+        solution_found : string
+            Inform user that solution was indeed found.
+        
+        solution_not_found : string
+            If initial guess or tolerance were badly defined.
+
+        Notes
+        -----
+        f'(x) != 0.
+        
+        Not root-bracketed.
+
+        Initial guess must be close to real solution; else, will converge to different root or oscillate (if symmetric).
+
+        Check that |g'(x)| <= (leading coefficient of g'(x)) for all x in [`a`,`b`].
+
+        Technique based on first Taylor polynomial expansion of `f` about `p0` and evaluated at x = p. |p - p0| is assumed small; therefore, 2nd order Taylor term, the error, is small.
+
+        Newton-Raphson has quickest convergence rate.
+
+        This method can be viewed as fixed-point iteration.
+
+        Theorem:
+        1) Existence of a fixed-point:
+            If g in C[`a`,`b`] and g(x) in C[`a`,`b`] for all x in [`a`,`b`], then function, g has a fixed point in [`a`,`b`].
+        
+        2) Uniqueness of a fixed point:
+            If g'(x) exists on [`a`,`b`] and a positive constant, `k` < 1 exist with {|g'(x)| <= k  |  x in (`a`,`b`)}, then there is exactly one fixed-point, `p` in [`a`,`b`].
+
+        Converges by O(linear) if g'(p) != 0, and O(quadratic) if g'(p) = 0 and g''(p) < M, where M = g''(xi) that is the error function.
+
+        Examples 
+        --------
+        If  g(x) = x**2 - 2
+
+        Then    p = g(p) = p**2 - 2
+        
+        =>  p**2 - p - 2 = 0
+        """
+        k, a, b, p0, tol = float(k), float(a), float(b), float(p0), float(10**power)
+        # calculate if expression
+        if isinstance(f,(FunctionType, sp.Expr)):
+            # determine form of derivative
+            df = sp.lambdify(x, sp.diff(f(x)))
+            P, ERROR, I = [], [], []    # initialize lists
+            N = max_iterations(a, b, power, 'newton raphson', k, p0)
+            i, error = 0, tol*10        # initialize
+            # exit by whichever condition is TRUE first
+            while error >= tol and i <= N:
+                fp0 = f(p0)
+                dfp0 = df(p0)
+                p = p0 - (fp0/dfp0)     # new value, p
+                P.append(p)
+                error = abs(p - p0)     # error of new value, p
+                ERROR.append(error); I.append(i)
+                p0 = p                  # set future previous value
+                i += 1                  # iterate to i + 1
+            if i < N: print('Congratulations! ', solution_found)
+            else: print('Warning! ', solution_not_found)
+        # abort if not expression
+        else: sys.exit('ERROR! ', must_be_expression)
+        return P, ERROR, I
     
-    solution_not_found : string
-        If initial guess or tolerance were badly defined.
-
-    Notes
-    -----
-    f'(x) != 0.
-    
-    Not root-bracketed.
-
-    Initial guess must be close to real solution; else, will converge to different root or oscillate (if symmetric).
-
-    Check that |g'(x)| <= (leading coefficient of g'(x)) for all x in [`a`,`b`].
-
-    Technique based on first Taylor polynomial expansion of `f` about `p0` and evaluated at x = p. |p - p0| is assumed small; therefore, 2nd order Taylor term, the error, is small.
-
-    Newton-Raphson has quickest convergence rate.
-
-    This method can be viewed as fixed-point iteration.
-
-    Theorem:
-    1) Existence of a fixed-point:
-        If g in C[`a`,`b`] and g(x) in C[`a`,`b`] for all x in [`a`,`b`], then function, g has a fixed point in [`a`,`b`].
-    
-    2) Uniqueness of a fixed point:
-        If g'(x) exists on [`a`,`b`] and a positive constant, `k` < 1 exist with {|g'(x)| <= k  |  x in (`a`,`b`)}, then there is exactly one fixed-point, `p` in [`a`,`b`].
-
-    Converges by O(linear) if g'(p) != 0, and O(quadratic) if g'(p) = 0 and g''(p) < M, where M = g''(xi) that is the error function.
-
-    Examples 
-    --------
-    If  g(x) = x**2 - 2
-
-    Then    p = g(p) = p**2 - 2
-    
-    =>  p**2 - p - 2 = 0
-    """
-    k, a, b, p0, tol = float(k), float(a), float(b), float(p0), float(10**power)
-    # calculate if expression
-    if isinstance(f,(FunctionType, sp.Expr)):
-        # determine form of derivative
-        df = sp.lambdify(x, sp.diff(f(x)))
-        P, ERROR, I = [], [], []    # initialize lists
-        N = max_iterations(a, b, power, 'newton raphson', k, p0)
-        i, error = 0, tol*10        # initialize
-        # exit by whichever condition is TRUE first
-        while error >= tol and i <= N:
-            fp0 = f(p0)
-            dfp0 = df(p0)
-            p = p0 - (fp0/dfp0)     # new value, p
-            P.append(p)
-            error = abs(p - p0)     # error of new value, p
-            ERROR.append(error); I.append(i)
-            p0 = p                  # set future previous value
-            i += 1                  # iterate to i + 1
-        if i < N: print('Congratulations! ', solution_found)
-        else: print('Warning! ', solution_not_found)
-    # abort if not expression
-    else: sys.exit('ERROR! ', must_be_expression)
-    return P, ERROR, I
+    def multi_variate(f, symbols, x0, powers, N, normType=0):
+        def jacobian(g, sym_x, x):
+            n = len(x)
+            jacMatrix = np.zeros((n, n))
+            for i in range(0, n):
+                for j in range(0, n):
+                    J_ij = sp.diff(g[i](*sym_x), sym_x[j])
+                    temp = sp.lambdify(sym_x, J_ij)(*x)
+                    if isinstance(temp, type(np.array([1]))): temp = temp[0]
+                    jacMatrix[i][j] = temp
+            return jacMatrix
+        f, x0 = np.array(f), np.array(x0)
+        for each in symbols:
+            if isinstance(each, type(sp.Symbol('x'))): continue
+            else: sys.exit('')
+        if not isinstance(N, int): sys.exit('')
+        n = len(x0)
+        if normType == 0:
+            tol = []
+            for p in powers: tol.append(10**p)
+        else: tol = 10**powers
+        f, x0 = np.reshape(f, (1, n))[0], np.reshape(x0, (n, 1))
+        for k in range(1, N):
+            J = jacobian(f, symbols, x0)
+            xk, g = np.zeros_like(x0), np.zeros_like(x0)
+            for i in range(0, n): 
+                g[i] = sp.lambdify(symbols, f[i](*symbols))(*x0)
+            y0 = np.linalg.solve(J, -g)
+            xk = x0 + y0
+            if normType == 0:
+                boolean = []
+                for i in range(0, n-1):
+                    if abs(xk[i] - x0[i])[0] <= tol[i]: boolean.append(1)
+                    else: boolean.append(0)
+                x0 = xk
+                if sum(boolean) < n: continue
+                else: break
+            elif normType == 'infinity':
+                norm = l_infinity_norm(xk, x0)
+                if norm <= tol: return xk
+                else: x0 = xk
+            else: sys.exit('')
+        return x0
 
 def secant_method(f, k, a, b, p0, p1, power):
     """Given f(x) and initial guesses, `p0` and `p1` in [`a`,`b`], find x within tolerance, `tol`.
@@ -1602,7 +1655,7 @@ class cubic_spline:
                 i += 1
             return Y, A, B, C, D
         sym_X, sym_f, sym_fp = 'X', 'f', 'fp' # varname(X), varname(f), varname(fp)
-        bad_X = 'Input domain, ' + sym_x + ' was neither an n x 1 nor a 1 x n array.'
+        bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
         bad_f = 'Input range, ' + sym_f + ' was neither function nor expression and not an n x 1 or 1 x n array.'
         bad_data = 'Arrays ' + sym_X + ' and ' + sym_f + ' must be of equal length.'
         bad_fp = 'Derivative range was neither function nor expression and not an n x 1 or 1 x n array.'
@@ -1614,11 +1667,12 @@ class cubic_spline:
             elif len(X) != len(f): sys.exit(bad_data)
             else: g = f
         elif isinstance(f, (FunctionType, sp.Expr)): g = make_array(X, f)
-        if fp != 0:
+        if np.sum(fp.shape) != 0:
             if not isinstance(fp, (FunctionType, sp.Expr)):
                 if np.sum(fp.shape) > np.sum(fp.shape[0]): sys.exit(bad_fp)
                 elif len(X) != len(fp): sys.exit(bad_fp_data)
-            elif isinstance(fp, (FunctionType, sp.Expr)): fp = make_array(X, fp)
+                else: gp = fp
+            elif isinstance(fp, (FunctionType, sp.Expr)): gp = make_array(X, fp)
         elif fp == 0:
             if isinstance(f,(FunctionType, sp.Expr)):
                 fp = sp.lambdify(x, sp.diff(f(x)))
@@ -2105,6 +2159,9 @@ def linear_least_squares(X_i, Y_i, n):
         i += 1
     return P, E
 
+def linear_interpolation(x0, y0, x1, y1, x):
+    return y0 + (x - x0)*(y1 - y0)/(x1 - x0)
+
 def newton_difference(X, FX, x0, direction=0):
     """Given a domain and range, construct some polynomial by Newton's Divided Difference.
 
@@ -2209,185 +2266,353 @@ def newton_difference(X, FX, x0, direction=0):
 # --------------------
 # numerical differentiation
 # and integration
-def composite_simpson(f, X, h=0, a=0, b=0):
-    """Find the integral of a function within some interval, using Simpson's Rule.
+class simpson:
 
-    Parameters
-    ----------
-    f : expression
-        Polynomial equation that defines graphical curve.
-    
-    X : list
-        Domain over which `f` is evaluated.
-    
-    h : float
-        Step-size through interval.
-    
-    a : float
-        Left-hand bound of interval.
-    
-    b : float
-        Right-hand bound of interval.
-    
-    Returns
-    -------
-    XJ : list
-        Values of domain at which `f` was analyzed.
-    
-    YJ : list
-        Evaluations of `f` from domain.
-    
-    F : float
-        Total area under curve, `f`.
+    def open(f, X, h=0, a=0, b=0):
+        """Find the integral of a function within some interval, using Simpson's Rule.
 
-    Raises
-    ------
-    bad_X : string
-        If {`X_i`} is neither n x 1 nor 1 x n array.
-    
-    bad_f : string
-        If {`f`} is not an expression.
+        Parameters
+        ----------
+        f : expression
+            Polynomial equation that defines graphical curve.
+        
+        X : list
+            Domain over which `f` is evaluated.
+        
+        h : float
+            Step-size through interval.
+        
+        a : float
+            Left-hand bound of interval.
+        
+        b : float
+            Right-hand bound of interval.
+        
+        Returns
+        -------
+        XJ : list
+            Values of domain at which `f` was analyzed.
+        
+        YJ : list
+            Evaluations of `f` from domain.
+        
+        F : float
+            Total area under curve, `f`.
 
-    Warns
-    -----
-    func_func : string
-        Evaluate input expression for Newton difference approximation.
-    
-    Notes
-    -----
-    `X = 0` if not a list nor n x 1 or 1 x n array.
+        Raises
+        ------
+        bad_X : string
+            If {`X_i`} is neither n x 1 nor 1 x n array.
+        
+        bad_f : string
+            If {`f`} is not an expression.
 
-    Unless specified and if `X` is defined, `a` and `b` will be the minimum and maximum, respectively, of `X`.
+        Warns
+        -----
+        func_func : string
+            Evaluate input expression for Newton difference approximation.
+        
+        Notes
+        -----
+        `X = 0` if not a list nor n x 1 or 1 x n array.
 
-    Theorem:
-    Let f be in C4[a,b], n be even, h = (b-a)/n, and xj = a + jh for j = 0, 1, ..., n. There exists a mu in (a,b) for which the quadrature for n sub-intervals can be written with its error term as:
-    int_(a)^(b)f(x)dx = h[f(a) + 2*[sum_(j=1)^(n/2 - 1){f(x_(2j))}] + 4*[sum_(j=1)^(n/2){f(x_(2j-1))}] + f(b)]/3 - (b-a)*(h^4)f''''(mu)/180.
+        Unless specified and if `X` is defined, `a` and `b` will be the minimum and maximum, respectively, of `X`.
 
-    Where: (b-a)*(h^4)f''''(mu)/180 -> O(h^4)
-    """
-    X = np.array(X)
-    sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
-    bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
-    bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
-    func_func = 'Input expression used.'
-    if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
-    if not isinstance(f,(FunctionType, sp.Expr)):
-        if np.sum(f.shape) > np.sum(f.shape[0]): sys.exit(bad_X)
-        else: sys.exit(bad_f)
-    if isinstance(f,(FunctionType, sp.Expr)): print(func_func)
-    if h == 0: h = X[1]-X[0]
-    if a == 0: a = min(X)
-    if b == 0: b = max(X)
-    h, a, b = float(h), float(a), float(b)
-    n = math.ceil((b-a)/h)
-    XJ1, XJ2, XJ, = [], [], []
-    YJ1, YJ2, YJ, = [], [], []
-    XJ.append(a); YJ.append(f(a))
-    j, z1 = 1, 0
-    while j <= (n/2)-1:
-        xj = a + 2*j*h
-        yj = f(xj)
-        XJ1.append(xj); YJ1.append(yj)
-        z1 += yj
-        j += 1
-    k, z2 = 1, 0
-    while k <= n/2:
-        xj = a + (2*k - 1)*h
-        yj = f(xj)
-        XJ2.append(xj); YJ2.append(yj)
-        z2 += yj
-        k += 1
-    l = 0
-    while l < np.array(XJ1).shape[0]:
-        XJ.append(XJ2[l]); YJ.append(YJ2[l])
-        XJ.append(XJ1[l]); YJ.append(YJ1[l])
-        l += 1
-    XJ.append(XJ2[l]); YJ.append(YJ2[l])
-    XJ.append(b); YJ.append(f(b))
-    F = h/3*(f(a) + 2*z1 + 4*z2 + f(b))
-    return XJ, YJ, F
+        Theorem:
+        Let f be in C4[a,b], n be even, h = (b-a)/n, and xj = a + jh for j = 0, 1, ..., n. There exists a mu in (a,b) for which the quadrature for n sub-intervals can be written with its error term as:
+        int_(a)^(b)f(x)dx = h[f(a) + 2*[sum_(j=1)^(n/2 - 1){f(x_(2j))}] + 4*[sum_(j=1)^(n/2){f(x_(2j-1))}] + f(b)]/3 - (b-a)*(h^4)f''''(mu)/180.
 
-def composite_trapezoidal(f, X, h, a=0, b=0):
-    """Find the integral of a function within some interval, using Trapezoidal Rule.
-
-    Parameters
-    ----------
-    f : expression
-        Polynomial equation that defines graphical curve.
-    
-    X : list
-        Domain over which `f` is evaluated.
-
-    h : float
-        Step-size through interval.
-    
-    a : float
-        Left-hand bound of interval.
-    
-    b : float
-        Right-hand bound of interval.
-    
-    Returns
-    -------
-    XJ : list
-        Values of domain at which `f` was analyzed.
-    
-    YJ : list
-        Evaluations of `f` from domain.
-    
-    F : float
-        Total area under curve, `f`.
-
-    Raises
-    ------
-    bad_X : string
-        If {`X_i`} is neither n x 1 nor 1 x n array.
-    
-    bad_f : string
-        If {`f`} is not an expression.
-
-    Warns
-    -----
-    func_func : string
-        Evaluate input expression for Newton difference approximation.
-    
-    Notes
-    -----
-    `X = 0` if not a list nor n x 1 or 1 x n array.
-
-    Unless specified and if `X` is defined, `a` and `b` will be the minimum and maximum, respectively, of `X`.
-
-    Theorem:
-    Let f be in C2[a,b], h = (b-a)/n, and xj = a + jh for j = 0, 1, ..., n. There exists a mu in (a,b) for which the quadrature for n sub-intervals can be written with its error term as:
-    int_(a)^(b)f(x)dx = h[f(a) + 2*[sum_(j=1)^(n - 1){f(xj)}] + f(b)]/2 - (b-a)*(h^2)f''(mu)/12.
-
-    Where: (b-a)*(h^2)f''(mu)/12 -> O(h^2)
-    """
-    X = np.array(X)
-    sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
-    bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
-    bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
-    func_func = 'Input expression used.'
-    if not isinstance(f,(FunctionType, sp.Expr)):
+        Where: (b-a)*(h^4)f''''(mu)/180 -> O(h^4)
+        """
+        X = np.array(X)
+        sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
+        bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+        bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
+        func_func = 'Input expression used.'
         if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
-        else: sys.exit(bad_f)
-    if isinstance(f,(FunctionType, sp.Expr)): print(func_func)
-    if a == 0: a = min(X)
-    if b == 0: b = max(X)
-    h, a, b = float(h), float(a), float(b)
-    XJ, YJ = [], []
-    XJ.append(a); YJ.append(f(a))
-    j, n, z = 1, math.ceil((b-a)/h), 0
-    while j <= n-1:
-        x_j = a + j*h
-        XJ.append(x_j)
-        y_j = f(x_j)
-        YJ.append(y_j)
-        z += y_j
-        j += 1
-    XJ.append(b); YJ.append(f(b))
-    F = h/2*(f(a) + 2*z + f(b))
-    return XJ, YJ, F
+        if not isinstance(f,(FunctionType, sp.Expr)):
+            if np.sum(f.shape) > np.sum(f.shape[0]): sys.exit(bad_X)
+            else: sys.exit(bad_f)
+        if isinstance(f,(FunctionType, sp.Expr)): print(func_func)
+        if h == 0: h = X[1]-X[0]
+        if a == 0: a = min(X)
+        if b == 0: b = max(X)
+        h, a, b = float(h), float(a), float(b)
+        n = math.ceil((b-a)/h)
+        XJ1, XJ2, XJ, = [], [], []
+        YJ1, YJ2, YJ, = [], [], []
+        XJ.append(a); YJ.append(f(a))
+        j, z1 = 1, 0
+        while j <= (n/2)-1:
+            xj = a + 2*j*h
+            yj = f(xj)
+            XJ1.append(xj); YJ1.append(yj)
+            z1 += yj
+            j += 1
+        k, z2 = 1, 0
+        while k <= n/2:
+            xj = a + (2*k - 1)*h
+            yj = f(xj)
+            XJ2.append(xj); YJ2.append(yj)
+            z2 += yj
+            k += 1
+        l = 0
+        while l < np.array(XJ1).shape[0]:
+            XJ.append(XJ2[l]); YJ.append(YJ2[l])
+            XJ.append(XJ1[l]); YJ.append(YJ1[l])
+            l += 1
+        XJ.append(XJ2[l]); YJ.append(YJ2[l])
+        XJ.append(b); YJ.append(f(b))
+        F = h/3*(f(a) + 2*z1 + 4*z2 + f(b))
+        return XJ, YJ, F
+    
+    def closed(f, X, h=0, a=0, b=0):
+        """Find the integral of a function within some interval, using Simpson's Rule.
+
+        Parameters
+        ----------
+        f : expression
+            Polynomial equation that defines graphical curve.
+        
+        X : list
+            Domain over which `f` is evaluated.
+        
+        h : float
+            Step-size through interval.
+        
+        a : float
+            Left-hand bound of interval.
+        
+        b : float
+            Right-hand bound of interval.
+        
+        Returns
+        -------
+        XJ : list
+            Values of domain at which `f` was analyzed.
+        
+        YJ : list
+            Evaluations of `f` from domain.
+        
+        F : float
+            Total area under curve, `f`.
+
+        Raises
+        ------
+        bad_X : string
+            If {`X_i`} is neither n x 1 nor 1 x n array.
+        
+        bad_f : string
+            If {`f`} is not an expression.
+
+        Warns
+        -----
+        func_func : string
+            Evaluate input expression for Newton difference approximation.
+        
+        Notes
+        -----
+        `X = 0` if not a list nor n x 1 or 1 x n array.
+
+        Unless specified and if `X` is defined, `a` and `b` will be the minimum and maximum, respectively, of `X`.
+
+        Theorem:
+        Let f be in C4[a,b], n be even, h = (b-a)/n, and xj = a + jh for j = 0, 1, ..., n. There exists a mu in (a,b) for which the quadrature for n sub-intervals can be written with its error term as:
+        int_(a)^(b)f(x)dx = h[f(a) + 2*[sum_(j=1)^(n/2 - 1){f(x_(2j))}] + 4*[sum_(j=1)^(n/2){f(x_(2j-1))}] + f(b)]/3 - (b-a)*(h^4)f''''(mu)/180.
+
+        Where: (b-a)*(h^4)f''''(mu)/180 -> O(h^4)
+        """
+        X = np.array(X)
+        sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
+        bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+        other_bad_X = 'Input domain, ' + sym_X + ' must be only 4 elements!'
+        bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
+        func_func = 'Input expression used.'
+        if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
+        if np.sum(X.shape[0]) != 4: sys.exit('ERROR! ' + other_bad_X)
+        if not isinstance(f,(FunctionType, sp.Expr)):
+            f = np.array(f)
+            if np.sum(f.shape) == np.sum(f.shape[0]) and np.sum(f.shape) == 4: Y = np.array(f)
+            elif np.sum(f.shape) > np.sum(f.shape[0]): sys.exit(bad_X)
+            else: sys.exit(bad_f)
+        if h == 0: h = X[1]-X[0]
+        if a == 0: a = min(X)
+        if b == 0: b = max(X)
+        if isinstance(f,(FunctionType, sp.Expr)): 
+            print(func_func)
+            Y = make_array(X, f)
+            if a < np.min(X): Y[0] = f(a)
+            if b > np.max(X): Y[3] = f(b)
+        h, a, b = float(h), float(a), float(b)
+        F = 3*h/8*(Y[0] + 3*(Y[1] + Y[2]) + Y[3])
+        return X, Y, F
+
+class trapezoidal:
+
+    def open(f, X, h=0, a=0, b=0):
+        """Find the integral of a function within some interval, using Trapezoidal Rule.
+
+        Parameters
+        ----------
+        f : expression
+            Polynomial equation that defines graphical curve.
+        
+        X : list
+            Domain over which `f` is evaluated.
+
+        h : float
+            Step-size through interval.
+        
+        a : float
+            Left-hand bound of interval.
+        
+        b : float
+            Right-hand bound of interval.
+        
+        Returns
+        -------
+        XJ : list
+            Values of domain at which `f` was analyzed.
+        
+        YJ : list
+            Evaluations of `f` from domain.
+        
+        F : float
+            Total area under curve, `f`.
+
+        Raises
+        ------
+        bad_X : string
+            If {`X_i`} is neither n x 1 nor 1 x n array.
+        
+        bad_f : string
+            If {`f`} is not an expression.
+
+        Warns
+        -----
+        func_func : string
+            Evaluate input expression for Newton difference approximation.
+        
+        Notes
+        -----
+        `X = 0` if not a list nor n x 1 or 1 x n array.
+
+        Unless specified and if `X` is defined, `a` and `b` will be the minimum and maximum, respectively, of `X`.
+
+        Theorem:
+        Let f be in C2[a,b], h = (b-a)/n, and xj = a + jh for j = 0, 1, ..., n. There exists a mu in (a,b) for which the quadrature for n sub-intervals can be written with its error term as:
+        int_(a)^(b)f(x)dx = h[f(a) + 2*[sum_(j=1)^(n - 1){f(xj)}] + f(b)]/2 - (b-a)*(h^2)f''(mu)/12.
+
+        Where: (b-a)*(h^2)f''(mu)/12 -> O(h^2)
+        """
+        X = np.array(X)
+        sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
+        bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+        bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
+        func_func = 'Input expression used.'
+        if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
+        if not isinstance(f,(FunctionType, sp.Expr)):
+            if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
+            else: sys.exit(bad_f)
+        if isinstance(f,(FunctionType, sp.Expr)): print(func_func)
+        if h == 0: h = X[1]-X[0]
+        if a == 0: a = min(X)
+        if b == 0: b = max(X)
+        h, a, b = float(h), float(a), float(b)
+        XJ, YJ = [], []
+        XJ.append(a); YJ.append(f(a))
+        j, n, z = 1, math.ceil((b-a)/h), 0
+        while j <= n-1:
+            x_j = a + j*h
+            XJ.append(x_j)
+            y_j = f(x_j)
+            YJ.append(y_j)
+            z += y_j
+            j += 1
+        XJ.append(b); YJ.append(f(b))
+        F = h/2*(f(a) + 2*z + f(b))
+        return XJ, YJ, F
+    
+    def closed(f, X, h=0, a=0, b=0):
+        """Find the integral of a function within some interval, using Trapezoidal Rule.
+
+        Parameters
+        ----------
+        f : expression
+            Polynomial equation that defines graphical curve.
+        
+        X : list
+            Domain over which `f` is evaluated.
+
+        h : float
+            Step-size through interval.
+        
+        a : float
+            Left-hand bound of interval.
+        
+        b : float
+            Right-hand bound of interval.
+        
+        Returns
+        -------
+        XJ : list
+            Values of domain at which `f` was analyzed.
+        
+        YJ : list
+            Evaluations of `f` from domain.
+        
+        F : float
+            Total area under curve, `f`.
+
+        Raises
+        ------
+        bad_X : string
+            If {`X_i`} is neither n x 1 nor 1 x n array.
+        
+        bad_f : string
+            If {`f`} is not an expression.
+
+        Warns
+        -----
+        func_func : string
+            Evaluate input expression for Newton difference approximation.
+        
+        Notes
+        -----
+        `X = 0` if not a list nor n x 1 or 1 x n array.
+
+        Unless specified and if `X` is defined, `a` and `b` will be the minimum and maximum, respectively, of `X`.
+
+        Theorem:
+        Let f be in C2[a,b], h = (b-a)/n, and xj = a + jh for j = 0, 1, ..., n. There exists a mu in (a,b) for which the quadrature for n sub-intervals can be written with its error term as:
+        int_(a)^(b)f(x)dx = h[f(a) + 2*[sum_(j=1)^(n - 1){f(xj)}] + f(b)]/2 - (b-a)*(h^2)f''(mu)/12.
+
+        Where: (b-a)*(h^2)f''(mu)/12 -> O(h^2)
+        """
+        X = np.array(X)
+        sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
+        bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+        other_bad_X = 'Input domain, ' + sym_X + ' must be only 2 elements!'
+        bad_f = 'Input range, ' + sym_f + ' must be expression, not list or tuple.'
+        func_func = 'Input expression used.'
+        if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
+        if np.sum(X.shape[0]) != 2: sys.exit('ERROR! ' + other_bad_X)
+        if not isinstance(f,(FunctionType, sp.Expr)):
+            f = np.array(f)
+            if np.sum(f.shape) == np.sum(f.shape[0]) and np.sum(f.shape) == 2: Y = np.array(f)
+            elif np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
+            else: sys.exit(bad_f)
+        if h == 0: h = X[1]-X[0]
+        if a == 0: a = min(X)
+        if b == 0: b = max(X)
+        if isinstance(f,(FunctionType, sp.Expr)): 
+            print(func_func)
+            Y = make_array(X, f)
+            if a < np.min(X): Y[0] = f(a)
+            if b > np.max(X): Y[1] = f(b)
+        h, a, b = float(h), float(a), float(b)
+        F = h/2*(Y[0] + Y[1])
+        return X, Y, F
 
 def endpoint(X, Y, h, point_type, which_end):
     """Find the derivative at an endpoint of data set.
@@ -2433,7 +2658,7 @@ def endpoint(X, Y, h, point_type, which_end):
     -----
     5 point is more accurate than 3 point; however, round-off error increases.
     """
-    sym_x, sym_Y = 'X', 'Y' # varname(X), varname(Y)
+    sym_X, sym_Y = 'X', 'Y' # varname(X), varname(Y)
     bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
     bad_Y = 'Input range, ' + sym_Y + ' was neither an n x 1 nor a 1 x n array.'
     bad_data = 'Arrays ' + sym_X + ' and ' + sym_Y + ' must be of equal length.'
@@ -2671,7 +2896,7 @@ class ode:
         bad_N = 'Desired number of iterations must be integer and non-zero.'
         if not isinstance(f,(FunctionType, sp.Expr)): sys.exit('ERROR! ' + bad_f)
         if not isinstance(N,(int)) or N == 0: sys.exit('ERROR!\n' + bad_N)
-        h, t, w, T, W, I = (tn - t0) / N, float(x0), float(w0), [], [], []
+        h, t, w, T, W, I = (tn - t0) / N, t0, float(w0), [], [], []
         T.append(t); W.append(w)
         print('\n-----------SOLUTION-----------')
         print('------------------------------')    
@@ -2684,9 +2909,10 @@ class ode:
             K3 = h*f(t + h/2, w + K2/2)
             K4 = h*f(t + h, w + K3)
             w += (K1 + 2*K2 + 2*K3 + K4) / 6
-            t += i*h
+            t += h
             T.append(t); W.append(w); I.append(i)
-            print('%.0f\t%.4f\t%.4f\t%.4f'% (i,t,w0,w) )
+            if isinstance(t, (FunctionType, sp.Expr)): print('%s\t%s\t%s\t%s'% (i,t,w0,w) )
+            else: print('%.0f\t%.4f\t%.4f\t%.4f'% (i,t,w0,w) )
         print('------------------------------')
         I.append(N)
         return T, W, I
@@ -2715,48 +2941,8 @@ class test:                     # test class
 ## End of Code
 # test.test()     # 'Test complete.'
 #   #   #   #   #   #   #   #   #
-def multi_variate(f, symbols, x0, powers, N, normType=0):
-    def jacobian(g, sym_x, x):
-        n = len(x)
-        jacMatrix = np.zeros((n, n))
-        for i in range(0, n):
-            for j in range(0, n):
-                J_ij = sp.diff(g[i](*sym_x), sym_x[j])
-                temp = sp.lambdify(sym_x, J_ij)(*x)
-                if isinstance(temp, type(np.array([1]))): temp = temp[0]
-                jacMatrix[i][j] = temp
-        return jacMatrix
-    f, x0 = np.array(f), np.array(x0)
-    for each in symbols:
-        if isinstance(each, type(sp.Symbol('x'))): continue
-        else: sys.exit('')
-    if not isinstance(N, int): sys.exit('')
-    n = len(x0)
-    if normType == 0:
-        tol = []
-        for p in powers: tol.append(10**p)
-    else: tol = 10**powers
-    f, x0 = np.reshape(f, (1, n))[0], np.reshape(x0, (n, 1))
-    for k in range(1, N):
-        J = jacobian(f, symbols, x0)
-        xk, g = np.zeros_like(x0), np.zeros_like(x0)
-        for i in range(0, n): 
-            g[i] = sp.lambdify(symbols, f[i](*symbols))(*x0)
-        y0 = np.linalg.solve(J, -g)
-        xk = x0 + y0
-        if normType == 0:
-            boolean = []
-            for i in range(0, n-1):
-                if abs(xk[i] - x0[i])[0] <= tol[i]: boolean.append(1)
-                else: boolean.append(0)
-            x0 = xk
-            if sum(boolean) < n: continue
-            else: break
-        elif normType == 'infinity':
-            norm = l_infinity_norm(xk, x0)
-            if norm <= tol: return xk
-            else: x0 = xk
-        else: sys.exit('')
-    return x0
 
-if isinstance(sym_x, (FunctionType, sp.Expr)): print('True')
+ball_v0 = np.array([[0], [math.e]])
+ball_v = np.array([math.e, math.pi])
+print(l_2_norm(ball_v, ball_v0))
+# print(spectral_radius(ball_v*np.reshape(ball_v0, (2, 1))))
