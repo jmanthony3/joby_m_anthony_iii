@@ -135,7 +135,7 @@ def spectral_radius(A):
     rho = np.max(np.abs(eigen_values(A)))
     return rho
 # preceded by spectral_radius
-def l_2_norm(x, x0=0):
+def l_2_norm(x, x0=[]):
     """Square root of sum of differences squared along i'th row.
 
     Parameters
@@ -166,14 +166,15 @@ def l_2_norm(x, x0=0):
     if x0.shape[0] == 0:
         # initialize loop
         i, norm_i = 0, np.zeros_like(x)
-        while i < len(x):
-            j = 0
-            while j <= len(x[0]):
+        if np.sum(x.shape) == x.shape[0]:
+            for i in range(len(x)):
                 # evaluate and store norm, ||.||
                 norm_i[i] += x[i]**2
-                j += 1      # iterate to j + 1 column
-            i += 1          # iterate to i + 1
-        l2_norm = math.sqrt(np.sum(norm_i))
+            l2_norm = math.sqrt(np.sum(norm_i))
+        elif np.sum(x.shape) > x.shape[0]:
+            x0 = np.reshape(x, (x.shape[0], x.shape[1]))
+            xt = np.reshape(x, (x.shape[1], x.shape[0]))
+            l2_norm = math.sqrt(spectral_radius(x0*xt))
     elif len(x) == len(x0):
         if np.sum(x0.shape) > x0.shape[0]:
             x0 = np.reshape(x0, (x0.shape[0], x0.shape[1]))
@@ -186,7 +187,7 @@ def l_2_norm(x, x0=0):
     else: sys.exit("ERROR! 'x', and 'x0' must be the same size!")
     return l2_norm
 
-def l_infinity_norm(x, x0=0):
+def l_infinity_norm(x, x0=[]):
     """Maximum difference between absolute sum of i'th rows.
 
     Parameters
@@ -218,17 +219,38 @@ def l_infinity_norm(x, x0=0):
 
     ||x0 - x|| = 0.2001
     """
+    x, x0 = np.array(x), np.array(x0)
     # initialize loop
     i, norm_i = 0, np.zeros_like(x)
-    while i < len(x):
-        j = 0
-        while j < len(x[0]):
-            # evaluate and store norm, ||.||
-            if np.sum(x0.shape) > np.sum(x0.shape[0]):
-                norm_i[i] = abs(x[i][j] - x0[i][j])
-            else: norm_i[i] = abs(x[i][j])
-            j += 1      # iterate to j + 1 column
-        i += 1          # iterate to i + 1 row
+    if x0.shape[0] == 0:
+        if np.sum(x.shape) == x.shape[0]:
+            for i in range(x.shape[0]):
+                # evaluate and store norm, ||.||
+                norm_i[i] = abs(x[i])
+        elif np.sum(x.shape) > x.shape[0]:
+            norm_ij = np.zeros_like(x)
+            for i in range(x.shape[0]):
+                for j in range(x.shape[1]):
+                    # evaluate and store norm, ||.||
+                    norm_ij[i][j] = abs(x[i][j])
+                norm_i[i] = np.sum(norm_ij[i][:])
+    elif len(x) == len(x0):
+        if np.sum(x0.shape) == x0.shape[0]:
+            for i in range(x0.shape[0]):
+                norm_i[i] = abs(x[i] - x0[i])
+        elif np.sum(x0.shape) > x0.shape[0]:
+            if np.sum(x.shape) == np.sum(x0.shape):
+                for i in range(x0.shape[0]):
+                    for j in range(x0.shape[1]):
+                        norm_ij = np.zeros_like(x)
+                        # evaluate and store norm, ||.||
+                        norm_ij[i][j] = abs(x[i][j] - x0[i][j])
+                    norm_i[i] = np.sum(norm_ij[i][:])
+            elif np.sum(x.shape) == np.sum(x0.shape):
+                for i in range(x0.shape[0]):
+                    # evaluate and store norm, ||.||
+                    norm_i[i] = abs(x[i] - x0[i])
+    else: sys.exit("ERROR! 'x', and 'x0' must be the same size!")
     # return the l_infinity norm
     return np.amax(norm_i)
 # preceded by l_2_norm and l_infinity_norm
