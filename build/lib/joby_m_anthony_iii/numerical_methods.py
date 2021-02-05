@@ -1835,9 +1835,10 @@ class cubic_spline:
         X = np.array(X)
         if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
         if not isinstance(f, (FunctionType, sp.Expr)):
+            f = np.array(f)
             if np.sum(f.shape) > np.sum(f.shape[0]): sys.exit(bad_f)
             elif len(X) != len(f): sys.exit(bad_data)
-            else: g = np.array(f)
+            else: g = f
         elif isinstance(f, (FunctionType, sp.Expr)): g = make_array(X, f)
         m = len(X)
         n = m - 1
