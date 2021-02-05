@@ -1794,7 +1794,7 @@ class cubic_spline:
             2) S'(x0) = f'(x0) and S'(xn) = f'(xn)  ->  `'clamped'`
         """
         def algorithm():
-            Y = np.array(g)
+            Y = g
             # STEP 1:   build list, h_i
             H, i = np.zeros(n), 0
             while i < n:
@@ -1832,15 +1832,16 @@ class cubic_spline:
         bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
         bad_f = 'Input range, ' + sym_f + ' was neither function nor expression and not an n x 1 or 1 x n array.'
         bad_data = 'Arrays ' + sym_X + ' and ' + sym_f + ' must be of equal length.'
+        X = np.array(X)
         if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
         if not isinstance(f, (FunctionType, sp.Expr)):
             if np.sum(f.shape) > np.sum(f.shape[0]): sys.exit(bad_f)
             elif len(X) != len(f): sys.exit(bad_data)
-            else: g = f
+            else: g = np.array(f)
         elif isinstance(f, (FunctionType, sp.Expr)): g = make_array(X, f)
         m = len(X)
         n = m - 1
-        Y, A, B, C, D = natural()
+        Y, A, B, C, D = algorithm()
         j, splines_j = 0, []
         while j <= n-1:
             xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
