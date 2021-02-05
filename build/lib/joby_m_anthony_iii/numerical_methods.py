@@ -1722,7 +1722,7 @@ class cubic_spline:
         j, splines_j = 0, []
         while j <= n-1:
             xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
-            sj = aj + bj*(x - xj) + cj*(x - xj)**2 + dj*(x - xj)**3
+            sj = aj + bj*(sym_x - xj) + cj*(sym_x - xj)**2 + dj*(sym_x - xj)**3
             splines_j.append(sj)
             j += 1
         spline = sp.simplify(sum(splines_j))
@@ -1846,7 +1846,7 @@ class cubic_spline:
         j, splines_j = 0, []
         while j <= n-1:
             xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
-            sj = aj + bj*(x - xj) + cj*(x - xj)**2 + dj*(x - xj)**3
+            sj = aj + bj*(sym_x - xj) + cj*(sym_x - xj)**2 + dj*(sym_x - xj)**3
             splines_j.append(sj)
             j += 1
         spline = sp.simplify(sum(splines_j))
