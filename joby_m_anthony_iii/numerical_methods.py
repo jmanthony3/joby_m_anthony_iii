@@ -1829,7 +1829,7 @@ class cubic_spline:
                 i += 1
             return Y, A, B, C, D
         sym_X, sym_f = 'X', 'f' # varname(X), varname(f)
-        bad_X = 'Input domain, ' + sym_x + ' was neither an n x 1 nor a 1 x n array.'
+        bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
         bad_f = 'Input range, ' + sym_f + ' was neither function nor expression and not an n x 1 or 1 x n array.'
         bad_data = 'Arrays ' + sym_X + ' and ' + sym_f + ' must be of equal length.'
         if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
