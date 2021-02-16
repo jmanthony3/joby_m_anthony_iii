@@ -1983,7 +1983,7 @@ def lagrange(X, Y, x=sp.Symbol('x')):
     yn : list
         Aggregate of Lagrangian terms.
     
-    `sp.lambdify(x, polynomial) : expression
+    sp.lambdify(x, polynomial) : expression
         Lambdified Lagrangian polynomial.
     
     bound : list
