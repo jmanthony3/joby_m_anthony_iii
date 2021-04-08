@@ -2,6 +2,7 @@
 ## Preamble
 # import necessary modules/tools
 
+import joby_m_anthony_iii
 import math
 import numpy as np
 from numpy.lib.arraysetops import isin
@@ -2086,100 +2087,161 @@ def lagrange(X, Y, x=sp.Symbol('x')):
     print(made_poly, str(polynomial))
     return yn, sp.lambdify(x, polynomial), bound, sum(bound)
 
-def linear_least_squares(X_i, Y_i, n):
-    """Given a domain and range, construct some polynomial.
+class least_squares:
+    
+    def linear(X_i, Y_i, n):
+        """Given a domain and range, construct some polynomial.
 
-    Parameters
-    ----------
-    X_i : array
-        Input domain.
-    
-    Y_i : array or expression
-        Desired/Found range of interest.
-    
-    n : int
-        Degree of polynomial.
-    
-    Returns
-    -------
-    P : expression
-        Lambdified linear least square polynomial.
-    
-    E : float
-        Total error.
+        Parameters
+        ----------
+        X_i : array
+            Input domain.
+        
+        Y_i : array or expression
+            Desired/Found range of interest.
+        
+        n : int
+            Degree of polynomial.
+        
+        Returns
+        -------
+        P : expression
+            Lambdified linear least square polynomial.
+        
+        E : float
+            Total error.
 
-    Raises
-    ------
-    bad_X : string
-        If {`X_i`} is neither n x 1 nor 1 x n array.
-    
-    bad_Y : string
-        If {`Y_i`} is neither n x 1 nor 1 x n array.
-    
-    bad_data : string
-        If {`X_i`} and {`Y_i`} are of unequal length.
-    
-    bad_n : string
-        If prescribed `n` is not an integer or is zero.
-    
-    Warns
-    -----
-    made_poly : string
-        Displays the string form of the equation.
-    """
-    def poly(X):
-        terms, k = [], 0
+        Raises
+        ------
+        bad_X : string
+            If {`X_i`} is neither n x 1 nor 1 x n array.
+        
+        bad_Y : string
+            If {`Y_i`} is neither n x 1 nor 1 x n array.
+        
+        bad_data : string
+            If {`X_i`} and {`Y_i`} are of unequal length.
+        
+        bad_n : string
+            If prescribed `n` is not an integer or is zero.
+        
+        Warns
+        -----
+        made_poly : string
+            Displays the string form of the equation.
+        """
+        def poly(X):
+            terms, k = [], 0
+            for x in X:
+                terms.append(x*(sym_x**k))
+                k += 1
+            p = sp.simplify(sum(terms))
+            err, i = 0, 0
+            for x_i in X_i:
+                px = p.subs(sym_x, x_i)
+                err += (Y_i[i] - px)**2
+                i += 1
+            return p, err
+        sym_X_i, sym_Y_i = 'X_i', 'Y_i' # varname(X_i), varname(Y_i)
+        bad_X = 'Input domain, ' + sym_X_i + ' was neither an n x 1 nor a 1 x n array.'
+        bad_Y = 'Input range, ' + sym_Y_i + ' was neither an n x 1 nor a 1 x n array.'
+        bad_data = 'Arrays ' + sym_X_i + ' and ' + sym_Y_i + ' must be of equal length.'
+        bad_n = 'Degree of polynomial must be integer and non-zero.'
+        made_poly = 'I have found your requested polynomial! P = '
+        if np.sum(X_i.shape) > np.sum(X_i.shape[0]): sys.exit(bad_X)
+        if np.sum(Y_i.shape) > np.sum(Y_i.shape[0]): sys.exit(bad_Y)
+        if len(X_i) != len(Y_i): sys.exit(bad_data)
+        if not isinstance(n,(int)) or n == 0: sys.exit(bad_n)
+        m = len(X_i)
+        A, x = np.zeros((n+1, n+1)), np.zeros((n+1,1))
+        i, b = 0, np.zeros_like(x)
+        while i <= n:
+            j = 0
+            while j <= n:
+                a_ij, k = 0, 0
+                while k < m:
+                    a_ij += (X_i[k])**(i + j)
+                    k += 1
+                A[i][j] = a_ij
+                j += 1
+            b_i, k = 0, 0
+            while k < m:
+                b_i += Y_i[k]*(X_i[k]**(i))
+                k += 1
+            b[i] = b_i
+            i += 1
+        x = np.transpose(np.linalg.solve(A, b))
+        k, X, terms = 0, x[0], []
         for x in X:
             terms.append(x*(sym_x**k))
             k += 1
-        p = sp.simplify(sum(terms))
-        err, i = 0, 0
+        polynomial = sp.simplify(sum(terms))
+        print(made_poly, str(polynomial))
+        P = sp.lambdify(sym_x, polynomial)
+        i, E = 0, 0
         for x_i in X_i:
-            px = p.subs(sym_x, x_i)
-            err += (Y_i[i] - px)**2
+            E += (Y_i[i] - P(x_i))**2
             i += 1
-        return p, err
-    sym_X_i, sym_Y_i = 'X_i', 'Y_i' # varname(X_i), varname(Y_i)
-    bad_X = 'Input domain, ' + sym_X_i + ' was neither an n x 1 nor a 1 x n array.'
-    bad_Y = 'Input range, ' + sym_Y_i + ' was neither an n x 1 nor a 1 x n array.'
-    bad_data = 'Arrays ' + sym_X_i + ' and ' + sym_Y_i + ' must be of equal length.'
-    bad_n = 'Degree of polynomial must be integer and non-zero.'
-    made_poly = 'I have found your requested polynomial! P = '
-    if np.sum(X_i.shape) > np.sum(X_i.shape[0]): sys.exit(bad_X)
-    if np.sum(Y_i.shape) > np.sum(Y_i.shape[0]): sys.exit(bad_Y)
-    if len(X_i) != len(Y_i): sys.exit(bad_data)
-    if not isinstance(n,(int)) or n == 0: sys.exit(bad_n)
-    m = len(X_i)
-    A, x = np.zeros((n+1, n+1)), np.zeros((n+1,1))
-    i, b = 0, np.zeros_like(x)
-    while i <= n:
-        j = 0
-        while j <= n:
-            a_ij, k = 0, 0
-            while k < m:
-                a_ij += (X_i[k])**(i + j)
-                k += 1
-            A[i][j] = a_ij
-            j += 1
-        b_i, k = 0, 0
-        while k < m:
-            b_i += Y_i[k]*(X_i[k]**(i))
-            k += 1
-        b[i] = b_i
-        i += 1
-    x = np.transpose(np.linalg.solve(A, b))
-    k, X, terms = 0, x[0], []
-    for x in X:
-        terms.append(x*(sym_x**k))
-        k += 1
-    polynomial = sp.simplify(sum(terms))
-    print(made_poly, str(polynomial))
-    P = sp.lambdify(sym_x, polynomial)
-    i, E = 0, 0
-    for x_i in X_i:
-        E += (Y_i[i] - P(x_i))**2
-        i += 1
-    return P, E
+        return P, E
+    
+    def power(X, Y):
+        """Given a domain and range, yield the coefficients for an equation of the form `y = A*(x^B)`.
+
+        Parameters
+        ----------
+        X : array
+            Input domain.
+        
+        Y : array or expression
+            Desired/Found range of interest.
+        
+        Returns
+        -------
+        A : float
+            Leading coefficient.
+        
+        B : float
+            Exponent.
+
+        Raises
+        ------
+        bad_X : string
+            If {`X`} is neither n x 1 nor 1 x n array.
+        
+        bad_Y : string
+            If {`Y`} is neither n x 1 nor 1 x n array.
+        
+        bad_data : string
+            If {`X`} and {`Y`} are of unequal length.
+        
+        Warns
+        -----
+        made_poly : string
+            Displays the string form of the equation.
+        """
+        sym_X, sym_Y = 'X', 'Y' # varname(X), varname(Y)
+        bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+        bad_Y = 'Input range, ' + sym_Y + ' was neither an n x 1 nor a 1 x n array.'
+        bad_data = 'Arrays ' + sym_X + ' and ' + sym_Y + ' must be of equal length.'
+        bad_n = 'Degree of polynomial must be integer and non-zero.'
+        made_poly = 'I have found your requested polynomial! P = '
+        X, Y = np.array(X), np.array(Y)
+        if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
+        if np.sum(Y.shape) > np.sum(Y.shape[0]): sys.exit(bad_Y)
+        if len(X) != len(Y): sys.exit(bad_data)
+        n = len(X)
+        q1, q2, q3, q4 = [], [], [], []
+        for i in range(n):
+            xi, yi = X[i], Y[i]
+            q1.append(np.log(xi)*np.log(yi))
+            q2.append(np.log(xi))
+            q3.append(np.log(yi))
+            q4.append(np.log(xi)**2)
+        num = n*np.sum(q1) - np.sum(q2)*np.sum(q3)
+        den = n*np.sum(q4) - (np.sum(q2))**2
+        b = num/den
+        a = math.exp((np.sum(q3) - b*np.sum(q2))/n)
+        return a, b
 
 def linear_interpolation(x0, y0, x1, y1, x):
     return y0 + (x - x0)*(y1 - y0)/(x1 - x0)
@@ -2964,7 +3026,8 @@ class test:                     # test class
 # test.test()     # 'Test complete.'
 #   #   #   #   #   #   #   #   #
 
-ball_v0 = np.array([[0], [math.e]])
-ball_v = np.array([[math.e], [math.pi]])
-print(l_infinity_norm(ball_v, ball_v0))
-# print(spectral_radius(ball_v*np.reshape(ball_v0, (2, 1))))
+X = [3389.830508, 6779.661017, 13559.32203, 27118.64407, 54237.28814, 108474.5763]
+Y = [11.83, 47.29, 178.36, 714.19, 2854.636, 11408.707]
+
+A, B = least_squares.power(X, Y)
+print(A, B)

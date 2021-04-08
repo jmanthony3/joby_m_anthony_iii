@@ -4,7 +4,7 @@
 
 import math
 import numpy as np
-from numpy.lib.arraysetops import isin
+import random
 from scipy.integrate import quad
 import sympy as sp
 import sys
@@ -1983,7 +1983,7 @@ def lagrange(X, Y, x=sp.Symbol('x')):
     yn : list
         Aggregate of Lagrangian terms.
     
-    `sp.lambdify(x, polynomial) : expression
+    sp.lambdify(x, polynomial) : expression
         Lambdified Lagrangian polynomial.
     
     bound : list
@@ -2088,100 +2088,161 @@ def lagrange(X, Y, x=sp.Symbol('x')):
     print(made_poly, str(polynomial))
     return yn, sp.lambdify(x, polynomial), bound, sum(bound)
 
-def linear_least_squares(X_i, Y_i, n):
-    """Given a domain and range, construct some polynomial.
+class least_squares:
+    
+    def linear(X_i, Y_i, n):
+        """Given a domain and range, construct some polynomial.
 
-    Parameters
-    ----------
-    X_i : array
-        Input domain.
-    
-    Y_i : array or expression
-        Desired/Found range of interest.
-    
-    n : int
-        Degree of polynomial.
-    
-    Returns
-    -------
-    P : expression
-        Lambdified linear least square polynomial.
-    
-    E : float
-        Total error.
+        Parameters
+        ----------
+        X_i : array
+            Input domain.
+        
+        Y_i : array or expression
+            Desired/Found range of interest.
+        
+        n : int
+            Degree of polynomial.
+        
+        Returns
+        -------
+        P : expression
+            Lambdified linear least square polynomial.
+        
+        E : float
+            Total error.
 
-    Raises
-    ------
-    bad_X : string
-        If {`X_i`} is neither n x 1 nor 1 x n array.
-    
-    bad_Y : string
-        If {`Y_i`} is neither n x 1 nor 1 x n array.
-    
-    bad_data : string
-        If {`X_i`} and {`Y_i`} are of unequal length.
-    
-    bad_n : string
-        If prescribed `n` is not an integer or is zero.
-    
-    Warns
-    -----
-    made_poly : string
-        Displays the string form of the equation.
-    """
-    def poly(X):
-        terms, k = [], 0
+        Raises
+        ------
+        bad_X : string
+            If {`X_i`} is neither n x 1 nor 1 x n array.
+        
+        bad_Y : string
+            If {`Y_i`} is neither n x 1 nor 1 x n array.
+        
+        bad_data : string
+            If {`X_i`} and {`Y_i`} are of unequal length.
+        
+        bad_n : string
+            If prescribed `n` is not an integer or is zero.
+        
+        Warns
+        -----
+        made_poly : string
+            Displays the string form of the equation.
+        """
+        def poly(X):
+            terms, k = [], 0
+            for x in X:
+                terms.append(x*(sym_x**k))
+                k += 1
+            p = sp.simplify(sum(terms))
+            err, i = 0, 0
+            for x_i in X_i:
+                px = p.subs(sym_x, x_i)
+                err += (Y_i[i] - px)**2
+                i += 1
+            return p, err
+        sym_X_i, sym_Y_i = 'X_i', 'Y_i' # varname(X_i), varname(Y_i)
+        bad_X = 'Input domain, ' + sym_X_i + ' was neither an n x 1 nor a 1 x n array.'
+        bad_Y = 'Input range, ' + sym_Y_i + ' was neither an n x 1 nor a 1 x n array.'
+        bad_data = 'Arrays ' + sym_X_i + ' and ' + sym_Y_i + ' must be of equal length.'
+        bad_n = 'Degree of polynomial must be integer and non-zero.'
+        made_poly = 'I have found your requested polynomial! P = '
+        if np.sum(X_i.shape) > np.sum(X_i.shape[0]): sys.exit(bad_X)
+        if np.sum(Y_i.shape) > np.sum(Y_i.shape[0]): sys.exit(bad_Y)
+        if len(X_i) != len(Y_i): sys.exit(bad_data)
+        if not isinstance(n,(int)) or n == 0: sys.exit(bad_n)
+        m = len(X_i)
+        A, x = np.zeros((n+1, n+1)), np.zeros((n+1,1))
+        i, b = 0, np.zeros_like(x)
+        while i <= n:
+            j = 0
+            while j <= n:
+                a_ij, k = 0, 0
+                while k < m:
+                    a_ij += (X_i[k])**(i + j)
+                    k += 1
+                A[i][j] = a_ij
+                j += 1
+            b_i, k = 0, 0
+            while k < m:
+                b_i += Y_i[k]*(X_i[k]**(i))
+                k += 1
+            b[i] = b_i
+            i += 1
+        x = np.transpose(np.linalg.solve(A, b))
+        k, X, terms = 0, x[0], []
         for x in X:
             terms.append(x*(sym_x**k))
             k += 1
-        p = sp.simplify(sum(terms))
-        err, i = 0, 0
+        polynomial = sp.simplify(sum(terms))
+        print(made_poly, str(polynomial))
+        P = sp.lambdify(sym_x, polynomial)
+        i, E = 0, 0
         for x_i in X_i:
-            px = p.subs(sym_x, x_i)
-            err += (Y_i[i] - px)**2
+            E += (Y_i[i] - P(x_i))**2
             i += 1
-        return p, err
-    sym_X_i, sym_Y_i = 'X_i', 'Y_i' # varname(X_i), varname(Y_i)
-    bad_X = 'Input domain, ' + sym_X_i + ' was neither an n x 1 nor a 1 x n array.'
-    bad_Y = 'Input range, ' + sym_Y_i + ' was neither an n x 1 nor a 1 x n array.'
-    bad_data = 'Arrays ' + sym_X_i + ' and ' + sym_Y_i + ' must be of equal length.'
-    bad_n = 'Degree of polynomial must be integer and non-zero.'
-    made_poly = 'I have found your requested polynomial! P = '
-    if np.sum(X_i.shape) > np.sum(X_i.shape[0]): sys.exit(bad_X)
-    if np.sum(Y_i.shape) > np.sum(Y_i.shape[0]): sys.exit(bad_Y)
-    if len(X_i) != len(Y_i): sys.exit(bad_data)
-    if not isinstance(n,(int)) or n == 0: sys.exit(bad_n)
-    m = len(X_i)
-    A, x = np.zeros((n+1, n+1)), np.zeros((n+1,1))
-    i, b = 0, np.zeros_like(x)
-    while i <= n:
-        j = 0
-        while j <= n:
-            a_ij, k = 0, 0
-            while k < m:
-                a_ij += (X_i[k])**(i + j)
-                k += 1
-            A[i][j] = a_ij
-            j += 1
-        b_i, k = 0, 0
-        while k < m:
-            b_i += Y_i[k]*(X_i[k]**(i))
-            k += 1
-        b[i] = b_i
-        i += 1
-    x = np.transpose(np.linalg.solve(A, b))
-    k, X, terms = 0, x[0], []
-    for x in X:
-        terms.append(x*(sym_x**k))
-        k += 1
-    polynomial = sp.simplify(sum(terms))
-    print(made_poly, str(polynomial))
-    P = sp.lambdify(sym_x, polynomial)
-    i, E = 0, 0
-    for x_i in X_i:
-        E += (Y_i[i] - P(x_i))**2
-        i += 1
-    return P, E
+        return P, E
+    
+    def power(X, Y):
+        """Given a domain and range, yield the coefficients for an equation of the form `y = A*(x^B)`.
+
+        Parameters
+        ----------
+        X : array
+            Input domain.
+        
+        Y : array or expression
+            Desired/Found range of interest.
+        
+        Returns
+        -------
+        A : float
+            Leading coefficient.
+        
+        B : float
+            Exponent.
+
+        Raises
+        ------
+        bad_X : string
+            If {`X`} is neither n x 1 nor 1 x n array.
+        
+        bad_Y : string
+            If {`Y`} is neither n x 1 nor 1 x n array.
+        
+        bad_data : string
+            If {`X`} and {`Y`} are of unequal length.
+        
+        Warns
+        -----
+        made_poly : string
+            Displays the string form of the equation.
+        """
+        sym_X, sym_Y = 'X', 'Y' # varname(X), varname(Y)
+        bad_X = 'Input domain, ' + sym_X + ' was neither an n x 1 nor a 1 x n array.'
+        bad_Y = 'Input range, ' + sym_Y + ' was neither an n x 1 nor a 1 x n array.'
+        bad_data = 'Arrays ' + sym_X + ' and ' + sym_Y + ' must be of equal length.'
+        bad_n = 'Degree of polynomial must be integer and non-zero.'
+        made_poly = 'I have found your requested polynomial! P = '
+        X, Y = np.array(X), np.array(Y)
+        if np.sum(X.shape) > np.sum(X.shape[0]): sys.exit(bad_X)
+        if np.sum(Y.shape) > np.sum(Y.shape[0]): sys.exit(bad_Y)
+        if len(X) != len(Y): sys.exit(bad_data)
+        n = len(X)
+        q1, q2, q3, q4 = [], [], [], []
+        for i in range(n):
+            xi, yi = X[i], Y[i]
+            q1.append(np.log(xi)*np.log(yi))
+            q2.append(np.log(xi))
+            q3.append(np.log(yi))
+            q4.append(np.log(xi)**2)
+        num = n*np.sum(q1) - np.sum(q2)*np.sum(q3)
+        den = n*np.sum(q4) - (np.sum(q2))**2
+        b = num/den
+        a = math.exp((np.sum(q3) - b*np.sum(q2))/n)
+        return a, b
 
 def linear_interpolation(x0, y0, x1, y1, x):
     return y0 + (x - x0)*(y1 - y0)/(x1 - x0)
@@ -2285,6 +2346,350 @@ def newton_difference(X, FX, x0, direction=0):
     print(made_poly, str(polynomial))
     p = sp.lambdify(sym_x, polynomial)
     return p, p(x0)
+
+def sine_cosine_algorithm(
+    maxIteration = 1000,
+    dim = 20,
+    searchAgents = 30,
+    func = 8,
+    lowerBound = -5,
+    upperBound = 10,
+    dist = 3,
+    runs = 10
+    ):
+    """'"An implementation in Python of the Since Cosine Algorithm (SCA), for solving optimization problems, with different randomization methods.
+
+    GitHub: https://github.com/luizaes/sca-algorithm
+    Source: http://dx.doi.org/10.1016/j.knosys.2015.12.022
+    """
+    # Funcao de mapeamento
+    def remap(number, fromMin, fromMax, toMin, toMax):
+
+        fromAbs = number - fromMin
+        fromMaxAbs = fromMax - fromMin
+
+        normal = fromAbs / fromMaxAbs
+
+        toMaxAbs = toMax - toMin
+        toAbs = toMaxAbs * normal
+
+        to = toAbs + toMin
+
+        return to
+
+    # Funcao para calculo da diversidade
+    def diversityCalc(population, dim):
+        ciVec = []
+        for x in range(0,dim):
+            ci = 0
+            for y in range(0,len(population)):
+                ci += population[y][x] / float(len(population))
+            ciVec.append(ci)
+
+        Isd = 0
+        t1 = 0
+        t2 = 0
+        for x in range(0,dim):
+            t1 = 0
+            for y in range(0,len(population)):
+                t2 = population[y][x] - ciVec[x]
+                t1 += t2 * t2
+            Isd += math.sqrt(t1/(len(population)-1))
+        Isd /= float(dim)
+        return Isd
+
+    # Mapas caoticos
+    def logisticMap(randomNum):
+        randomNum = 4.0 * randomNum * (1 - randomNum)
+        return randomNum
+
+    # Funcoes objetivo
+    def funcObjective(individual, type):
+        fitness = 0
+        top1 = 0
+        top = 0
+
+        if type == 1:
+            # Esfera -5.12 .. 5.12
+            for x in range(0,len(individual)):
+                fitness = fitness + individual[x] ** 2
+        elif type == 2:
+            # Rosenbrock -30 .. 30
+            for x in range(0,len(individual)-1):
+                fitness = fitness + (100.0 * (individual[x+1]-individual[x]**2) ** 2) + (individual[x]-1.0) ** 2
+        elif type == 3:
+            # Rastrigin -5.12 .. 5.12
+            for x in range(0,len(individual)):
+                fitness = fitness + individual[x] ** 2 - 10 * math.cos(2*math.pi*individual[x]) + 10
+        elif type == 4:
+            # Schaffer -100 .. 100
+            for x in range(0,len(individual)):
+                top = top + (individual[x]**2)
+            top = top ** 0.25
+            for x in range(0,len(individual)):
+                top1 = top1 + (individual[x] ** 2)
+            top1 = top1 ** 0.1
+            top1 = (math.sin(50*top1)**2) +1.0
+            fitness = top * top1
+        elif type == 5:
+            # Ackley -32 .. 32
+            aux = aux1 = 0.0
+            for x in range(0, len(individual)):
+                aux = aux + (individual[x]*individual[x])
+
+            for x in range(0, len(individual)):
+                aux1 = aux1 + math.cos(2.0*math.pi*individual[x])
+
+            fitness = -20.0*(math.exp(-0.2*math.sqrt(1.0/len(individual)*aux)))-math.exp(1.0/len(individual)*aux1)+20.0+math.exp(1)
+        elif type == 6:
+            # Griewank -600 .. 600
+            top1 = 0
+            top2 = 1
+            for x in range(0, len(individual)):
+                top1 = top1 + individual[x] ** 2
+                top2 = top2 * math.cos((((individual[x])/math.sqrt((x+1)))*math.pi)/180)
+            fitness = (1/4000.0) * top1 - top2 + 1
+        elif type == 7:
+            # Schwefel -500 .. 500
+            aux = 0.0
+            for x in range(0, len(individual)):
+                aux = aux + individual[x] * math.sin(math.sqrt(math.fabs(individual[x]))) 
+            fitness = (-1*aux/len(individual))
+        elif type == 8:
+            # Zakharov -5 .. 10
+            aux = aux1 = 0
+            for x in range(0, len(individual)):
+                aux = aux + individual[x] ** 2
+                aux1 = aux1 + 0.5 * x * individual[x]
+            
+            fitness = aux + aux1 ** 2 + aux1 ** 4
+        return fitness
+
+    # Parametros
+    average = 0
+    averageNormalized = 0
+    finalSolutions = []
+    bestSolutionFinal = []
+    worstSolutionFinal = []
+    meanSolutionFinal = []
+    diversityFinal = []
+    lastBest = 0
+    std = 0
+
+    for z in range(0,runs):
+        bestSolution = []
+        bestFitness = []
+        best = 0
+        contador = 1
+        population = []
+        initialPoint = random.uniform(0.0,1.0)
+        worst = 0
+        mean = 0
+        diversity = 0
+        desvio = 1
+
+        # Geracao da Populacao Inicial
+        for x in range(0,searchAgents):
+            individual = []
+            for y in range(0,dim):
+                # Uniforme
+                if dist == 1:
+                    individual.append(random.uniform(lowerBound, upperBound))	
+                # Logistico
+                elif dist == 2:
+                    initialPoint = logisticMap(initialPoint)
+                    individual.append(remap(initialPoint, 0, 1, lowerBound, upperBound))
+                # Gaussiana
+                elif dist == 3:
+                    num = np.random.normal((lowerBound+upperBound)/2, upperBound-((lowerBound+upperBound)/2))
+                    if num < lowerBound:
+                        num = lowerBound
+                    if num > upperBound:
+                        num = upperBound
+                    individual.append(num)
+            population.append(individual)
+
+        #print(population)
+
+        mean = 0
+        # Avaliacao da Populacao Inicial
+        for x in range(0,searchAgents):
+            fitness = funcObjective(population[x], func)
+            mean = mean + fitness
+            if x == 0:
+                bestSolution = population[x]
+                best = fitness
+                worst = fitness
+            elif fitness < best:
+                best = fitness
+                bestSolution = population[x]
+            elif worst < fitness:
+                worst = fitness
+
+        mean = mean / searchAgents
+
+        diversity = diversityCalc(population, dim)
+
+        if z == 0:
+            bestSolutionFinal.append(best)
+            worstSolutionFinal.append(worst)
+            meanSolutionFinal.append(mean)
+            diversityFinal.append(diversity)
+        else:
+            bestSolutionFinal[0] = bestSolutionFinal[0] + best 
+            worstSolutionFinal[0] = worstSolutionFinal[0] + worst 
+            meanSolutionFinal[0] = meanSolutionFinal[0] + mean
+            diversityFinal[0] = diversityFinal[0] + diversity
+
+        # Algoritmo Principal
+        while contador < maxIteration:
+            a = 2
+            mean = 0
+            r1 = a-contador*((a)/maxIteration)
+
+            # Para cada agente de busca e para cada dimensao, faz o update
+            for x in range(0,searchAgents):
+                    for y in range(0,dim):
+                        # Uniforme
+                        if dist == 1:
+                            r2 = 2*math.pi*random.uniform(0.0,1.0)
+                            r3 = 2*random.uniform(0.0,1.0)	
+                            r4 = random.uniform(0.0,1.0)	
+                        # Logistico
+                        elif dist == 2:
+                            initialPoint = logisticMap(initialPoint)
+                            r2 = 2*math.pi*initialPoint
+                            initialPoint = logisticMap(initialPoint)
+                            r3 = 2*initialPoint
+                            initialPoint = logisticMap(initialPoint)
+                            r4 = initialPoint
+                        # Gaussiana
+                        elif dist == 3:
+                            r2 = np.random.normal(0.5, 0.5)
+                            if r2 < 0:
+                                r2 = 0.0
+                            if r2 > 1:
+                                r2 = 1.0
+                            r2 = 2*math.pi*r2
+                            r3 = np.random.normal(0.5, 0.5)
+                            if r3 < 0:
+                                r3 = 0.0
+                            if r3 > 1:
+                                r3 = 1.0
+                            r3 = 2*r3
+                            r4 = np.random.normal(0.5, 0.5)
+                            if r4 < 0:
+                                r4 = 0.0
+                            if r4 > 1:
+                                r4 = 1.0
+
+                    
+                        if r4 < 0.5:
+                            population[x][y] = population[x][y]+(r1*math.sin(r2)*abs(r3*bestSolution[y]-population[x][y]))
+                            if population[x][y] > upperBound or population[x][y] < lowerBound:
+                                # Uniforme
+                                if dist == 1:
+                                    population[x][y] = random.uniform(lowerBound, upperBound)
+                                # Logistico
+                                elif dist == 2:
+                                    initialPoint = logisticMap(initialPoint)
+                                    population[x][y] = remap(initialPoint, 0, 1, lowerBound, upperBound)
+                                # Gaussiana
+                                elif dist == 3:
+                                    num = np.random.normal((lowerBound+upperBound)/2, upperBound-((lowerBound+upperBound)/2))
+                                    if num < lowerBound:
+                                        num = lowerBound
+                                    if num > upperBound:
+                                        num = upperBound
+                                    population[x][y] = num
+                        else:
+                            population[x][y] = population[x][y]+(r1*math.cos(r2)*abs(r3*bestSolution[y]-population[x][y]))
+                            if population[x][y] > upperBound or population[x][y] < lowerBound:
+                                # Uniforme
+                                if dist == 1:
+                                    population[x][y] = random.uniform(lowerBound, upperBound)
+                                # Logistico
+                                elif dist == 2:
+                                    initialPoint = logisticMap(initialPoint)
+                                    population[x][y] = remap(initialPoint, 0, 1, lowerBound, upperBound)
+                                # Gaussiana
+                                elif dist == 3:
+                                    num = np.random.normal((lowerBound+upperBound)/2, upperBound-((lowerBound+upperBound)/2))
+                                    if num < lowerBound:
+                                        num = lowerBound
+                                    if num > upperBound:
+                                        num = upperBound
+                                    population[x][y] = num
+            
+            mean = 0
+            # Avalia novamente as solucoes
+            for x in range(0,searchAgents):
+                fitness = funcObjective(population[x], func)
+                mean = mean + fitness
+                if x == 0:
+                    worst = fitness
+                if fitness < best:
+                    best = fitness
+                    bestSolution = population[x]
+                elif worst < fitness:
+                    worst = fitness
+
+            mean = mean / searchAgents
+
+            diversity = diversityCalc(population, dim)
+
+            if z == 0:
+                bestSolutionFinal.append(best)
+                worstSolutionFinal.append(worst)
+                meanSolutionFinal.append(mean)
+                diversityFinal.append(diversity)
+            else:
+                bestSolutionFinal[contador] = bestSolutionFinal[contador] + best
+                worstSolutionFinal[contador] = worstSolutionFinal[contador] + worst
+                meanSolutionFinal[contador] = meanSolutionFinal[contador] + mean
+                diversityFinal[contador] = diversityFinal[contador] + diversity
+
+            contador = contador + 1
+            bestFitness.append(best)
+
+        print("Melhor fitness da execucao:")
+        print(best)
+        finalSolutions.append(best)
+        average = average + best
+
+    average = average/runs
+
+    for x in range(0,len(finalSolutions)):
+        std = std + (finalSolutions[x] - average) ** 2
+
+    for x in range(0,len(bestSolutionFinal)):
+        bestSolutionFinal[x] = bestSolutionFinal[x] / runs
+        worstSolutionFinal[x] = worstSolutionFinal[x] / runs
+        meanSolutionFinal[x] = meanSolutionFinal[x] / runs
+        diversityFinal[x] = diversityFinal[x] / runs
+
+    print("-------------------- Informacoes das execucoes ------------------------")
+    print("Average: " + str(average))
+    std = math.sqrt(std/len(finalSolutions))
+    print("Std: " + str(std))
+
+    #plt.gca().get_yaxis().get_major_formatter().set_useOffset(False)
+    # axes.set_xlim([0, maxIteration])
+    # axes.set_ylim([0,100])
+
+    plt.plot([i for i in reversed(range(999))],[float(bestSolutionFinal[i]) for i in reversed(range(999))])
+    plt.plot([i for i in reversed(range(999))],[float(worstSolutionFinal[i]) for i in reversed(range(999))])
+    plt.plot([i for i in reversed(range(999))],[float(meanSolutionFinal[i]) for i in reversed(range(999))])
+    plt.ylabel('Fitness')
+    plt.xlabel('Iterations')
+    plt.title('Convergence Graph')
+    plt.show()
+
+    plt.plot([i for i in reversed(range(999))],[(round(diversityFinal[i], 2)) for i in reversed(range(999))])
+    plt.ylabel('Diversity')
+    plt.xlabel('Iterations')
+    plt.title('Diversity Graph')
+    plt.show()
 # --------------------
 
 # --------------------
