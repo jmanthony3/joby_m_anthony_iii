@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
   name = 'joby_m_anthony_iii',
-  version = '1.4.7',
+  version = '1.4.8',
   author = 'Joby M. Anthony III',
   author_email = 'jmanthony1@liberty.edu',
   description = 'Numerical methods/techniques.',
