@@ -1,0 +1,6 @@
+pip install --upgrade build pip
+py -m build
+pip install --upgrade twine
+py -m twine upload --repository testpypi dist/*
+py -m twine upload --repository pypi dist/*
+pip install --upgrade joby_m_anthony_iii

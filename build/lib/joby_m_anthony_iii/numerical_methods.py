@@ -506,7 +506,7 @@ def max_iterations(a, b, power, method, k=0, p0=0):
             N_max = math.ceil(math.log(tol/max(p0 - a, b - p0))/math.log(k))
             break
         else: continue
-    else: sys.exit('ERROR! ', bad_method)
+    else: sys.exit('ERROR! ' + bad_method)
     print(number_of_iter, N_max)
     return N_max
 
@@ -588,9 +588,9 @@ def bisection(f, a, b, power):
             if i < N: print('Congratulations! ', solution_found)
             else: print('Warning! ', solution_not_found)
         # abort if f(a) is not opposite f(b)
-        else: sys.exit('ERROR! ', opposite_signs)
+        else: sys.exit('ERROR! ' + opposite_signs)
     # abort if not expression
-    else: sys.exit('ERROR! ', must_be_expression)
+    else: sys.exit('ERROR! ' + must_be_expression)
     return P, ERROR, I
 
 def false_position(f, k, a, b, p0, p1, power):
@@ -693,9 +693,9 @@ def false_position(f, k, a, b, p0, p1, power):
             if i < N: print('Congratulations! ', solution_found)
             else: print('Warning! ', solution_not_found)
         # abort if f(a) is not opposite f(b)
-        else: sys.exit('ERROR! ', opposite_signs)
+        else: sys.exit('ERROR! ' + opposite_signs)
     # abort if not expression
-    else: sys.exit('ERROR! ', must_be_expression)
+    else: sys.exit('ERROR! ' + must_be_expression)
     return P, ERROR, I
 
 def fixed_point(f, k, a, b, p0, power):
@@ -787,7 +787,7 @@ def fixed_point(f, k, a, b, p0, power):
         if i < N: print('Congratulations! ', solution_found)
         else: print('Warning! ', solution_not_found)
     # abort if not expression
-    else: sys.exit('ERROR! ', must_be_expression)
+    else: sys.exit('ERROR! ' + must_be_expression)
     return P, ERROR, I
 
 class newton_raphson:
@@ -900,7 +900,7 @@ class newton_raphson:
             if i < N: print('Congratulations! ', solution_found)
             else: print('Warning! ', solution_not_found)
         # abort if not expression
-        else: sys.exit('ERROR! ', must_be_expression)
+        else: sys.exit('ERROR! ' + must_be_expression)
         return P, ERROR, I
     
     def multi_variate(f, symbols, x0, powers, N, normType=0):
@@ -1049,9 +1049,9 @@ def secant_method(f, k, a, b, p0, p1, power):
             if i < N: print('Congratulations! ', solution_found)
             else: print('Warning! ', solution_not_found)
         # abort if f(a) is not opposite f(b)
-        else: sys.exit('ERROR! ', opposite_signs)
+        else: sys.exit('ERROR! ' + opposite_signs)
     # abort if not expression
-    else: sys.exit('ERROR! ', must_be_expression)
+    else: sys.exit('ERROR! ' + must_be_expression)
     return P, ERROR, I
 
 # systems of equations
@@ -1141,11 +1141,11 @@ def jacobi(A, x0, b, N, power, norm_type):
     bad_N = "Maximum iterations, N must be an integer greater than zero."
     bad_type = "Desired norm type was not understood. Please choose 'l_infinity' or 'l_2'."
     A = np.array(A)
-    if len(A) != len(A[0]): sys.exit('ERROR! ', bad_matrix)
-    if np.sum(x0.shape) > np.sum(x0.shape[0]): sys.exit('ERROR! ', bad_x0)
-    if np.sum(b.shape) > np.sum(b.shape[0]): sys.exit('ERROR! ', bad_b)
-    if N <= 0 or not isinstance(N, int): sys.exit('ERROR! ', bad_N)
-    if norm_type != 'l_infinity' and norm_type != 'l_2': sys.exit('ERROR! ', bad_type)
+    if len(A) != len(A[0]): sys.exit('ERROR! ' + bad_matrix)
+    if np.sum(x0.shape) > np.sum(x0.shape[0]): sys.exit('ERROR! ' + bad_x0)
+    if np.sum(b.shape) > np.sum(b.shape[0]): sys.exit('ERROR! ' + bad_b)
+    if N <= 0 or not isinstance(N, int): sys.exit('ERROR! ' + bad_N)
+    if norm_type != 'l_infinity' and norm_type != 'l_2': sys.exit('ERROR! ' + bad_type)
     diagonality(A)
     tol = float(10**power)
     n = len(x0)
@@ -1265,11 +1265,11 @@ def gauss_seidel(A, x0, b, N, power, norm_type):
     bad_N = "Maximum iterations, N must be an integer greater than zero."
     bad_type = "Desired norm type was not understood. Please choose 'l_infinity' or 'l_2'."
     A = np.array(A)
-    if len(A) != len(A[0]): sys.exit('ERROR! ', bad_matrix)
-    if np.sum(x0.shape) > np.sum(x0.shape[0]): sys.exit('ERROR! ', bad_x0)
-    if np.sum(b.shape) > np.sum(b.shape[0]): sys.exit('ERROR! ', bad_b)
-    if N <= 0 or not isinstance(N, int): sys.exit('ERROR! ', bad_N)
-    if norm_type != 'l_infinity' and norm_type != 'l_2': sys.exit('ERROR! ', bad_type)
+    if len(A) != len(A[0]): sys.exit('ERROR! ' + bad_matrix)
+    if np.sum(x0.shape) > np.sum(x0.shape[0]): sys.exit('ERROR! ' + bad_x0)
+    if np.sum(b.shape) > np.sum(b.shape[0]): sys.exit('ERROR! ' + bad_b)
+    if N <= 0 or not isinstance(N, int): sys.exit('ERROR! ' + bad_N)
+    if norm_type != 'l_infinity' and norm_type != 'l_2': sys.exit('ERROR! ' + bad_type)
     diagonality(A)
     tol = float(10**power)
     n = len(x0)
@@ -1504,11 +1504,11 @@ def successive_relaxation(A, x0, b, N, power, norm_type, w=0):
     optimal_omega = 'w = ' + str(w) + ' given. Which is not optimum: '
     bad_omega = 'Either a positive omega was not given, or I could not choose one.'
     A = np.array(A)
-    if len(A) != len(A[0]): sys.exit('ERROR! ', bad_matrix)
-    if np.sum(x0.shape) > np.sum(x0.shape[0]): sys.exit('ERROR! ', bad_x0)
-    if np.sum(b.shape) > np.sum(b.shape[0]): sys.exit('ERROR! ', bad_b)
-    if N <= 0 or not isinstance(N, int): sys.exit('ERROR! ', bad_N)
-    if norm_type != 'l_infinity' and norm_type != 'l_2': sys.exit('ERROR! ', bad_type)
+    if len(A) != len(A[0]): sys.exit('ERROR! ' + bad_matrix)
+    if np.sum(x0.shape) > np.sum(x0.shape[0]): sys.exit('ERROR! ' + bad_x0)
+    if np.sum(b.shape) > np.sum(b.shape[0]): sys.exit('ERROR! ' + bad_b)
+    if N <= 0 or not isinstance(N, int): sys.exit('ERROR! ' + bad_N)
+    if norm_type != 'l_infinity' and norm_type != 'l_2': sys.exit('ERROR! ' + bad_type)
     diagonality(A)
     if w == 0: 
         w = find_omega(A, x0)
