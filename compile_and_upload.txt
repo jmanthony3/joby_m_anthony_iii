@@ -1,5 +1,5 @@
 pip install --upgrade build pip twine
 py -m build
-py -m twine upload --repository testpypi dist/*
-py -m twine upload --repository pypi dist/*
+py -m twine upload --repository testpypi dist/joby_m_anthony_iii-.tar.gz
+py -m twine upload --repository pypi dist/joby_m_anthony_iii-.tar.gz
 pip install --upgrade joby_m_anthony_iii
