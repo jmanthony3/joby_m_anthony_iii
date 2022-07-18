@@ -1,0 +1,57 @@
+Metadata-Version: 2.1
+Name: joby-m-anthony-iii
+Version: 3.1.1
+Summary: Numerical methods/techniques.
+Author-email: "Joby M. Anthony III" <jmanthony1@liberty.edu>
+License: MIT License
+        
+        Copyright (c) 2022 Joby Anthony III
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        
+Project-URL: Homepage, https://github.com/jmanthony3/joby_m_anthony_iii.git
+Keywords: numerical methods
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+# joby_m_anthony_iii
+Collection of Python packages/modules.
+
+## Comments from the author
+docstrings formatted according to NumPy's https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard[convention].
+
+## Discovered links
+* https://github.com/equinor/scikit-build-example
+* https://www.codespeedy.com/creating-subclass-in-python/[class]
+* https://www.w3schools.com/python/gloss_python_class_init.asp[class_init]
+* https://johnathaningle.com/simple-derivatives-in-python/[derivatives]
+* https://www.programiz.com/python-programming/docstrings[docstrings]
+* https://stackoverflow.com/questions/27802270/how-to-stop-a-function[error_messages]
+* https://problemsolvingwithpython.com/07-Functions-and-Modules/07.05-Calling-Functions-from-Other-Files/[function_calls]
+* https://stackoverflow.com/questions/16807011/python-how-to-identify-if-a-variable-is-an-array-or-a-scalar[isinstance]
+* https://realpython.com/python-lambda/#first-example[lambda]
+* https://mathworld.wolfram.com/LeastSquaresFittingPowerLaw.html[power law]
+* https://github.com/luizaes/sca-algorithm[sca]
+* https://www.codesansar.com/numerical-methods/runge-kutta-fourth-order-rk4-python-program.htm[solution_printing]
+* https://stackoverflow.com/questions/43414128/how-does-one-check-if-a-variable-is-a-sympy-expression[sympy_expression]
+* https://exceptionshub.com/how-to-get-a-variable-name-as-a-string-in-python.html[varname]
