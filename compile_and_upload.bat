@@ -10,14 +10,14 @@ set version=%version:~1,-1%
 del src\joby_m_anthony_iii\numerical_methods.log
 del tests\numerical_methods.log
 
-pip install --upgrade build twine
-python -m build
-twine check ./dist/joby_m_anthony_iii-%version%*
+@REM pip install --upgrade build twine
+@REM python -m build
+@REM twine check ./dist/joby_m_anthony_iii-%version%*
 
 
-python -m twine upload --repository pypi ./dist/joby_m_anthony_iii-%version%.tar.gz
-timeout 5 /NOBREAK
-pip install --upgrade joby_m_anthony_iii==%version%
+@REM python -m twine upload --repository pypi ./dist/joby_m_anthony_iii-%version%.tar.gz
+@REM timeout 5 /NOBREAK
+@REM pip install --upgrade joby_m_anthony_iii==%version%
 
 echo "Compiled, uploaded, and updated to 'joby_m_anthony_iii-%version%'. Generating documentation..."
 
@@ -30,3 +30,5 @@ for /f %%i in ('type "temp"') do (
 del temp
 sed -i "%line_number%s/.*/extensions = [\n    'sphinx.ext.napoleon'\n]\nnapoleon_google_docstring = False\n/" "docs/conf.py"
 sphinx-build -b html docs/ docs/_build/html
+xcopy docs\_build\html docs /E
+del numerical_methods.log
