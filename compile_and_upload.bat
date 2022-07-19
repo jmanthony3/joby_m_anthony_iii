@@ -37,7 +37,7 @@ rmdir /Q /S docs
 
 sphinx-apidoc -f -M -F -H="joby_m_anthony_iii" -A="Joby M. Anthony III" -V="%version%" -o ./docs ./src/joby_m_anthony_iii
 
-sed -i "s/html_theme = .*/html_theme = 'classic'/" "docs/conf.py"
+sed -i "s/html_theme = .*/html_theme = 'python_docs_theme'/" "docs/conf.py"
 
 sed -n "/# -- Extension configuration /{=}" "docs/conf.py" | sed -n "1p" > temp
 for /f %%i in ('type "temp"') do (
