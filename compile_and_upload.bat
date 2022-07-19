@@ -29,6 +29,36 @@ for /f %%i in ('type "temp"') do (
 )
 del temp
 sed -i "%line_number%s/.*/extensions = [\n    'sphinx.ext.napoleon'\n]\nnapoleon_google_docstring = False\n/" "docs/conf.py"
-sphinx-build -b html docs/ docs/_build/html
-xcopy docs\_build\html docs /E
-del numerical_methods.log
+sed -n "/BUILDDIR      = _build/{=}" "docs/Makefile" | sed -n "1p" > temp
+for /f %%i in ('type "temp"') do (
+    set /A line_number=%%i
+)
+del temp
+sed -i "%line_number%s@.*@BUILDDIR      = ../../jmanthony3.github.io/joby_m_anthony_iii\nPDFBUILDDIR   = /tmp\nPDF           = ../manual.pdf\n@" "docs/Makefile"
+
+(
+echo.
+echo latexpdf:
+echo 	$^(SPHINXBUILD^) -b latex $^(ALLSPHINXOPTS^) $^(PDFBUILDDIR^)^/latex
+echo 	#                                          ^^^^^^
+echo 	@echo "Running LaTeX files through pdflatex..."
+echo 	^make -C $^(PDFBUILDDIR^)^/latex all-pdf
+echo 	#         ^^^^^^
+echo 	^copy $^(PDFBUILDDIR^)^/latex^/*.pdf $^(PDF^)
+echo 	#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+echo 	@echo "pdflatex finished; see $(PDF)"
+)>>"docs/Makefile"
+
+echo .. include:: ../../README.md> "docs/includeme.rst"
+
+sed -n "/:caption: Contents:/{=}" "docs/index.rst" | sed -n "1p" > temp
+for /f %%i in ('type "temp"') do (
+    set /A line_number=%%i+1
+)
+del temp
+sed -i "%line_number%s/.*/   includeme\n/" "docs/index.rst"
+
+@REM sphinx-build -b html docs/ docs/_build/html
+@REM sphinx-build -b html docs/ "..\\jmanthony3.github.io\\joby_m_anthony_iii\html"
+@REM del numerical_methods.log
+cd docs && make html && cd .. && xcopy "docs\_build\doctrees" "..\jmanthony3.github.io\joby_m_anthony_iii\doctrees\" /E /Y && xcopy "docs\_build\html" "..\jmanthony3.github.io\joby_m_anthony_iii\html\" /E /Y && cd docs && make latexpdf && cd .. && copy "docs\_build\latex\*.pdf" "manual.pdf"
