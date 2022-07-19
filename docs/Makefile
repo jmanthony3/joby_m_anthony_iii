@@ -6,7 +6,7 @@
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
-BUILDDIR      = ../../jmanthony3.github.io/joby_m_anthony_iii
+BUILDDIR      = ../../joby_m_anthony_iii-docs
 PDFBUILDDIR   = /tmp
 PDF           = ../manual.pdf
 

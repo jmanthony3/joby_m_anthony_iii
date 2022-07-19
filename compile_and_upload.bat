@@ -34,7 +34,7 @@ for /f %%i in ('type "temp"') do (
     set /A line_number=%%i
 )
 del temp
-sed -i "%line_number%s@.*@BUILDDIR      = ../../jmanthony3.github.io/joby_m_anthony_iii\nPDFBUILDDIR   = /tmp\nPDF           = ../manual.pdf\n@" "docs/Makefile"
+sed -i "%line_number%s@.*@BUILDDIR      = ../../joby_m_anthony_iii-docs\nPDFBUILDDIR   = /tmp\nPDF           = ../manual.pdf\n@" "docs/Makefile"
 
 (
 echo.
@@ -61,4 +61,4 @@ sed -i "%line_number%s/.*/   includeme\n/" "docs/index.rst"
 @REM sphinx-build -b html docs/ docs/_build/html
 @REM sphinx-build -b html docs/ "..\\jmanthony3.github.io\\joby_m_anthony_iii\html"
 @REM del numerical_methods.log
-cd docs && make html && cd .. && xcopy "docs\_build\doctrees" "..\jmanthony3.github.io\joby_m_anthony_iii\doctrees\" /E /Y && xcopy "docs\_build\html" "..\jmanthony3.github.io\joby_m_anthony_iii\html\" /E /Y && cd docs && make latexpdf && cd .. && copy "docs\_build\latex\*.pdf" "manual.pdf"
+cd docs && make html && cd .. && xcopy "docs\_build\doctrees" "..\joby_m_anthony_iii-docs\doctrees\" /E /Y && xcopy "docs\_build\html" "..\joby_m_anthony_iii-docs\html\" /E /Y && cd docs && make latexpdf && cd .. && copy "docs\_build\latex\*.pdf" "manual.pdf" /Y
