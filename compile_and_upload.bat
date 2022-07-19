@@ -16,19 +16,19 @@ set version=%version:~1,-1%
 del src\joby_m_anthony_iii\numerical_methods.log
 del tests\numerical_methods.log
 
-rem ------------------------------------------------------------
-rem     Build Python wheel
-rem ------------------------------------------------------------
+@REM rem ------------------------------------------------------------
+@REM rem     Build Python wheel
+@REM rem ------------------------------------------------------------
+@REM rem upload to PyPi and upgrade local
 @REM pip install --upgrade build twine
 @REM python -m build
 @REM twine check ./dist/joby_m_anthony_iii-%version%*
 
-rem upload to PyPi and upgrade local
 @REM python -m twine upload --repository pypi ./dist/joby_m_anthony_iii-%version%.tar.gz
 @REM timeout 5 /NOBREAK
 @REM pip install --upgrade joby_m_anthony_iii==%version%
 
-echo "Compiled, uploaded, and updated to 'joby_m_anthony_iii-%version%'. Generating documentation..."
+@REM echo "Compiled, uploaded, and updated to 'joby_m_anthony_iii-%version%'. Generating documentation..."
 
 rem ------------------------------------------------------------
 rem     Generate/Update API Documentation

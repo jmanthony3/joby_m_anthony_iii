@@ -155,10 +155,6 @@ def spectral_radius(A: tuple) -> float:
 	Notes
 	-----
 	:math:`\rho(\mathbf{A}) = \max|\lambda|`, where :math:`\lambda` is the set of eigenvalues for `A` [1]_.
-
-	References
-	----------
-	.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 	"""
 	matrix_name, A = _retrieve_name(A), np.array(A)
 	if not(np.sum(A.shape) - A.shape[0] == A.shape[0]):
@@ -195,7 +191,7 @@ class Norm:
 	Notes
 	-----
 	Definition [1]_:
-		A matrix norm on the set of all :math:`n \cross n` matrices is a real-valued function, :math:`||\cdot||`, defined on this set, satisfying for all :math:`n \cross n` matrices :math:`\mathbf{A}` and :math:`\mathbf{B}` and all real numbers :math:`\alpha`:
+		A matrix norm on the set of all :math:`n \times n` matrices is a real-valued function, :math:`||\cdot||`, defined on this set, satisfying for all :math:`n \times n` matrices :math:`\mathbf{A}` and :math:`\mathbf{B}` and all real numbers :math:`\alpha`:
 			(i) :math:`||\mathbf{A}|| \geq 0`;
 			(ii) :math:`||\mathbf{A}|| = 0` iff :math:`\mathbf{A}` is a matrix with all zero entries;
 			(iii) :math:`||\alpha\mathbf{A}|| = |\alpha|||\mathbf{A}||`;
@@ -203,13 +199,11 @@ class Norm:
 			(v) :math:`||\mathbf{A}\mathbf{B}|| \leq ||\mathbf{A}||||\mathbf{B}||`
 
 	Theorem [1]_:
-		If :math:`||\cdot||` is a vector norm on :math:`\mathbb{R}^{n}`, then .. math::
+		If :math:`||\cdot||` is a vector norm on :math:`\mathbb{R}^{n}`, then
+
+		.. math::
 			||\mathbf{A}|| = \underset{||\vec{x}|| = 1}{\max}||\mathbf{A}\vec{x}||
 		is a matrix norm.
-
-	References
-	----------
-	.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 	"""
 
 	def __init__(self, x: tuple, x0: Optional[tuple]=None):
@@ -358,14 +352,12 @@ def condition_number(
 	Will write evaluation of condition number to logfile.
 
 	Definition [1]_:
-		The condition number of the non-singular matrix, :math:`\mathbf{A}` relative to a norm, :math:`||\cdot||` is .. math::
+		The condition number of the non-singular matrix, :math:`\mathbf{A}` relative to a norm, :math:`||\cdot||` is
+
+		.. math::
 			K(\mathbf{A}) = ||\mathbf{A}|| \cdot ||\mathbf{A}^{-1}||
 
 	A matrix is well-conditioned if :math:`K(\mathbf{A})` is close to 1 and is ill-conditioned if significantly greater than 1.
-
-	References
-	----------
-	.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 	"""
 	matrix_name, A = _retrieve_name(A), np.array(A)
 	BadNormTypeError = lambda norm_type: f"Input `norm_type`='{norm_type}' not understood. Please input 'l_infinity' or 'l_two'."
@@ -648,10 +640,6 @@ class EigenValues:
 		------
 		IndexError
 			If `x` is not a one-dimensional array.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 		"""
 		self.__vector_name = _retrieve_name(x)
 		if np.sum(np.array(x).shape) - np.array(x).shape[0] > 1: raise IndexError(f"Systems vector, '{self.__vector_name}' must be one-dimensional array!")
@@ -709,10 +697,6 @@ class EigenValues:
 		Notes
 		-----
 		Supposed to converge faster than `power_method` [1]_.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 		"""
 		self.__vector_name = _retrieve_name(x)
 		if np.sum(np.array(x).shape) - np.array(x).shape[0] > 1: raise IndexError(f"Systems vector, {self.__vector_name} must be one-dimensional array!")
@@ -760,14 +744,11 @@ class EigenValues:
 
 		Notes
 		-----
-		This method is preferred over `power_method` and `inverse_power_method` by keeping round-off error to a minimum [2]_.
+		This method is preferred over `power_method` and `inverse_power_method` by keeping round-off error to a minimum [1]_.
 
-		References
-		----------
-		.. [1] The Bright Side of Mathematics, QR decomposition (for square matrices), (Mar. 22, 2020). Accessed: Jul. 14, 2022. [Online Video]. Available: https://www.youtube.com/watch?v=FAnNBw7d0vg
-		.. [2] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
-
-		`Example <https://www.youtube.com/watch?v=FAnNBw7d0vg>`_
+		Examples
+		--------
+		Refer to this `example <https://www.youtube.com/watch?v=FAnNBw7d0vg>`_ for an explanation and demonstration [2]_.
 		"""
 		# if self.is_symmetric and self.is_tridiagonal:
 		A = self.A
@@ -926,10 +907,6 @@ class SystemOfEquations:
 		-----
 		More computationally expensive than `gaussian_elimination` for smaller systems and is best suited for large, sparse matrices.
 		If pre-conditioned, can solve in :math:`\sqrt{n}` iterations.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 		"""
 		if self.is_positive_definite:
 			self.__vector_name = _retrieve_name(x)
@@ -998,10 +975,6 @@ class SystemOfEquations:
 		------
 		ValueError
 			If a unique solution could not be find which indicates linearly dependent SOE.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 		"""
 		n = len(self.A)
 		m = n - 1
@@ -1053,10 +1026,6 @@ class SystemOfEquations:
 		------
 		IndexError
 			If `x` is not a one-dimensional array.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 		"""
 		self.__vector_name = _retrieve_name(x)
 		if np.sum(np.array(x).shape) - np.array(x).shape[0] > 1: raise IndexError(f"Systems vector, '{self.__vector_name}' must be one-dimensional array!")
@@ -1241,7 +1210,7 @@ class SingleVariableIteration:
 			N &\geq -\log(`tol`/(`b` - `a`))/\log(2) \\
 			 &\geq -\log((10^{-3}/(2 - 1))/\log(2) \\
 			 &\geq 9.96 \\
-			\implies `max_iter` = 10
+			\implies N = 10
 
 		Else, if `a`=1, `b`=2, `power`=-3, `p0`=1.5, nd `k`=0.9, then:
 
@@ -1250,7 +1219,7 @@ class SingleVariableIteration:
 			 &\geq \log(10^{-3}/max(1.5 - 1, 2 - 1.5))/\log(0.9) \\
 			 &\geq \log(10^{-3}/0.5)/\log(0.9) \\
 			 &\geq 58.98 \\
-			\implies `max_iter` >= 59
+			\implies N >= 59
 		"""
 		a, b, k = self.a, self.b, self.function_slope
 		p0 = float(p0)
@@ -1294,10 +1263,6 @@ class SingleVariableIteration:
 		-----
 		Relying on the Intermediate Value Theorem (IVT), this is a bracketed, root-finding method. Generates a sequence :math:`{p_{n}}_{n=1}^{\infty}` such :math:`f(x=p_{n}) = 0` and converges by :math:`\mathcal{O}(1 / (2^{N}))` [1]_.
 		This method is rather slow to converge but will always converge to a solution; therefore, is a good starter method.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 
 		Examples
 		--------
@@ -1390,10 +1355,6 @@ class SingleVariableIteration:
 			If :math:`g'(x)` exists on :math:`[a, b]` and a positive constant, `k` < 1 exist with :math:`\{|g'(x)| \leq k | x \in (a, b)\}`, then there is exactly one fixed-point, :math:`p \in [a, b]`.
 
 		Converges by :math:`\mathcal{O}(\text{linear})` if :math:`g'(p) \neq 0`, and :math:`\mathcal{O}(\text{quadratic})` if :math:`g'(p) = 0` and :math:`g''(p) < M`, where :math:`M = g''(\xi)` that is the error function.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 
 		Examples 
 		--------
@@ -1488,11 +1449,6 @@ class SingleVariableIteration:
 			If :math:`g'(x)` exists on :math:`[a, b]` and a positive constant, `k` < 1 exist with :math:`\{|g'(x)| \leq k | x \in (a, b)\}`, then there is exactly one fixed-point, :math:`p \in [a, b]`.
 
 		Converges by :math:`\mathcal{O}(\text{linear})` if :math:`g'(p) \neq 0`, and :math:`\mathcal{O}(\text{quadratic})` if :math:`g'(p) = 0` and :math:`g''(p) < M`, where :math:`M = g''(\xi)` that is the error function.
-
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 
 		Examples 
 		--------
@@ -1591,10 +1547,6 @@ class SingleVariableIteration:
 			If :math:`g'(x)` exists on :math:`[a, b]` and a positive constant, `k` < 1 exist with :math:`\{|g'(x)| \leq k | x \in (a, b)\}`, then there is exactly one fixed-point, :math:`p \in [a, b]`.
 
 		Converges by :math:`\mathcal{O}(\text{linear})` if :math:`g'(p) \neq 0`, and :math:`\mathcal{O}(\text{quadratic})` if :math:`g'(p) = 0` and :math:`g''(p) < M`, where :math:`M = g''(\xi)` that is the error function.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 
 		Examples 
 		--------
@@ -1695,10 +1647,6 @@ class SingleVariableIteration:
 			If :math:`g'(x)` exists on :math:`[a, b]` and a positive constant, `k` < 1 exist with :math:`\{|g'(x)| \leq k | x \in (a, b)\}`, then there is exactly one fixed-point, :math:`p \in [a, b]`.
 
 		Converges by :math:`\mathcal{O}(\text{linear})` if :math:`g'(p) \neq 0`, and :math:`\mathcal{O}(\text{quadratic})` if :math:`g'(p) = 0` and :math:`g''(p) < M`, where :math:`M = g''(\xi)` that is the error function.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 
 		Examples 
 		--------
@@ -1982,12 +1930,10 @@ class MultiVariableIteration:
 		-----
 		This improves on `jacobi` by using the most recently calculated entries in the approximation vector, `x` after each iteration.
 
-		The primary algorithm by which method marches approximation vector, `x` .. math::
-			\vec{x}^{(k)} = \bigl( (\mathbf{D} - \mathbf{L})^{-1} * \mathbf{U} \bigr) \cdot \vec{x}^{(k - 1)} + \bigl( (\mathbf{D} - \mathbf{L})^{-1} \bigr) \cdot \vec{b}
+		The primary algorithm by which method marches approximation vector, `x`
 
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
+		.. math::
+			\vec{x}^{(k)} = \bigl( (\mathbf{D} - \mathbf{L})^{-1} * \mathbf{U} \bigr) \cdot \vec{x}^{(k - 1)} + \bigl( (\mathbf{D} - \mathbf{L})^{-1} \bigr) \cdot \vec{b}
 		"""
 		x = self.x
 		# A = np.zeros((N, N))
@@ -2061,12 +2007,10 @@ class MultiVariableIteration:
 
 		Notes
 		-----
-		The primary algorithm by which method marches approximation vector, `x` .. math::
-			\vec{x}^{(k)} = \bigl( \mathbf{D}^{-1} * (\mathbf{L} + \mathbf{U}) \bigr) \cdot \vec{x}^{(k - 1)} + ( \mathbf{D}^{-1} ) \cdot \vec{b}
+		The primary algorithm by which method marches approximation vector, `x`
 
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
+		.. math::
+			\vec{x}^{(k)} = \bigl( \mathbf{D}^{-1} * (\mathbf{L} + \mathbf{U}) \bigr) \cdot \vec{x}^{(k - 1)} + ( \mathbf{D}^{-1} ) \cdot \vec{b}
 		"""
 		x = self.x
 		k, n, approximations, errors = 1, len(x), [x], [self.tol*10]
@@ -2116,10 +2060,6 @@ class MultiVariableIteration:
 		Notes
 		-----
 		Modified form of `MultiVariableIteration` to analyze a one-dimensional array of non-linear SOE. Each element should be a lambda expression wherein each variable is represented.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 
 		Examples 
 		--------
@@ -2217,16 +2157,17 @@ class MultiVariableIteration:
 		-----
 		SOR and SUR modify, respectively, on `gauss_seidel` by decreasing or increasing, respectively, the spectral radius of `A` to accelerate or deccelerate convergence, respectively.
 
-		The primary algorithm by which method marches approximation vector, `x` .. math::
+		The primary algorithm by which method marches approximation vector, `x`
+
+		.. math::
 			\vec{x}^{(k)} = \bigl( (\mathbf{D} - \omega\mathbf{L})^{-1} * ((1 - \omega)*\mathbf{D} + \omega\mathbf{U}) \bigr) \cdot \vec{x}^{(k - 1)} + \omega( (\mathbf{D} - \omega\mathbf{L})^{-1} ) \cdot \vec{b}
-		which is similar to `gauss_seidel` .. math::
+
+		which is similar to `gauss_seidel`
+
+		.. math::
 			\vec{x}^{(k)} = \bigl( (\mathbf{D} - \mathbf{L})^{-1} * \mathbf{U} \bigr) \cdot \vec{x}^{(k - 1)} + \bigl( (\mathbf{D} - \mathbf{L})^{-1} \bigr) \cdot \vec{b}
 
 		`omega` will be analyzed independent of assigned value which will be used if not specified in assignment and if possible.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 		"""
 		BadOmegaError = lambda omega: f"ERROR! Either a positive omega greater than zero was not given (w = {omega}), or I could not choose one."
 		if omega == None:
@@ -2315,7 +2256,9 @@ class CubicSpline:
 	-----
 	Method uses many, low-ordered polynomials to fit larger datasets. This minimizes computational load, which, conversely, greatly increases for larger datasets that yield high-ordered polynomials.
 
-	General form .. math::
+	General form
+
+	.. math::
 		S_{j}(x) = a_{j} + b_{j}(x - x_{j}) + c_{j}(x - x_{j})^{2} + dj(x - x_{j})^{3}
 
 	`clamped()` splines fit the constructed polynomial to the given data and its derivatives at either endpoint.
@@ -2323,22 +2266,18 @@ class CubicSpline:
 	`natural()` splines set the derivative at either endpoint to be 1.
 
 	Definitions of cubic spline conditions:
-		a) math:`S(x)` is a cubic polynomial, math:`S_{j}(x)` on sub-interval math:`[x_{j}, x_(j+1)]` for each math:`j \in [0, 1, ..., n-1]`;
+		a) :math:`S(x)` is a cubic polynomial, :math:`S_{j}(x)` on sub-interval :math:`[x_{j}, x_(j+1)]` for each :math:`j \in [0, 1, ..., n-1]`;
 
-		b) math:`S_{j}(x_{j}) = f(x_{j})` and math:`S_{j}(x_{j+1}) = f(x_{j+1})` for each math:`j \in [0, 1, ..., n-1]`;
+		b) :math:`S_{j}(x_{j}) = f(x_{j})` and :math:`S_{j}(x_{j+1}) = f(x_{j+1})` for each :math:`j \in [0, 1, ..., n-1]`;
 
-		c) math:`S_{j+1}(x_{j+1}) = S_{j}(x_{j+1})` for each math:`j \in [0, 1, ..., n-2]`;
+		c) :math:`S_{j+1}(x_{j+1}) = S_{j}(x_{j+1})` for each :math:`j \in [0, 1, ..., n-2]`;
 
-		d) math:`S_{j+1}'(x_{j+1}) = S_{j}'(x_{j+1})` for each math:`j \in [0, 1, ..., n-2]`;
+		d) :math:`S_{j+1}'(x_{j+1}) = S_{j}'(x_{j+1})` for each :math:`j \in [0, 1, ..., n-2]`;
 
 		e) One of the following conditions is satisfied:
-			1) math:`S''(x_{0}) = S''(x_{n}) = 0` -> `'natural'`
+			1) :math:`S''(x_{0}) = S''(x_{n}) = 0` -> `'natural'`
 
-			2) math:`S'(x_{0}) = f'(x_{0})` and math:`S'(x_{n}) = f'(x_{n})` -> `'clamped'`
-
-	References
-	----------
-	.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
+			2) :math:`S'(x_{0}) = f'(x_{0})` and :math:`S'(x_{n}) = f'(x_{n})` -> `'clamped'`
 	"""
 
 	def __init__(
@@ -2602,10 +2541,6 @@ def hermite(
 	`function_derivative` calculated if not specified.
 
 	Osculating curve incorporates Taylor and Lagrangian polynomials to kiss the data and match each data point's derivatives which fits the curve to the shape of the data and its trend.
-
-	References
-	----------
-	.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 	"""
 	domain_name, function_name, function_derivative_name = _retrieve_name(domain), _retrieve_name(function), _retrieve_name(function_derivative)
 	domain, function = np.array(domain), np.array(function)
@@ -2743,17 +2678,17 @@ def lagrange(
 	-----
 	Polynomial will quickly begin to oscillate for larger datasets.
 
-	Polynomial is of the following form .. math::
+	Polynomial is of the following form
+
+	.. math::
 		P(x) &= f(x_{0})L_{n,0}(x) + ... + f(x_{n})L_{n,n}(x) \text{, where} \\
 		L_{n,k} &= \prod_{i=0, i \neq k}^{n} (x - x_{i})/(x_{k} - x_{i})
 
-	References
-	----------
-	.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
-
 	Examples
 	--------
-	A Lagrange polynomial between (2,4) and (5,1) would be found as follows .. math::
+	A Lagrange polynomial between (2,4) and (5,1) would be found as follows
+
+	.. math::
 		L_{0}(x) &= (x - 5)/(2 - 5) = -(x - 5)/3 \\
 		L_{1}(x) &= (x - 2)/(5 - 2) = (x - 2)/3 \\
 		\implies P(x) &= (4)*(-(x - 5)/3) + (1)*((x - 2)/3) \\
@@ -2892,11 +2827,7 @@ class LeastSquares:
 		-----
 		Least squares error := :math:`E = \sum_{i=1}^{m}(y_{i} - P_{n}(x_{i}))^{2}`
 
-		Constructed polynomial of the form: :math:`P(x) = a_{n}x^{n} + a_{n - 1}x^{n - 1} + \dots + a_{1}x + a_{0}
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
+		Constructed polynomial of the form: :math:`P(x) = a_{n}x^{n} + a_{n - 1}x^{n - 1} + \dots + a_{1}x + a_{0}`
 		"""
 		BadDegreeError = lambda n: f"Degree of polynomial, n = {n} must be integer and greater than zero."
 		if not isinstance(degree,(int)) or degree <= 0: raise ValueError(BadDegreeError(degree))
@@ -2930,7 +2861,7 @@ class LeastSquares:
 		return polynomial, error
 
 	def power(self) -> Tuple[float, float, FunctionType]:
-		r"""Given a domain and range, yield the coefficients for an equation and the equation of the form :math:`y = ax^{b}` [1]_.
+		r"""Given a domain and range, yield the coefficients for an equation and the equation of the form :math:`y = ax^{b}` [3]_.
 
 		Returns
 		-------
@@ -2938,10 +2869,6 @@ class LeastSquares:
 			Leading coefficient and exponent of equation.
 		expression : lambda
 			Lambda expression of curve-fit with calculated leading coefficient, `a` and exponent, `b`.
-
-		References
-		----------
-		.. [1] E. W. Weisstein, “Least Squares Fitting--Power Law.” https://mathworld.wolfram.com/ (accessed Jul. 15, 2022).
 		"""
 		X, Y = self.domain, self.function
 		q1, q2, q3, q4 = [], [], [], []
@@ -3020,10 +2947,6 @@ def newton_difference(
 	Direction will be chosen if not specified.
 
 	Polynomials best made with even spacing in `domain`; although, this is not completely necessary.
-
-	References
-	----------
-	.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 	"""
 	domain_name, function_name = _retrieve_name(domain), _retrieve_name(function)
 	BadDomainError = lambda domain_name: f"Input domain, '{domain_name}' was not a one-dimensional array."
@@ -3135,10 +3058,6 @@ class Derivative:
 	-----
 	5 point, :math:`\mathcal{O}(h^{4})` is more accurate than 3 point, :math:`\mathcal{O}(h^{2})`; however, round-off error increases.
 	`midpoint` has half the error of `endpoint` because of using more information and performing fewer calculations.
-
-	References
-	----------
-	.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 	"""
 
 	def __init__(
@@ -3273,10 +3192,6 @@ class Integrate:
 	Dataset may contain unevenly spaces points.
 
 	Unless specified and if `domain` is defined, `a` and `b` will be the left and right-hand bounds, respectively, of `domain`. If `domain` is not defined and `a`, `b`, and `h` are, then `domain` is constructed by `np.arange(a, b, h)`.
-
-	References
-	----------
-	.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 	"""
 
 	def __init__(
@@ -3325,7 +3240,9 @@ class Integrate:
 		Notes
 		-----
 		Theorem:
-			Let :math:`f` be in :math:`C^{4}[a,b]`, :math:`n` be even, :math:`h = (b-a)/n`, and :math:`x_{j} = a + jh` for :math:`j = 0, 1, ..., n`. There exists a :math:`\mu` \in (a,b)` for which the quadrature for :math:`n` sub-intervals can be written with its error term as: .. math::
+			Let :math:`f` be in :math:`C^{4}[a,b]`, :math:`n` be even, :math:`h = (b-a)/n`, and :math:`x_{j} = a + jh` for :math:`j = 0, 1, ..., n`. There exists a :math:`\mu` \in (a,b)` for which the quadrature for :math:`n` sub-intervals can be written with its error term as:
+
+			.. math::
 				\int_{a}^{b}f(x)dx = \frac{h}{3}\bigl[ f(a) + 2*[\sum_{j=1}^{n/2 - 1}{f(x_{2j})}] + 4[\sum_{j=1}^{n/2}{f(x_{2j-1})}] + f(b) \bigr] - (b-a)h^{4}f^{\text{iv}}(\mu)/180.
 
 			Where: :math:`(b-a)h^{4}f^{\text{iv}}(\mu)/180 \rightarrow \mathcal{O}(h^{4})`
@@ -3372,7 +3289,9 @@ class Integrate:
 		Notes
 		-----
 		Theorem:
-			Let :math:`f` be in :math:`C^{2}[a,b]`, :math:`h = (b-a)/n`, and :math:`x_{j} = a + jh` for :math:`j = 0, 1, ..., n`. There exists a :math:`\mu \in (a,b)` for which the quadrature for :math:`n` sub-intervals can be written with its error term as: .. math::
+			Let :math:`f` be in :math:`C^{2}[a,b]`, :math:`h = (b-a)/n`, and :math:`x_{j} = a + jh` for :math:`j = 0, 1, ..., n`. There exists a :math:`\mu \in (a,b)` for which the quadrature for :math:`n` sub-intervals can be written with its error term as:
+
+			.. math::
 				\int_{a}^{b}f(x)dx = \frac{h}{2}\bigl[ f(a) + 2[\sum_{j=1}^{n - 1}{f(x_{j})}] + f(b) \bigr] - (b-a)*(h^{2})f''(\mu)/12.
 
 			Where: :math:`(b-a)*(h^{2})f''(\mu)/12 \rightarrow \mathcal{O}(h^{2})`
@@ -3450,10 +3369,6 @@ def richard_extrapolation(
 	See Also
 	--------
 	newton_difference : Newton Difference method to build extrapolation for function's derivative and order of error.
-
-	References
-	----------
-	.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 	"""
 	function_name = _retrieve_name(function)
 	BadExpressionError = lambda function_name: f"Function, '{function_name}' must be a lambda expression."
@@ -3674,10 +3589,6 @@ class IVP(__ode):
 		Implicit time stepping scheme which is generally suited for stiff equations being conditionally stable.
 
 		Gives first-order accuracy, :math:`\mathcal{O}(h)`.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 		"""
 		h, t, w0 = self.step_size, self.a, self.alpha
 		Y, increments = [w0], [0]
@@ -3732,10 +3643,6 @@ class IVP(__ode):
 		Notes
 		-----
 		Explicit time stepping scheme via first-order Taylor approximations.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 		"""
 		h, t, w0 = self.step_size, self.a, self.alpha
 		Y, increments = [w0], [0]
@@ -3785,10 +3692,6 @@ class IVP(__ode):
 		Is equivalent to :math:`2^{\text{nd}}`-Order Runge-Kutta (Midpoint) Method where endpoints `a` and `b` are 0.5 and :math:`\lambda` = 1 with :math:`\mathcal{O}(h^{2})`.
 
 		Explicit time stepping scheme.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 		"""
 		h, t, w0 = self.step_size, self.a, self.alpha
 		ea, eb, lam = 1/2, 1/2, 1
@@ -3835,10 +3738,6 @@ class IVP(__ode):
 		Achieves higher-order, local truncation error, :math:`\mathcal{O}(h^{4})` like Taylor-based methods--such as `forward_euler`--but without the need to compute the higher-order derivatives.
 
 		Explicit time stepping scheme.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 		"""
 		h, t, w0 = self.step_size, self.a, self.alpha
 		Y, increments = [w0], [0]
@@ -3903,10 +3802,6 @@ class IVP(__ode):
 		Preferred method to `backward_euler` because of :math:`\mathcal{O}(h^{2})` accuracy.
 
 		Tolerance of `SingleVariableIteration.newton_raphson` defined by `10**power`.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 		"""
 		h, t, w0 = self.step_size, self.a, self.alpha
 		self.tol = 10**power
@@ -4043,10 +3938,6 @@ class BVP(__ode):
 		Uses a Taylor polynomial with a first-order and a second-order IVP equations.
 
 		Converges :math:`\mathcal{O}(h^{2})`.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 		"""
 		h, alpha, beta = self.step_size, self.alpha, self.beta
 		ai, bi, ci, di = [], [], [], []
@@ -4112,10 +4003,6 @@ class BVP(__ode):
 		------
 		TypeError
 			If input `function`(s) cannot be understood as lambda expression.
-
-		References
-		----------
-		.. [1] R. Burden L., D. Faires J., and A. Burden M., Numerical Analysis, 10th ed. 20 Channel Center Street, Boston, MA 02210, USA: Cengage, 2019.
 		"""
 		h, alpha, beta = self.step_size, self.alpha, self.beta
 		u1, u2, v1, v2 = [alpha], [0], [0], [1]
