@@ -7,7 +7,6 @@ import functools
 import logging
 import math
 import numpy as np
-import os
 import pandas as pd
 import scipy as sc
 import sympy as sp
@@ -15,17 +14,6 @@ import sys
 from typing import Optional, Tuple, Union
 from types import FunctionType
 #   #   #   #   #   #   #   #   #
-
-
-# create an external file that stores print outs
-logfile = f"{os.getcwd()}/numerical_methods.log"
-try: os.remove(logfile)
-except FileNotFoundError:
-	logging.basicConfig(filename=logfile, filemode="xt", level=logging.DEBUG)
-except PermissionError as e:
-	logging.basicConfig(filename=logfile, filemode="at", level=logging.DEBUG)
-else:
-	logging.basicConfig(filename=logfile, filemode="wt", level=logging.DEBUG)
 
 
 #################################
@@ -4092,9 +4080,6 @@ class test:			# test class
 		success = "Test complete."
 		sys.exit(success)
 #   #   #   #   #   #   #   #   #
-
-
-logging.shutdown()
 
 
 #################################

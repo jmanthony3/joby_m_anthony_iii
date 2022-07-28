@@ -1,13 +1,28 @@
 import importlib.util
+import logging
 from joby_m_anthony_iii import numerical_methods as nm
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 import pandas as pd
 from random import random
 import sympy as sp
 import sys
 from time import perf_counter
+
+# create an external file that stores print outs
+logfile = f"{os.getcwd()}/numerical_methods.log"
+logger=logging.getLogger(__name__)
+try: os.remove(logfile)
+except FileNotFoundError:
+	logging.basicConfig(filename=logfile, filemode="xt")
+except PermissionError as e:
+	logging.basicConfig(filename=logfile, filemode="at")
+else:
+	logging.basicConfig(filename=logfile, filemode="wt")
+finally:
+	logger.setLevel(logging.DEBUG)
 
 #COUNT = 500000*3  # Change this value depending on the speed of your computer
 COUNT = int((500000/5000)**2)  # Change this value depending on the speed of your computer
@@ -2238,3 +2253,5 @@ if __name__ == "__main__":
 
 
 	plt.show()
+
+logging.shutdown()
