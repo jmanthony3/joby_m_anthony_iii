@@ -23,12 +23,11 @@ del tests\numerical_methods.log
 @REM pip install --upgrade build twine
 @REM python -m build
 @REM twine check ./dist/joby_m_anthony_iii-%version%*
-
 @REM python -m twine upload --repository pypi ./dist/joby_m_anthony_iii-%version%.tar.gz
-@REM timeout 5 /NOBREAK
-@REM pip install --upgrade joby_m_anthony_iii==%version%
 
-@REM echo "Compiled, uploaded, and updated to 'joby_m_anthony_iii-%version%'. Generating documentation..."
+pip install --upgrade joby_m_anthony_iii==%version%
+
+echo "Compiled, uploaded, and updated to 'joby_m_anthony_iii-%version%'. Generating documentation..."
 
 rem ------------------------------------------------------------
 rem     Generate/Update API Documentation

@@ -1123,7 +1123,7 @@ if __name__ == "__main__":
 	k = 1
 	for h in H:
 		obj = bar.IVP(d_dot, h, t, d0, steps=t/h)
-		df = obj.improved_euler()
+		df = obj.modified_euler()
 		print(f"{k}, h = {h}s: d = {df['Range'].values[-1]} for total change = {np.sum(df['Increments'].values)} in {df['Iterations'].values[-1]} time steps.")
 		ax3.plot(df["Domain"].values, df["Range"].values, label=f"{h} s")
 		ax4.plot(df["Domain"].values, df["Increments"].values, label=f"{h} s")
@@ -1165,7 +1165,7 @@ if __name__ == "__main__":
 	k = 1
 	for h in H:
 		obj = bar.IVP(d_dot, h, t, d0, steps=t/h)
-		df = obj.trapezoidal()
+		df = obj.crank_nicholson()
 		print(f"{k}, h = {h}s: d = {df['Range'].values[-1]} for total change = {np.sum(df['Increments'].values)} in {df['Iterations'].values[-1]} time steps.")
 		ax9.plot(df["Domain"].values, df["Range"].values, label=f"{h} s")
 		ax10.plot(df["Domain"].values, df["Increments"].values, label=f"{h} s")

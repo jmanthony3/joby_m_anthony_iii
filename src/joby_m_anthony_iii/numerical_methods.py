@@ -3,6 +3,7 @@
 # import necessary modules/tools
 # import extension as ex
 import inspect
+import functools
 import logging
 import math
 import numpy as np
@@ -18,7 +19,13 @@ from types import FunctionType
 
 # create an external file that stores print outs
 logfile = f"{os.getcwd()}/numerical_methods.log"
-logging.basicConfig(filename=logfile, level=logging.DEBUG)
+try: os.remove(logfile)
+except FileNotFoundError:
+	logging.basicConfig(filename=logfile, filemode="xt", level=logging.DEBUG)
+except PermissionError as e:
+	logging.basicConfig(filename=logfile, filemode="at", level=logging.DEBUG)
+else:
+	logging.basicConfig(filename=logfile, filemode="wt", level=logging.DEBUG)
 
 
 #################################
@@ -32,6 +39,15 @@ def _retrieve_name(var):
 def _retrieve_expression(expression):
 	expression_str = str(inspect.getsourcelines(expression)[0]).strip("['\\n']").split(" = ")[1]
 	return expression_str[expression_str.find(": ")+2:]
+
+def _alias(alias_f):
+	# https://stackoverflow.com/questions/68642129/set-multiple-names-for-one-function
+	def _(_):
+		@functools.wraps(alias_f)
+		def _(*args, **kwargs):
+			return alias_f(*args, **kwargs)
+		return _
+	return _
 
 def diagonality(A: tuple) -> bool:
 	r"""Determines if matrix, `A` is strictly, diagonally dominant.
@@ -3713,6 +3729,12 @@ class IVP(__ode):
 			"Increments": self.increments
 		})
 
+	@_alias(improved_euler)
+	def modified_euler(self) -> pd.DataFrame:
+		"""`modified_euler` is an alias for `improved_euler`."""
+		logging.warn(self.modified_euler.__doc__)
+		pass
+
 	def runge_kutta(self) -> pd.DataFrame:
 		r"""Explicit, fourth-order method.
 
@@ -3836,6 +3858,12 @@ class IVP(__ode):
 			"Range": self.range,
 			"Increments": self.increments
 		})
+
+	@_alias(trapezoidal)
+	def crank_nicholson(self) -> pd.DataFrame:
+		"""`crank_nicholson` is an alias for `trapezoidal`."""
+		logging.warn(self.crank_nicholson.__doc__)
+		pass
 
 class BVP(__ode):
 	r"""Class containing Boundary Value Problem (BVP) methods.
@@ -4064,6 +4092,9 @@ class test:			# test class
 		success = "Test complete."
 		sys.exit(success)
 #   #   #   #   #   #   #   #   #
+
+
+logging.shutdown()
 
 
 #################################
