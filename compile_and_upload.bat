@@ -25,9 +25,9 @@ del tests\numerical_methods.log
 @REM twine check ./dist/joby_m_anthony_iii-%version%*
 @REM python -m twine upload --repository pypi ./dist/joby_m_anthony_iii-%version%.tar.gz
 
-pip install --upgrade joby_m_anthony_iii==%version%
+@REM pip install --upgrade joby_m_anthony_iii==%version%
 
-echo "Compiled, uploaded, and updated to 'joby_m_anthony_iii-%version%'. Generating documentation..."
+@REM echo "Compiled, uploaded, and updated to 'joby_m_anthony_iii-%version%'. Generating documentation..."
 
 rem ------------------------------------------------------------
 rem     Generate/Update API Documentation
@@ -37,6 +37,7 @@ rmdir /Q /S docs
 sphinx-apidoc -f -M -F -H="joby_m_anthony_iii" -A="Joby M. Anthony III" -V="%version%" -o ./docs ./src/joby_m_anthony_iii
 
 sed -i "s/html_theme = .*/html_theme = 'sphinx_rtd_theme'/" "docs/conf.py"
+@REM sed -i "s/html_theme = .*/html_theme = 'python_docs_theme'/" "docs/conf.py"
 
 sed -n "/# -- Extension configuration /{=}" "docs/conf.py" | sed -n "1p" > temp
 for /f %%i in ('type "temp"') do (
