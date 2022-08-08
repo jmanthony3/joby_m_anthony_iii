@@ -3598,16 +3598,17 @@ class IVP(__ode):
 		Y, increments = [w0], [0]
 		for i in range(1, self.steps):
 			t = self.a + i*h
-			# w = w0 + h*function(t + h, w0 + h*function(t, w0))
-			w = lambda x: x - (w0 + h*self.function(t + h, x))
-			#w = "x - (w0 + h*" + self.function_str + ")"
-			#sys.stdout =  open(os.devnull, "w")
-			obj = SingleVariableIteration(w, t, t+h, power=power, variable="t", iter_guess=max_iter)
-			w = obj.newton_raphson(w0)["Approximations"].values[-1]
-			#sys.stdout = sys.__stdout__
+			w = w0 + h*self.function(t + h, w0 + h*self.function(t, w0))
+			# TODO: determine whether the above (^) or below (v) is correct
+			# NOTE: above is much faster but below was from class.
+			# NOTE (220808): fairly certain above is correct from p. 356
+			# w = lambda x: x - (w0 + h*self.function(t + h, x))
+			# #w = "x - (w0 + h*" + self.function_str + ")"
+			# #sys.stdout =  open(os.devnull, "w")
+			# obj = SingleVariableIteration(w, t, t+h, power=power, variable="t", iter_guess=max_iter)
+			# w = obj.newton_raphson(w0)["Approximations"].values[-1]
 			Y.append(w)
 			increments.append(abs(w - w0))
-			# t, w0 = a + i*h, w
 			w0 = w
 		self.iterations = np.arange(self.steps)
 		self.domain = np.linspace(self.a, t+h, self.steps)

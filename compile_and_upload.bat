@@ -25,9 +25,9 @@ del tests\numerical_methods.log
 @REM twine check ./dist/joby_m_anthony_iii-%version%*
 @REM python -m twine upload --repository pypi ./dist/joby_m_anthony_iii-%version%.tar.gz
 
-@REM pip install --upgrade joby_m_anthony_iii==%version%
+pip install --upgrade joby_m_anthony_iii==%version%
 
-@REM echo "Compiled, uploaded, and updated to 'joby_m_anthony_iii-%version%'. Generating documentation..."
+echo "Compiled, uploaded, and updated to 'joby_m_anthony_iii-%version%'. Generating documentation..."
 
 rem ------------------------------------------------------------
 rem     Generate/Update API Documentation
