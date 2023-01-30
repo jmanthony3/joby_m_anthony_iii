@@ -59,7 +59,7 @@ def diagonality(A: tuple) -> bool:
 	-----
 	Will write to logfile either if strictly, diagonally dominant, or if matrix, `A` is not strictly, diagonally dominant which could lead to poor solution of :math:`\mathbf{A}\vec{x} = \vec{b}`.
 	"""
-	matrix_name, A = _retrieve_name(A), np.array(A)
+	matrix_name, A = "A", np.array(A)#_retrieve_name(A), np.array(A)
 	if not(np.sum(A.shape) - A.shape[0] == A.shape[0]):
 		raise IndexError(f"Matrix, '{matrix_name}' must be square!")
 	i, diags, long = 0, np.zeros_like(A), np.zeros_like(A)
@@ -104,7 +104,7 @@ def eigen_values(A: tuple) -> np.ndarray:
 	"""
 	# See Also
 	# --------
-	matrix_name, A = _retrieve_name(A), np.array(A)
+	matrix_name, A = "A", np.array(A)#_retrieve_name(A), np.array(A)
 	# -------------- TODO: Fix this -------------- #
 	if not(np.sum(A.shape) - A.shape[0] == A.shape[0]):
 		raise IndexError(f"Matrix, '{matrix_name}' must be square!")
@@ -160,7 +160,7 @@ def spectral_radius(A: tuple) -> float:
 	-----
 	:math:`\rho(\mathbf{A}) = \max|\lambda|`, where :math:`\lambda` is the set of eigenvalues for `A` [1]_.
 	"""
-	matrix_name, A = _retrieve_name(A), np.array(A)
+	matrix_name, A = "A", np.array(A)#_retrieve_name(A), np.array(A)
 	if not(np.sum(A.shape) - A.shape[0] == A.shape[0]):
 		raise IndexError(f"Matrix, '{matrix_name}' must be square!")
 	#rho = np.max(np.abs(eigen_values(A)))
@@ -211,9 +211,9 @@ class Norm:
 	"""
 
 	def __init__(self, x: tuple, x0: Optional[tuple]=None):
-		self.__vector_name, self.x = _retrieve_name(x), np.array(x)
+		self.__vector_name, self.x = "x", np.array(x)#_retrieve_name(x), np.array(x)
 		if not isinstance(x0, type(None)):
-			self.__old_vector_name, self.x0 = _retrieve_name(x0), np.array(x0)
+			self.__old_vector_name, self.x0 = "x0", np.array(x0)#_retrieve_name(x0), np.array(x0)
 			if not(self.x0.shape[0] == 0 or len(x) == len(x0)):
 				raise IndexError(f"'{self.__vector_name}' and '{self.__old_vector_name}' must be the same size!")
 		else: self.__old_vector_name, self.x0 = "x0", x0
@@ -363,7 +363,7 @@ def condition_number(
 
 	A matrix is well-conditioned if :math:`K(\mathbf{A})` is close to 1 and is ill-conditioned if significantly greater than 1.
 	"""
-	matrix_name, A = _retrieve_name(A), np.array(A)
+	matrix_name, A = "A", np.array(A)#_retrieve_name(A), np.array(A)
 	BadNormTypeError = lambda norm_type: f"Input `norm_type`='{norm_type}' not understood. Please input 'l_infinity' or 'l_two'."
 	i, A_inv = 0, np.zeros_like(A)
 	while i < len(A):
@@ -410,7 +410,7 @@ def make_array(
 
 	If the input function happens to already be a NumPy array, then that array will simply be returned without processing.
 	"""
-	function_name = _retrieve_name(function)
+	function_name = "f"#_retrieve_name(function)
 	BadFunctionError = lambda function_name: f"'{function_name}' must be a lambda expression."
 	if isinstance(function, (list, tuple, np.ndarray)):
 		mapped = np.array(function)
@@ -451,7 +451,7 @@ def symmetry(A: tuple) -> bool:
 	-----
 	Writes to logfile that `A` is either symmetric or asymmetric.
 	"""
-	matrix_name, A = _retrieve_name(A), np.array(A)
+	matrix_name, A = "A", np.array(A)#_retrieve_name(A), np.array(A)
 	if not(np.sum(A.shape) - A.shape[0] == A.shape[0]):
 		raise IndexError(f"Matrix, '{matrix_name}' must be square!")
 	i, At, is_symmetric = 0, np.transpose(A), False
@@ -491,7 +491,7 @@ def positive_definite(A: tuple) -> bool:
 	-----
 	Writes to logfile that `A` is either positive definite or not.
 	"""
-	matrix_name, A = _retrieve_name(A), np.array(A)
+	matrix_name, A = "A", np.array(A)#_retrieve_name(A), np.array(A)
 	if not(np.sum(A.shape) - A.shape[0] == A.shape[0]):
 		raise IndexError(f"Matrix, '{matrix_name}' must be square!")
 	is_symmetric, obj = symmetry(A), EigenValues(A)
@@ -534,7 +534,7 @@ def tridiagonality(A: tuple) -> bool:
 	-----
 	Writes to logfile that matrix is either tridiagonal or not.
 	"""
-	matrix_name, A = _retrieve_name(A), np.array(A)
+	matrix_name, A = "A", np.array(A)#_retrieve_name(A), np.array(A)
 	if not(np.sum(np.shape(A)) - np.shape(A)[0] == np.shape(A)[0]):
 		raise IndexError(f"Matrix, '{matrix_name}' must be square!")
 	diagonals = np.diagflat(np.diag(A))
@@ -608,7 +608,7 @@ class EigenValues:
 		power: float=-6,
 		max_iter: int=100
 	):
-		self.__matrix_name = _retrieve_name(A)
+		self.__matrix_name = "A"#_retrieve_name(A)
 		if np.array(A).shape[0] != np.array(A).shape[1]: raise IndexError(f"Matrix, '{self.__matrix_name}' must be square!")
 		if max_iter <= 0 or not isinstance(max_iter, (int, float)): raise ValueError(f"Maximum iterations, N = {max_iter} must be an integer greater than zero.")
 		self.A = A = np.array(A)
@@ -645,7 +645,7 @@ class EigenValues:
 		IndexError
 			If `x` is not a one-dimensional array.
 		"""
-		self.__vector_name = _retrieve_name(x)
+		self.__vector_name = "X"#_retrieve_name(x)
 		if np.sum(np.array(x).shape) - np.array(x).shape[0] > 1: raise IndexError(f"Systems vector, '{self.__vector_name}' must be one-dimensional array!")
 		if len(x) != len(self.A): raise IndexError(EigenValues.__BadVectorDataError(self.__matrix_name, self.A.shape, self.__vector_name, np.array(x).shape))
 		self.x = x = np.array(x)
@@ -702,7 +702,7 @@ class EigenValues:
 		-----
 		Supposed to converge faster than `power_method` [1]_.
 		"""
-		self.__vector_name = _retrieve_name(x)
+		self.__vector_name = "x"#_retrieve_name(x)
 		if np.sum(np.array(x).shape) - np.array(x).shape[0] > 1: raise IndexError(f"Systems vector, {self.__vector_name} must be one-dimensional array!")
 		if len(x) != len(self.A): raise IndexError(EigenValues.__BadVectorDataError(self.__matrix_name, self.A.shape, self.__vector_name, np.array(x).shape))
 		self.x = x = np.array(x)
@@ -847,9 +847,9 @@ class SystemOfEquations:
 		power: Optional[float]=-6,
 		max_iter: Optional[int]=100
 	):
-		self.__matrix_name = _retrieve_name(A)
+		self.__matrix_name = "A"#_retrieve_name(A)
 		if np.array(A).shape[0] != np.array(A).shape[1]: raise IndexError(f"Matrix, '{self.__matrix_name}' must be square!")
-		self.__solution_name = _retrieve_name(b)
+		self.__solution_name = "b"#_retrieve_name(b)
 		if len(b) != len(A): raise IndexError(SystemOfEquations.__BadVectorDataError(self.__matrix_name, self.A.shape, self.__solution_name, np.array(b).shape))
 		if np.sum(np.array(b).shape) - np.array(b).shape[0] > 1: raise IndexError(f"Systems vector, '{self.__solution_name}' must be one-dimensional array!")
 		if max_iter <= 0 or not isinstance(max_iter, (int, float)): raise ValueError(f"Maximum iterations, N = {max_iter} must be an integer greater than zero.")
@@ -913,7 +913,7 @@ class SystemOfEquations:
 		If pre-conditioned, can solve in :math:`\sqrt{n}` iterations.
 		"""
 		if self.is_positive_definite:
-			self.__vector_name = _retrieve_name(x)
+			self.__vector_name = "x"#_retrieve_name(x)
 			if np.sum(np.array(x).shape) - np.array(x).shape[0] > 1: raise IndexError(f"Systems vector, '{self.__vector_name}' must be one-dimensional array!")
 			self.x = x = np.array(x)
 			b, self.C = self.b, C
@@ -1031,7 +1031,7 @@ class SystemOfEquations:
 		IndexError
 			If `x` is not a one-dimensional array.
 		"""
-		self.__vector_name = _retrieve_name(x)
+		self.__vector_name = "x"#_retrieve_name(x)
 		if np.sum(np.array(x).shape) - np.array(x).shape[0] > 1: raise IndexError(f"Systems vector, '{self.__vector_name}' must be one-dimensional array!")
 		self.x = x = np.array(x)
 		k, approximations, errors = 1, [x], [self.tol*10]
@@ -1127,7 +1127,7 @@ class SingleVariableIteration:
 		iter_guess: Optional[Union[bool,int]]=True,
 		function_slope: Optional[float]=0
 	):
-		self.__function_name = function_name = _retrieve_name(function)
+		self.__function_name = function_name = "f"#_retrieve_name(function)
 		# if isinstance(function, (str)):
 		# 	function_str = ex.fast_parse_latex(function)
 		# 	function = lambda x: ex.fast_eval_latex(function_str, {variable: x})
@@ -1790,9 +1790,9 @@ class MultiVariableIteration:
 		norm_type: Optional[str]="l_infinity"
 	):
 		A, x, b = np.array(A), np.array(x), np.array(b)
-		self.__matrix_name = _retrieve_name(A)
-		self.__vector_name = _retrieve_name(x)
-		self.__solution_name = _retrieve_name(b)
+		self.__matrix_name = "A"#_retrieve_name(A)
+		self.__vector_name = "x"#_retrieve_name(x)
+		self.__solution_name = "b"#_retrieve_name(b)
 		BadMatrixError = lambda matrix_name: f"Matrix, '{matrix_name}' must be square matrix of floats or one-dimensional array of lambda expressions!"
 		BadVectorError = lambda vector_name: f"Systems vector, '{vector_name}' must be one-dimensional array!"
 		BadSystemError = f"System of equations are not all same length!"
@@ -2290,7 +2290,7 @@ class CubicSpline:
 		function: tuple,
 		variable: Optional[str]="x"
 	):
-		self.__domain_name, self.__function_name = _retrieve_name(domain), _retrieve_name(function)
+		self.__domain_name, self.__function_name = "x", "f"#_retrieve_name(domain), _retrieve_name(function)
 		self.domain = X = np.array(domain)
 		if np.sum(X.shape) > X.shape[0]: raise IndexError(CubicSpline.__BadDomainError(self.__domain_name))
 		# if isinstance(function, (str)):
@@ -2381,7 +2381,7 @@ class CubicSpline:
 				B[j] = (A[j+1] - A[j])/H[j] - H[j]*(C[j+1] + 2*C[j])/3
 				D[j] = (C[j+1] - C[j])/(3*H[j])
 			return Y, A, B, C, D
-		try: self.__function_derivative_name = _retrieve_name(function_derivative)
+		try: self.__function_derivative_name = "fp"#_retrieve_name(function_derivative)
 		except IndexError: self.__function_derivative_name = "fp"
 		BadDerivativeError = lambda fp_name: f"Derivative range, '{fp_name}' was neither function nor expression and not an one-dimensional array."
 		BadDataError = lambda domain_name, function_name, fp_name: f"Arrays '{domain_name}', '{function_name}', and '{fp_name}' must be of equal length."
@@ -2546,7 +2546,7 @@ def hermite(
 
 	Osculating curve incorporates Taylor and Lagrangian polynomials to kiss the data and match each data point's derivatives which fits the curve to the shape of the data and its trend.
 	"""
-	domain_name, function_name, function_derivative_name = _retrieve_name(domain), _retrieve_name(function), _retrieve_name(function_derivative)
+	domain_name, function_name, function_derivative_name = "x", "f", "fp"#_retrieve_name(domain), _retrieve_name(function), _retrieve_name(function_derivative)
 	domain, function = np.array(domain), np.array(function)
 	BadDomainError = lambda domain_name: f"Input domain, '{domain_name}' was not a one-dimensional array."
 	BadFunctionError = lambda function_name: f"Input range, '{function_name}' was not a one-dimensional array."
@@ -2731,7 +2731,7 @@ def lagrange(
 						R.append(g.evalf(subs={x: s}))
 				gx = np.amax(np.abs(R))
 		return np.abs(xi_err*gx)
-	domain_name, function_name = _retrieve_name(domain), _retrieve_name(function)
+	domain_name, function_name = "x", "f"#_retrieve_name(domain), _retrieve_name(function)
 	domain, function = np.array(domain), np.array(function)
 	if isinstance(degree, type(None)):
 		degree = len(domain) - 1
@@ -2787,7 +2787,7 @@ class LeastSquares:
 		domain: tuple,
 		function: tuple
 	):
-		self.__domain_name, self.__function_name = _retrieve_name(domain), _retrieve_name(function)
+		self.__domain_name, self.__function_name = "x", "f"#_retrieve_name(domain), _retrieve_name(function)
 		BadDomainError = lambda domain_name: f"Input domain, '{domain_name}' was not a one-dimensional array."
 		BadFunctionError = lambda function_name: f"Input range, '{function_name}' was not a one-dimensional array."
 		BadDataError = lambda domain_name, function_name: f"Arrays '{domain_name}' and '{function_name}' must be of equal length."
@@ -2952,7 +2952,7 @@ def newton_difference(
 
 	Polynomials best made with even spacing in `domain`; although, this is not completely necessary.
 	"""
-	domain_name, function_name = _retrieve_name(domain), _retrieve_name(function)
+	domain_name, function_name = "x", "f"#_retrieve_name(domain), _retrieve_name(function)
 	BadDomainError = lambda domain_name: f"Input domain, '{domain_name}' was not a one-dimensional array."
 	BadFunctionError = lambda function_name: f"Input function, '{function_name}' was not a one-dimensional array."
 	BadDataError = lambda domain_name, function_name: f"Arrays '{domain_name}' and '{function_name}' must be of equal length."
@@ -3071,7 +3071,7 @@ class Derivative:
 		h: float,
 		point_type: Optional[str]="three"
 	):
-		self.__domain_name, self.__function_name = _retrieve_name(domain), _retrieve_name(function)
+		self.__domain_name, self.__function_name = "x", "f"#_retrieve_name(domain), _retrieve_name(function)
 		BadDomainError = lambda domain_name: f"Input domain, '{domain_name}' was not a one-dimensional array."
 		BadFunctionError = lambda function_name: f"Input function, '{function_name}' was not a one-dimensional array."
 		BadDataError = lambda domain_name, function_name: f"Arrays '{domain_name}' and '{function_name}' must be of equal length."
@@ -3207,7 +3207,7 @@ class Integrate:
 		h: Optional[float]=None,
 		scheme: Optional[str]="open"
 	):
-		self.__domain_name, self.__function_name = _retrieve_name(domain), _retrieve_name(function)
+		self.__domain_name, self.__function_name = "x", "f"#_retrieve_name(domain), _retrieve_name(function)
 		BadDomainError = lambda domain_name: f"Input domain, '{domain_name}' was not a one-dimensional array."
 		BadFunctionError = lambda function_name: f"Input range, '{function_name}' must be expression, not list or tuple."
 		if isinstance(domain, type(None)):
@@ -3374,7 +3374,7 @@ def richard_extrapolation(
 	--------
 	newton_difference : Newton Difference method to build extrapolation for function's derivative and order of error.
 	"""
-	function_name = _retrieve_name(function)
+	function_name = "f"#_retrieve_name(function)
 	BadExpressionError = lambda function_name: f"Function, '{function_name}' must be a lambda expression."
 	BadOrderError = lambda order: f"Order, n = {order} must be an integer greater than zero."
 	BadDirectionError = lambda direction: f"Supplied direction ('{direction}') was not understood. Please specify 'forward' or 'backward'."
