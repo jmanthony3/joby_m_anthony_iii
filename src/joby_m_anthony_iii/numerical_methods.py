@@ -3211,30 +3211,36 @@ class Integrate:
 		BadDomainError = lambda domain_name: f"Input domain, '{domain_name}' was not a one-dimensional array."
 		BadFunctionError = lambda function_name: f"Input range, '{function_name}' must be expression, not list or tuple."
 		if isinstance(domain, type(None)):
-			domain = np.arange(a, b+h, h)
-		elif np.sum(np.array(domain).shape) > np.sum(np.array(domain).shape[0]):
-			raise IndexError(BadDomainError(self.__domain_name))
+			self.domain = np.arange(a, b+h, h)
+		elif isinstance(domain, (list, tuple, np.ndarray)):
+			if np.sum(np.array(domain).shape) > np.sum(np.array(domain).shape[0]):
+				raise IndexError(BadDomainError(self.__domain_name))
+			else:
+				self.domain = np.array(domain)
+				if a == None: a = domain[0]
+				if b == None: b = domain[-1]
+				if h == None: h = domain[1] - domain[0]
 		else: raise IndexError(BadDomainError(self.__domain_name))
 		if isinstance(function, (list, tuple, np.ndarray)):
-			function = np.array(function)
+			self.function = np.array(function)
 		elif isinstance(function, FunctionType):
 			# if isinstance(function, str):
 			# 	self.function_str = function_str = ex.fast_parse_latex(function)
 			# 	function = lambda x: ex.fast_eval_latex(function_str, {variable: x})
-			self.function = function = make_array(domain, function)
+			self.function = make_array(self.domain, function)
 			#print("String expression converted to lambda function.")
 		#elif not isinstance(function,(FunctionType, sp.Expr)):
 		#	if np.sum(domain.shape) > np.sum(domain.shape[0]): raise ValueError("ERROR! " + bad_X)
 		#	else: raise ValueError("ERROR! " + bad_f)
 		else: raise TypeError(BadFunctionError(self.__function_name))
-		if isinstance(domain, type(None)):
-			self.domain = np.arange(a, b, h)
-		else:
-			self.domain = np.array(domain)
-			# self.variable = variable
-			if a == None: a = domain[0]
-			if b == None: b = domain[-1]
-			if h == None: h = domain[1]-domain[0]
+		# if isinstance(domain, type(None)):
+		# 	self.domain = np.arange(a, b, h)
+		# else:
+		# 	self.domain = np.array(domain)
+		# 	# self.variable = variable
+		# 	if a == None: a = domain[0]
+		# 	if b == None: b = domain[-1]
+		# 	if h == None: h = domain[1]-domain[0]
 		self.a, self.b, self.h = float(a), float(b), float(h)
 		self.scheme = scheme
 
@@ -3261,9 +3267,9 @@ class Integrate:
 		f, X = self.function, self.domain
 		a, b, h = self.a, self.b, self.h
 		if self.scheme == "open":
-			n = math.ceil((b-a)/h)
 			XJ1, XJ2, XJ, = [], [], [a]
 			YJ1, YJ2, YJ, = [], [], [f(a) if not isinstance(f, np.ndarray) else f[0]]
+			n = math.ceil((b-a)/h) if not isinstance(f, np.ndarray) else len(X) - 1
 			for j in range(1, int(n/2)):
 				XJ1.append(a + 2*j*h)
 				YJ1.append(f(XJ1[-1]) if not isinstance(f, np.ndarray) else f[2*j])
@@ -3311,7 +3317,7 @@ class Integrate:
 		a, b, h = self.a, self.b, self.h
 		if self.scheme == "open":
 			XJ, YJ = [a], [f(a) if not isinstance(f, np.ndarray) else f[0]]
-			n = math.ceil((b-a)/h)
+			n = math.ceil((b-a)/h) if not isinstance(f, np.ndarray) else len(X) - 1
 			for j in range(1, n):
 				XJ.append(a + j*h)
 				YJ.append(f(XJ[-1]) if not isinstance(f, np.ndarray) else f[j])

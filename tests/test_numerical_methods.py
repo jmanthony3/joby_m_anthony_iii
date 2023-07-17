@@ -67,11 +67,11 @@ def test(fn, x, name):
 	#    assert -1 <= d <= 1, " incorrect values"
 
 if __name__ == "__main__":
-	print("Running C++ extension benchmarks with COUNT = ({},{})".format(rows, columns))
+	# print("Running C++ extension benchmarks with COUNT = ({},{})".format(rows, columns))
 
-	test(lambda d: [[tanh(x) for x in r] for r in d], DATA, "[tanh(x) for x in d] (Python implementation)")
+	# test(lambda d: [[tanh(x) for x in r] for r in d], DATA, "[tanh(x) for x in d] (Python implementation)")
 
-	print("\nOnto 'numerical_methods'...\n")
+	# print("\nOnto 'numerical_methods'...\n")
 
 	spec = importlib.util.spec_from_file_location("numerical_methods", r"..\src\joby_m_anthony_iii\numerical_methods.py")
 	bar = importlib.util.module_from_spec(spec)
@@ -867,6 +867,9 @@ if __name__ == "__main__":
 	# X = np.arange(a, b+h, h)
 	# Y = np.cos(X)*X**2
 	# obj = bar.Integrate(lambda_expression, a=a, b=b, h=h, scheme="open")
+	# # obj = bar.Integrate(lambda_expression, X, scheme="open")
+	# # obj = bar.Integrate(Y, X, a=a, b=b, h=h, scheme="open")
+	# # obj = bar.Integrate(Y, X, scheme="open")
 	# domain, rng, area = obj.simpson()
 	# print(f"Simpson, A = {area}")
 	# domain, rng, area = obj.trapezoidal()
@@ -1077,164 +1080,164 @@ if __name__ == "__main__":
 
 	# print("")
 
-	#test ivp
-	print("Testing ivp...")
-	sys.modules["ivp"] = bar
-	spec.loader.exec_module(bar)
-	fig = plt.figure(figsize=(7,7))
-	fig.suptitle("'IVP()' Methods")
-	ax = fig.add_gridspec(5, 2)
-	ax1 = fig.add_subplot(ax[0, 0])
-	ax2 = fig.add_subplot(ax[0, 1])
-	ax3 = fig.add_subplot(ax[1, 0])
-	ax4 = fig.add_subplot(ax[1, 1])
-	ax5 = fig.add_subplot(ax[2, 0])
-	ax6 = fig.add_subplot(ax[2, 1])
-	ax7 = fig.add_subplot(ax[3, 0])
-	ax8 = fig.add_subplot(ax[3, 1])
-	ax9 = fig.add_subplot(ax[4, 0])
-	ax10 = fig.add_subplot(ax[4, 1])
-	line_labels = []
-	n = 5 	# grain growth exponent
-	H_star = 10**5 	# activation enthalpy [J/mol]
-	k0 = 10**10 	# growth rate constant [micro-m-n/s]
-	R = 8.314462175 	# universal gas constant [J/K-mol]
-	T = 1000 	# absolute temperature [K]
-	d0 = 10 	# initial grain size [micro-m]
-	t = 10*60 	# total experiment time [s]
-	d_dot = lambda t, d: k0/(n*d**(n - 1))*math.exp(-H_star/R/T)
-	H = (10, 5, 1)
-	#ltx_expression = r"\frac{k}{nd^{n-1}}\exp(-\frac{H_star}{RT})"
-	#ltx_dict = {
-	#	"n": n,
-	#	"H_star": H_star,
-	#	"k0": k0,
-	#	"R": R,
-	#	"T": T,
-	#	"d0": d0,
-	#	"t": t
-	#}
-	def d_dot_analytical(t, d0, h):
-		domain, Y, increment = np.arange(h, t+h, h), [d0], [0]
-		d = lambda t, d0: (d0**n + k0*sp.exp(-H_star/R/T)*t)**(1/n)
-		for ti in domain:
-			Y.append(d(ti, d0))
-			increment.append(d(ti, d0) - d(ti - h, d0))
-		return pd.DataFrame(data={"Iterations": range(len(domain)+1), "Domain": np.arange(0, t+h, h), "Range": Y, "Increments": increment})
-	# forward_euler
-	print("Testing forward_euler...")
-	k = 1
-	for h in H:
-		obj = bar.IVP(d_dot, h, t, d0, steps=t/h)
-		df = obj.forward_euler()
-		print(f"{k}, h = {h}s: d = {df['Range'].values[-1]} for total change = {np.sum(df['Increments'].values)} in {df['Iterations'].values[-1]} time steps.")
-		ax1.plot(df["Domain"].values, df["Range"].values, label=f"{h} s")
-		ax2.plot(df["Domain"].values, df["Increments"].values, label=f"{h} s")
-		line_labels.append(r"$\Delta t$" + f"={h:4.2f} s")
-		k += 1
-	df = d_dot_analytical(t, d0, h)
-	ax1.plot(df["Domain"].values, df["Range"].values, label=f"Analytical")
-	ax2.plot(df["Domain"].values, df["Increments"].values, label=f"Analytical")
-	#plt.show()
-	# improved_euler
-	print("Testing improved_euler...")
-	k = 1
-	for h in H:
-		obj = bar.IVP(d_dot, h, t, d0, steps=t/h)
-		df = obj.modified_euler()
-		print(f"{k}, h = {h}s: d = {df['Range'].values[-1]} for total change = {np.sum(df['Increments'].values)} in {df['Iterations'].values[-1]} time steps.")
-		ax3.plot(df["Domain"].values, df["Range"].values, label=f"{h} s")
-		ax4.plot(df["Domain"].values, df["Increments"].values, label=f"{h} s")
-		k += 1
-	df = d_dot_analytical(t, d0, h)
-	ax3.plot(df["Domain"].values, df["Range"].values, label=f"Analytical")
-	ax4.plot(df["Domain"].values, df["Increments"].values, label=f"Analytical")
-	#plt.show()
-	# backward_euler
-	print("Testing backward_euler...")
-	k = 1
-	for h in H:
-		obj = bar.IVP(d_dot, h, t, d0, steps=t/h)
-		df = obj.backward_euler()
-		print(f"{k}, h = {h}s: d = {df['Range'].values[-1]} for total change = {np.sum(df['Increments'].values)} in {df['Iterations'].values[-1]} time steps.")
-		ax5.plot(df["Domain"].values, df["Range"].values, label=f"{h} s")
-		ax6.plot(df["Domain"].values, df["Increments"].values, label=f"{h} s")
-		k += 1
-	df = d_dot_analytical(t, d0, h)
-	ax5.plot(df["Domain"].values, df["Range"].values, label=f"Analytical")
-	ax6.plot(df["Domain"].values, df["Increments"].values, label=f"Analytical")
-	#plt.show()
-	# runge_kutta
-	print("Testing runge_kutta...")
-	k = 1
-	for h in H:
-		obj = bar.IVP(d_dot, h, t, d0, steps=t/h)
-		df = obj.runge_kutta()
-		print(f"{k}, h = {h}s: d = {df['Range'].values[-1]} for total change = {np.sum(df['Increments'].values)} in {df['Iterations'].values[-1]} time steps.")
-		ax7.plot(df["Domain"].values, df["Range"].values, label=f"{h} s")
-		ax8.plot(df["Domain"].values, df["Increments"].values, label=f"{h} s")
-		k += 1
-	df = d_dot_analytical(t, d0, h)
-	ax7.plot(df["Domain"].values, df["Range"].values, label=f"Analytical")
-	ax8.plot(df["Domain"].values, df["Increments"].values, label=f"Analytical")
-	#plt.show()
-	# trapezoidal
-	print("Testing trapezoidal...")
-	k = 1
-	for h in H:
-		obj = bar.IVP(d_dot, h, t, d0, steps=t/h)
-		df = obj.crank_nicholson()
-		print(f"{k}, h = {h}s: d = {df['Range'].values[-1]} for total change = {np.sum(df['Increments'].values)} in {df['Iterations'].values[-1]} time steps.")
-		ax9.plot(df["Domain"].values, df["Range"].values, label=f"{h} s")
-		ax10.plot(df["Domain"].values, df["Increments"].values, label=f"{h} s")
-		k += 1
-	df = d_dot_analytical(t, d0, h)
-	ax9.plot(df["Domain"].values, df["Range"].values, label=f"Analytical")
-	ax10.plot(df["Domain"].values, df["Increments"].values, label=f"Analytical")
-	line_labels.append("Analytical")
-	# ax1.set_xlabel("Time [s]")
-	ax1.set_ylabel("Forward Euler")
-	# ax1.legend()
-	# ax2.set_xlabel("Time [s]")
-	# ax2.set_ylabel(r"$\Delta\mu$")
-	# ax2.legend()
-	# ax3.set_xlabel("Time [s]")
-	ax3.set_ylabel("Improved Euler")
-	# ax3.legend()
-	# ax4.set_xlabel("Time [s]")
-	# ax4.set_ylabel(r"$\Delta\mu$")
-	# ax4.legend()
-	# ax5.set_xlabel("Time [s]")
-	ax5.set_ylabel("Backward Euler")
-	# ax5.legend()
-	# ax6.set_xlabel("Time [s]")
-	# ax6.set_ylabel(r"$\Delta\mu$")
-	# ax6.legend()
-	# ax7.set_xlabel("Time [s]")
-	ax7.set_ylabel("Runge-Kutta")
-	# ax7.legend()
-	# ax8.set_xlabel("Time [s]")
-	# ax8.set_ylabel(r"$\Delta\mu$")
-	# ax8.legend()
-	# ax9.set_xlabel("Time [s]")
-	ax9.set_ylabel("Trapezoidal")
-	# ax9.legend()
-	# ax10.set_xlabel("Time [s]")
-	# ax10.set_ylabel(r"$\Delta\mu$")
-	# ax10.legend()
-	fig.legend([ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9, ax10], # The line objects
-		labels=line_labels, # The labels for each line
-		loc="lower center", # Position of legend
-		ncol=4,
-		fontsize="small",
-		mode="expand",
-		title="Legend", # Title for the legend
-		borderaxespad=0.1 # Small spacing around legend box
-	)
-	# Adjust the scaling factor to fit your legend text completely outside the plot
-	# (smaller value results in more space being made for the legend)
-	plt.subplots_adjust(bottom=0.175)
-	#plt.show()
+	# #test ivp
+	# print("Testing ivp...")
+	# sys.modules["ivp"] = bar
+	# spec.loader.exec_module(bar)
+	# fig = plt.figure(figsize=(7,7))
+	# fig.suptitle("'IVP()' Methods")
+	# ax = fig.add_gridspec(5, 2)
+	# ax1 = fig.add_subplot(ax[0, 0])
+	# ax2 = fig.add_subplot(ax[0, 1])
+	# ax3 = fig.add_subplot(ax[1, 0])
+	# ax4 = fig.add_subplot(ax[1, 1])
+	# ax5 = fig.add_subplot(ax[2, 0])
+	# ax6 = fig.add_subplot(ax[2, 1])
+	# ax7 = fig.add_subplot(ax[3, 0])
+	# ax8 = fig.add_subplot(ax[3, 1])
+	# ax9 = fig.add_subplot(ax[4, 0])
+	# ax10 = fig.add_subplot(ax[4, 1])
+	# line_labels = []
+	# n = 5 	# grain growth exponent
+	# H_star = 10**5 	# activation enthalpy [J/mol]
+	# k0 = 10**10 	# growth rate constant [micro-m-n/s]
+	# R = 8.314462175 	# universal gas constant [J/K-mol]
+	# T = 1000 	# absolute temperature [K]
+	# d0 = 10 	# initial grain size [micro-m]
+	# t = 10*60 	# total experiment time [s]
+	# d_dot = lambda t, d: k0/(n*d**(n - 1))*math.exp(-H_star/R/T)
+	# H = (10, 5, 1)
+	# #ltx_expression = r"\frac{k}{nd^{n-1}}\exp(-\frac{H_star}{RT})"
+	# #ltx_dict = {
+	# #	"n": n,
+	# #	"H_star": H_star,
+	# #	"k0": k0,
+	# #	"R": R,
+	# #	"T": T,
+	# #	"d0": d0,
+	# #	"t": t
+	# #}
+	# def d_dot_analytical(t, d0, h):
+	# 	domain, Y, increment = np.arange(h, t+h, h), [d0], [0]
+	# 	d = lambda t, d0: (d0**n + k0*sp.exp(-H_star/R/T)*t)**(1/n)
+	# 	for ti in domain:
+	# 		Y.append(d(ti, d0))
+	# 		increment.append(d(ti, d0) - d(ti - h, d0))
+	# 	return pd.DataFrame(data={"Iterations": range(len(domain)+1), "Domain": np.arange(0, t+h, h), "Range": Y, "Increments": increment})
+	# # forward_euler
+	# print("Testing forward_euler...")
+	# k = 1
+	# for h in H:
+	# 	obj = bar.IVP(d_dot, h, t, d0, steps=t/h)
+	# 	df = obj.forward_euler()
+	# 	print(f"{k}, h = {h}s: d = {df['Range'].values[-1]} for total change = {np.sum(df['Increments'].values)} in {df['Iterations'].values[-1]} time steps.")
+	# 	ax1.plot(df["Domain"].values, df["Range"].values, label=f"{h} s")
+	# 	ax2.plot(df["Domain"].values, df["Increments"].values, label=f"{h} s")
+	# 	line_labels.append(r"$\Delta t$" + f"={h:4.2f} s")
+	# 	k += 1
+	# df = d_dot_analytical(t, d0, h)
+	# ax1.plot(df["Domain"].values, df["Range"].values, label=f"Analytical")
+	# ax2.plot(df["Domain"].values, df["Increments"].values, label=f"Analytical")
+	# #plt.show()
+	# # improved_euler
+	# print("Testing improved_euler...")
+	# k = 1
+	# for h in H:
+	# 	obj = bar.IVP(d_dot, h, t, d0, steps=t/h)
+	# 	df = obj.modified_euler()
+	# 	print(f"{k}, h = {h}s: d = {df['Range'].values[-1]} for total change = {np.sum(df['Increments'].values)} in {df['Iterations'].values[-1]} time steps.")
+	# 	ax3.plot(df["Domain"].values, df["Range"].values, label=f"{h} s")
+	# 	ax4.plot(df["Domain"].values, df["Increments"].values, label=f"{h} s")
+	# 	k += 1
+	# df = d_dot_analytical(t, d0, h)
+	# ax3.plot(df["Domain"].values, df["Range"].values, label=f"Analytical")
+	# ax4.plot(df["Domain"].values, df["Increments"].values, label=f"Analytical")
+	# #plt.show()
+	# # backward_euler
+	# print("Testing backward_euler...")
+	# k = 1
+	# for h in H:
+	# 	obj = bar.IVP(d_dot, h, t, d0, steps=t/h)
+	# 	df = obj.backward_euler()
+	# 	print(f"{k}, h = {h}s: d = {df['Range'].values[-1]} for total change = {np.sum(df['Increments'].values)} in {df['Iterations'].values[-1]} time steps.")
+	# 	ax5.plot(df["Domain"].values, df["Range"].values, label=f"{h} s")
+	# 	ax6.plot(df["Domain"].values, df["Increments"].values, label=f"{h} s")
+	# 	k += 1
+	# df = d_dot_analytical(t, d0, h)
+	# ax5.plot(df["Domain"].values, df["Range"].values, label=f"Analytical")
+	# ax6.plot(df["Domain"].values, df["Increments"].values, label=f"Analytical")
+	# #plt.show()
+	# # runge_kutta
+	# print("Testing runge_kutta...")
+	# k = 1
+	# for h in H:
+	# 	obj = bar.IVP(d_dot, h, t, d0, steps=t/h)
+	# 	df = obj.runge_kutta()
+	# 	print(f"{k}, h = {h}s: d = {df['Range'].values[-1]} for total change = {np.sum(df['Increments'].values)} in {df['Iterations'].values[-1]} time steps.")
+	# 	ax7.plot(df["Domain"].values, df["Range"].values, label=f"{h} s")
+	# 	ax8.plot(df["Domain"].values, df["Increments"].values, label=f"{h} s")
+	# 	k += 1
+	# df = d_dot_analytical(t, d0, h)
+	# ax7.plot(df["Domain"].values, df["Range"].values, label=f"Analytical")
+	# ax8.plot(df["Domain"].values, df["Increments"].values, label=f"Analytical")
+	# #plt.show()
+	# # trapezoidal
+	# print("Testing trapezoidal...")
+	# k = 1
+	# for h in H:
+	# 	obj = bar.IVP(d_dot, h, t, d0, steps=t/h)
+	# 	df = obj.crank_nicholson()
+	# 	print(f"{k}, h = {h}s: d = {df['Range'].values[-1]} for total change = {np.sum(df['Increments'].values)} in {df['Iterations'].values[-1]} time steps.")
+	# 	ax9.plot(df["Domain"].values, df["Range"].values, label=f"{h} s")
+	# 	ax10.plot(df["Domain"].values, df["Increments"].values, label=f"{h} s")
+	# 	k += 1
+	# df = d_dot_analytical(t, d0, h)
+	# ax9.plot(df["Domain"].values, df["Range"].values, label=f"Analytical")
+	# ax10.plot(df["Domain"].values, df["Increments"].values, label=f"Analytical")
+	# line_labels.append("Analytical")
+	# # ax1.set_xlabel("Time [s]")
+	# ax1.set_ylabel("Forward Euler")
+	# # ax1.legend()
+	# # ax2.set_xlabel("Time [s]")
+	# # ax2.set_ylabel(r"$\Delta\mu$")
+	# # ax2.legend()
+	# # ax3.set_xlabel("Time [s]")
+	# ax3.set_ylabel("Improved Euler")
+	# # ax3.legend()
+	# # ax4.set_xlabel("Time [s]")
+	# # ax4.set_ylabel(r"$\Delta\mu$")
+	# # ax4.legend()
+	# # ax5.set_xlabel("Time [s]")
+	# ax5.set_ylabel("Backward Euler")
+	# # ax5.legend()
+	# # ax6.set_xlabel("Time [s]")
+	# # ax6.set_ylabel(r"$\Delta\mu$")
+	# # ax6.legend()
+	# # ax7.set_xlabel("Time [s]")
+	# ax7.set_ylabel("Runge-Kutta")
+	# # ax7.legend()
+	# # ax8.set_xlabel("Time [s]")
+	# # ax8.set_ylabel(r"$\Delta\mu$")
+	# # ax8.legend()
+	# # ax9.set_xlabel("Time [s]")
+	# ax9.set_ylabel("Trapezoidal")
+	# # ax9.legend()
+	# # ax10.set_xlabel("Time [s]")
+	# # ax10.set_ylabel(r"$\Delta\mu$")
+	# # ax10.legend()
+	# fig.legend([ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9, ax10], # The line objects
+	# 	labels=line_labels, # The labels for each line
+	# 	loc="lower center", # Position of legend
+	# 	ncol=4,
+	# 	fontsize="small",
+	# 	mode="expand",
+	# 	title="Legend", # Title for the legend
+	# 	borderaxespad=0.1 # Small spacing around legend box
+	# )
+	# # Adjust the scaling factor to fit your legend text completely outside the plot
+	# # (smaller value results in more space being made for the legend)
+	# plt.subplots_adjust(bottom=0.175)
+	# #plt.show()
 
 	# print("")
 
@@ -1658,45 +1661,45 @@ if __name__ == "__main__":
 
 	# # #print("")
 
-	# # ## test cubic_spline
-	# # #print("Testing cubic_spline...")
-	# # #sys.modules["cubic_spline"] = bar
-	# # #spec.loader.exec_module(bar)
-	# # ### 		supplied parameters
-	# # #X = [0.0, 0.3, 0.5]
-	# # #a, b = 0.0, 0.5
-	# # #method = "Clamped"
-	# # #ltx_variable = "x"
-	# # #ltx_expression = r"\sin(3x)"
-	# # ##ltx_expression = np.sin(3*np.array(X))
-	# # ##ltx_expression = lambda x: math.sin(3*x)
-	# # ##ltx_expression = [0, 0.7]
-	# # #obj = bar.CubicSpline(X, ltx_expression)
-	# # #if method == "Clamped":
-	# # #	Y, S, S_str = obj.clamped()
-	# # #elif method == "Natural":
-	# # #	Y, S, S_str = obj.natural()
-	# # #### 		console outputs
-	# # #print('Interpolant Spline 1, $S_{0}$ = ', S_str[0])
-	# # #print('Interpolant Spline 2, $S_{1}$ = ', S_str[1])
-	# # ##print('Clamped Cubic Spline, $s(x)$ = ','\n')
-	# # ##print(spline,'\n')
-	# # ### 		output plots
-	# # #plt.figure(figsize=(7,7))
-	# # #plt.title(f"Cubic Spline ({method})")
-	# # #plt.scatter(X,Y, color='r', label="Raw Data")
-	# # #X1, Y1 = np.arange(a, X[1]+0.01, 0.01), []
-	# # #for x in X1:
-	# # #	Y1.append(S[0](x))
-	# # #plt.plot(X1,Y1, color='g', label=f"Interpolant 1")
-	# # #X2, Y2 = np.arange(X[1], X[2]+0.01, 0.01), []
-	# # #for x in X2:
-	# # #	Y2.append(S[1](x))
-	# # #plt.plot(X2,Y2, color='b', label=f"Interpolant 2")
-	# # #plt.xlabel("Real Domain [rad]")
-	# # #plt.ylabel("Real Range [rad]")
-	# # #plt.legend()
-	# # ##plt.show()
+	# # test cubic_spline
+	# print("Testing cubic_spline...")
+	# sys.modules["cubic_spline"] = bar
+	# spec.loader.exec_module(bar)
+	# ## 		supplied parameters
+	# X = [0.0, 0.3, 0.5]
+	# a, b = 0.0, 0.5
+	# method = "Clamped"
+	# # ltx_variable = "x"
+	# # ltx_expression = r"\sin(3x)"
+	# ltx_expression = np.sin(3*np.array(X))
+	# #ltx_expression = lambda x: math.sin(3*x)
+	# #ltx_expression = [0, 0.7]
+	# obj = bar.CubicSpline(X, ltx_expression)
+	# if method == "Clamped":
+	# 	Y, S = obj.clamped()
+	# elif method == "Natural":
+	# 	Y, S = obj.natural()
+	# ### 		console outputs
+	# print('Interpolant Spline 1, $S_{0}$ = ', S[0](sp.Symbol("x")))
+	# print('Interpolant Spline 2, $S_{1}$ = ', S[1](sp.Symbol("x")))
+	# #print('Clamped Cubic Spline, $s(x)$ = ','\n')
+	# #print(spline,'\n')
+	# ## 		output plots
+	# plt.figure(figsize=(7,7))
+	# plt.title(f"Cubic Spline ({method})")
+	# plt.scatter(X,Y, color='r', label="Raw Data")
+	# X1, Y1 = np.arange(a, X[1]+0.01, 0.01), []
+	# for x in X1:
+	# 	Y1.append(S[0](x))
+	# plt.plot(X1,Y1, color='g', label=f"Interpolant 1")
+	# X2, Y2 = np.arange(X[1], X[2]+0.01, 0.01), []
+	# for x in X2:
+	# 	Y2.append(S[1](x))
+	# plt.plot(X2,Y2, color='b', label=f"Interpolant 2")
+	# plt.xlabel("Real Domain [rad]")
+	# plt.ylabel("Real Range [rad]")
+	# plt.legend()
+	# #plt.show()
 
 	# # #print("")
 
@@ -1817,48 +1820,48 @@ if __name__ == "__main__":
 
 	# # #print("")
 
-	# # ## test least_squares
-	# # #print("Testing least_squares...")
-	# # #sys.modules["least_squares"] = bar
-	# # #spec.loader.exec_module(bar)
-	# # #plt.figure(figsize=(7,7))
-	# # #plt.title("Raw Data versus Least Square Polynomial and Power Law")
-	# # ### 		supplied parameters
-	# # ## x_i 
-	# # #X_i = [0.01, 0.15, 0.31, 0.5, 0.6, 0.75]
-	# # ## y_i 
-	# # #Y_i = [1.0, 1.004, 1.031, 1.117, 1.223, 1.422]
-	# # #degree = 2
-	# # #obj = bar.LeastSquares(X_i, Y_i)
-	# # #polynomial, error = obj.linear(degree)
-	# # #plt.scatter(X_i,Y_i, color='r', label='Raw Data')
-	# # ## build arrays to plot
-	# # #dx = 0.01 			# distance between discrete elements
-	# # ## X = discretize domain
-	# # ## Y = empty list for range of domain, X
-	# # #X, Y = np.arange(X_i[0],\
-	# # #	X_i[-1] + (X_i[-1] - X_i[-2]), dx), []
-	# # #for x in X: 		# for each element in domain
-	# # #	# write to range, Y
-	# # #	Y.append(polynomial(x))
-	# # ### 		output plots
-	# # #plt.plot(X,Y, color='g', label=f"Polynomial, n = {degree} (error = {error:1.4f})")
-	# # #power_a, power_b, power_expression = obj.power()
-	# # ## build arrays to plot
-	# # #dx = 0.01 			# distance between discrete elements
-	# # ## X = discretize domain
-	# # ## Y = empty list for range of domain, X
-	# # #X, Y = np.arange(X_i[0],\
-	# # #	X_i[-1] + (X_i[-1] - X_i[-2]), dx), []
-	# # #for x in X: 		# for each element in domain
-	# # #	# write to range, Y
-	# # #	Y.append(power_expression(x))
-	# # ### 		output plots
-	# # #plt.plot(X,Y, color='b', label=f'Power: {power_a:1.4f}x**{power_b:1.4f}')
-	# # #plt.xlabel('Real Domain')
-	# # #plt.ylabel('Real Range')
-	# # #plt.legend()
-	# # ##plt.show()
+	# test least_squares
+	print("Testing least_squares...")
+	sys.modules["least_squares"] = bar
+	spec.loader.exec_module(bar)
+	plt.figure(figsize=(7,7))
+	plt.title("Raw Data versus Least Square Polynomial and Power Law")
+	## 		supplied parameters
+	# x_i 
+	X_i = [0.01, 0.15, 0.31, 0.5, 0.6, 0.75]
+	# y_i 
+	Y_i = [1.0, 1.004, 1.031, 1.117, 1.223, 1.422]
+	degree = 2
+	obj = bar.LeastSquares(X_i, Y_i)
+	polynomial, error = obj.linear(degree)
+	plt.scatter(X_i,Y_i, color='r', label='Raw Data')
+	# build arrays to plot
+	dx = 0.01 			# distance between discrete elements
+	# X = discretize domain
+	# Y = empty list for range of domain, X
+	X, Y = np.arange(X_i[0],\
+		X_i[-1] + (X_i[-1] - X_i[-2]), dx), []
+	for x in X: 		# for each element in domain
+		# write to range, Y
+		Y.append(polynomial(x))
+	## 		output plots
+	plt.plot(X,Y, color='g', label=f"Polynomial, n = {degree} (error = {error:1.4f})")
+	power_a, power_b, power_expression = obj.power()
+	# build arrays to plot
+	dx = 0.01 			# distance between discrete elements
+	# X = discretize domain
+	# Y = empty list for range of domain, X
+	X, Y = np.arange(X_i[0],\
+		X_i[-1] + (X_i[-1] - X_i[-2]), dx), []
+	for x in X: 		# for each element in domain
+		# write to range, Y
+		Y.append(power_expression(x))
+	## 		output plots
+	plt.plot(X,Y, color='b', label=f'Power: {power_a:1.4f}x**{power_b:1.4f}')
+	plt.xlabel('Real Domain')
+	plt.ylabel('Real Range')
+	plt.legend()
+	#plt.show()
 
 	# # #print("")
 

@@ -9,3 +9,4 @@ src/joby_m_anthony_iii.egg-info/SOURCES.txt
 src/joby_m_anthony_iii.egg-info/dependency_links.txt
 src/joby_m_anthony_iii.egg-info/requires.txt
 src/joby_m_anthony_iii.egg-info/top_level.txt
+tests/test_numerical_methods.py

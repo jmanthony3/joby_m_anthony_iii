@@ -16,14 +16,17 @@ set version=%version:~1,-1%
 del src\joby_m_anthony_iii\numerical_methods.log
 del tests\numerical_methods.log
 
-@REM rem ------------------------------------------------------------
-@REM rem     Build Python wheel
-@REM rem ------------------------------------------------------------
-@REM rem upload to PyPi and upgrade local
+rem ------------------------------------------------------------
+rem     Build Python wheel
+rem ------------------------------------------------------------
+rem upload to PyPi and upgrade local
 @REM pip install --upgrade build twine
 @REM python -m build
 @REM twine check ./dist/joby_m_anthony_iii-%version%*
 @REM python -m twine upload --repository pypi ./dist/joby_m_anthony_iii-%version%.tar.gz
+
+rem uncomment the previous four lines to build and upload the package
+rem uncomment the below to build and serve the package documentation
 
 pip install --upgrade joby_m_anthony_iii==%version%
 
