@@ -158,7 +158,7 @@ def spectral_radius(A: tuple) -> float:
 
 	Notes
 	-----
-	:math:`\rho(\mathbf{A}) = \max|\lambda|`, where :math:`\lambda` is the set of eigenvalues for `A` [1]_.
+	:math:`\rho(\mathbf{A}) = \max|\lambda|`, where :math:`\lambda` is the set of eigenvalues for `A` [burdenNumericalAnalysis2016]_.
 	"""
 	matrix_name, A = "A", np.array(A)#_retrieve_name(A), np.array(A)
 	if not(np.sum(A.shape) - A.shape[0] == A.shape[0]):
@@ -194,7 +194,7 @@ class Norm:
 
 	Notes
 	-----
-	Definition [1]_:
+	Definition [burdenNumericalAnalysis2016]_:
 		A matrix norm on the set of all :math:`n \times n` matrices is a real-valued function, :math:`||\cdot||`, defined on this set, satisfying for all :math:`n \times n` matrices :math:`\mathbf{A}` and :math:`\mathbf{B}` and all real numbers :math:`\alpha`:
 			(i) :math:`||\mathbf{A}|| \geq 0`;
 			(ii) :math:`||\mathbf{A}|| = 0` iff :math:`\mathbf{A}` is a matrix with all zero entries;
@@ -202,7 +202,7 @@ class Norm:
 			(iv) :math:`||\mathbf{A} + \mathbf{B}|| \leq ||\mathbf{A}|| + ||\mathbf{B}||`;
 			(v) :math:`||\mathbf{A}\mathbf{B}|| \leq ||\mathbf{A}||||\mathbf{B}||`
 
-	Theorem [1]_:
+	Theorem [burdenNumericalAnalysis2016]_:
 		If :math:`||\cdot||` is a vector norm on :math:`\mathbb{R}^{n}`, then
 
 		.. math::
@@ -355,7 +355,7 @@ def condition_number(
 	-----
 	Will write evaluation of condition number to logfile.
 
-	Definition [1]_:
+	Definition [burdenNumericalAnalysis2016]_:
 		The condition number of the non-singular matrix, :math:`\mathbf{A}` relative to a norm, :math:`||\cdot||` is
 
 		.. math::
@@ -700,7 +700,7 @@ class EigenValues:
 
 		Notes
 		-----
-		Supposed to converge faster than `power_method` [1]_.
+		Supposed to converge faster than `power_method` [burdenNumericalAnalysis2016]_.
 		"""
 		self.__vector_name = "x"#_retrieve_name(x)
 		if np.sum(np.array(x).shape) - np.array(x).shape[0] > 1: raise IndexError(f"Systems vector, {self.__vector_name} must be one-dimensional array!")
@@ -730,7 +730,7 @@ class EigenValues:
 		})
 
 	def qr_algorithm(self) -> pd.DataFrame:
-		r"""Approximate dominant eigenvalue and associated eigenvector of matrix, `A` by decomposition [1]_.
+		r"""Approximate dominant eigenvalue and associated eigenvector of matrix, `A` by decomposition [burdenNumericalAnalysis2016]_.
 
 		Returns
 		-------
@@ -748,11 +748,11 @@ class EigenValues:
 
 		Notes
 		-----
-		This method is preferred over `power_method` and `inverse_power_method` by keeping round-off error to a minimum [1]_.
+		This method is preferred over `power_method` and `inverse_power_method` by keeping round-off error to a minimum [burdenNumericalAnalysis2016]_.
 
 		Examples
 		--------
-		Refer to this `example <https://www.youtube.com/watch?v=FAnNBw7d0vg>`_ for an explanation and demonstration [2]_.
+		Refer to this `example <https://www.youtube.com/watch?v=FAnNBw7d0vg>`_ for an explanation and demonstration [thebrightsideofmathematicsQRDecompositionSquare2020]_.
 		"""
 		# if self.is_symmetric and self.is_tridiagonal:
 		A = self.A
@@ -1238,7 +1238,7 @@ class SingleVariableIteration:
 	# next 5 functions preceded by find_k & max_iterations
 
 	def bisection(self) -> pd.DataFrame:
-		r"""Root-finding method: :math:`f(x) = 0` [1]_.
+		r"""Root-finding method: :math:`f(x) = 0` [burdenNumericalAnalysis2016]_.
 
 		Returns
 		-------
@@ -1265,7 +1265,7 @@ class SingleVariableIteration:
 
 		Notes
 		-----
-		Relying on the Intermediate Value Theorem (IVT), this is a bracketed, root-finding method. Generates a sequence :math:`{p_{n}}_{n=1}^{\infty}` such :math:`f(x=p_{n}) = 0` and converges by :math:`\mathcal{O}(1 / (2^{N}))` [1]_.
+		Relying on the Intermediate Value Theorem (IVT), this is a bracketed, root-finding method. Generates a sequence :math:`{p_{n}}_{n=1}^{\infty}` such :math:`f(x=p_{n}) = 0` and converges by :math:`\mathcal{O}(1 / (2^{N}))` [burdenNumericalAnalysis2016]_.
 		This method is rather slow to converge but will always converge to a solution; therefore, is a good starter method.
 
 		Examples
@@ -2795,7 +2795,7 @@ class LeastSquares:
 		if np.sum(domain.shape) > np.sum(domain.shape[0]): raise IndexError(BadDomainError(self.__domain_name))
 		if np.sum(function.shape) > np.sum(function.shape[0]): raise IndexError(BadFunctionError(self.__function_name))
 		if len(domain) != len(function): raise IndexError(BadDataError(self.__domain_name, self.__function_name))
-		self.domain, self.function = domain, function
+		self.domain, self.function = np.array(domain), np.array(function)
 
 	__MadePolynomialInformation = lambda polynomial_str: f"Information: I have found your requested polynomial! P = {polynomial_str}"
 
@@ -2825,7 +2825,9 @@ class LeastSquares:
 
 		See Also
 		--------
-		SystemOfEquations.conjugate_gradient : Utilize the Conjugate Gradient Method to solve SOE.
+		SystemOfEquations.conjugate_gradient : Utilize the Conjugate Gradient Method to solve SOE (if positive definite).
+
+		SystemOfEquations.steepest_descent : Utilize the Steepest Descent Method to solve SOE (if positive not definite).
 
 		Notes
 		-----
@@ -2859,35 +2861,40 @@ class LeastSquares:
 		# polynomial_str = ex.fast_parse_latex(polynomial_str)
 		# polynomial = lambda x: ex.fast_eval_latex(polynomial_str, {variable: x})
 		#print(least_squares.__MadePolynomialInformation(polynomial_str))
-		error = 0
-		for i in range(len(x)):
-			error += float(Y[i] - polynomial(x[i]))**2
+		error = np.sum((Y - polynomial(X)[0])**2)
 		return polynomial, error
 
-	def power(self) -> Tuple[float, float, FunctionType]:
-		r"""Given a domain and range, yield the coefficients for an equation and the equation of the form :math:`y = ax^{b}` [3]_.
+	def power(self) -> Tuple[FunctionType, float, float, float]:
+		r"""Given a domain and range, yield the coefficients for an equation and the equation of the form :math:`y = ax^{b}` [weissteinLeastSquaresFitting2022]_.
 
 		Returns
 		-------
-		a, b : float
-			Leading coefficient and exponent of equation.
 		expression : lambda
 			Lambda expression of curve-fit with calculated leading coefficient, `a` and exponent, `b`.
+		error, a, b : float
+			Total error, leading coefficient, and exponent of fit equation.
+
+		Notes
+		-----
+		Least squares error := :math:`E = \sum_{i=1}^{m}(y_{i} - P_{n}(x_{i}))^{2}`
+
+		Constructed polynomial of the form: :math:`P(x) = ax^{b}`
 		"""
-		X, Y = self.domain, self.function
+		X, Y, m = self.domain, self.function, len(self.domain)
 		q1, q2, q3, q4 = [], [], [], []
-		for i in range(len(X)):
+		for i in range(m):
 			q1.append(math.log(X[i])*math.log(Y[i]))
 			q2.append(math.log(X[i]))
 			q3.append(math.log(Y[i]))
 			q4.append(math.log(X[i])**2)
-		num = len(X)*np.sum(q1) - np.sum(q2)*np.sum(q3)
-		den = len(X)*np.sum(q4) - (np.sum(q2))**2
+		num = m*np.sum(q1) - np.sum(q2)*np.sum(q3)
+		den = m*np.sum(q4) - (np.sum(q2))**2
 		b = num/den
-		a = math.exp((np.sum(q3) - b*np.sum(q2))/len(X))
+		a = math.exp((np.sum(q3) - b*np.sum(q2))/m)
 		expression = lambda x: a*(x**b)
 		# expression = lambda x: ex.fast_eval_latex(f"{a}*x^{b}", {"x": x})
-		return a, b, expression
+		error = np.sum((Y - expression(X)[0])**2)
+		return expression, a, b, error
 
 def linear_interpolation(
 	x0: float,
