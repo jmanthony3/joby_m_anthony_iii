@@ -1241,123 +1241,123 @@ if __name__ == "__main__":
 
 	# print("")
 
-	# #test bvp
-	# print("Testing bvp...")
-	# sys.modules["bvp"] = bar
-	# spec.loader.exec_module(bar)
-	# fig = plt.figure(figsize=(7,7))
-	# fig.suptitle(r"Comparing Boundary Value Problem Methods")
-	# ax = fig.add_gridspec(3, 3)
-	# ax1 = fig.add_subplot(ax[0, 0])
-	# ax2 = fig.add_subplot(ax[1, 0])
-	# ax3 = fig.add_subplot(ax[1, 1])
-	# ax4 = fig.add_subplot(ax[2, 0])
-	# ax5 = fig.add_subplot(ax[2, 1])
-	# ax6 = fig.add_subplot(ax[2, 2])
-	# a, b = 1, 2
-	# alpha, beta = 0, 2
+	#test bvp
+	print("Testing bvp...")
+	sys.modules["bvp"] = bar
+	spec.loader.exec_module(bar)
+	fig = plt.figure(figsize=(7,7))
+	fig.suptitle(r"Comparing Boundary Value Problem Methods")
+	ax = fig.add_gridspec(3, 3)
+	ax1 = fig.add_subplot(ax[0, 0])
+	ax2 = fig.add_subplot(ax[1, 0])
+	ax3 = fig.add_subplot(ax[1, 1])
+	ax4 = fig.add_subplot(ax[2, 0])
+	ax5 = fig.add_subplot(ax[2, 1])
+	ax6 = fig.add_subplot(ax[2, 2])
+	a, b = 1, 2
+	alpha, beta = 0, 2
+	p = lambda x: -(2/x)
+	q = lambda x: 2/(x**2)
+	r = lambda x: -3*(x**2)
+	# alpha, beta = 1, 2
 	# p = lambda x: -(2/x)
 	# q = lambda x: 2/(x**2)
-	# r = lambda x: -3*(x**2)
-	# # alpha, beta = 1, 2
-	# # p = lambda x: -(2/x)
-	# # q = lambda x: 2/(x**2)
-	# # r = lambda x: np.sin(np.log(x))/(x**2)
-	# ypp = lambda y, yp, x: p(x)*yp + q(x)*y + r(x)
-	# F = [p, q, r, ypp]
-	# H = (0.2, 0.1, 0.05)
-	# def y_analytical(a, b, alpha, beta, h):
-	# 	N = int((b - a)/h)+1
-	# 	domain, Y, increment = np.linspace(a, b, N+2), [], []
-	# 	y = lambda x: -52/(21*x**2) - (x**4)/6 + 37*x/14
-	# 	# c2 = (8 - 12*np.sin(np.log(2)) - 4*np.cos(np.log(2)))/70
-	# 	# c1 = 11/10 - c2
-	# 	# y = lambda x: c1*x + c2/(x**2) - 3/10*np.sin(np.log(x)) - 1/10*np.cos(np.log(x))
-	# 	for x in domain:
-	# 		Y.append(y(x))
-	# 		increment.append(y(x) - y(x - h))
-	# 	# Y.append(beta)
-	# 	# increment.append(beta - y(b))
-	# 	return pd.DataFrame(data={"Iterations": range(len(domain)), "Domain": np.linspace(a, b, N+2), "Range": Y, "Increments": increment})
-	# k = 1
-	# for h in H:
-	# 	df = y_analytical(a, b, alpha, beta, h)
-	# 	print(f"{k}, h = {h}: Max = {np.max(df['Range'].values)} in {df['Iterations'].values[-1]} steps.")
-	# 	ax1.plot(df["Domain"].values, df["Range"].values, label=f"{h}")
-	# 	k += 1
-	# #plt.show()
+	# r = lambda x: np.sin(np.log(x))/(x**2)
+	ypp = lambda y, yp, x: p(x)*yp + q(x)*y + r(x)
+	F = [p, q, r, ypp]
+	H = (0.2, 0.1, 0.05)
+	def y_analytical(a, b, alpha, beta, h):
+		N = int((b - a)/h)+1
+		domain, Y, increment = np.linspace(a, b, N+2), [], []
+		y = lambda x: -52/(21*x**2) - (x**4)/6 + 37*x/14
+		# c2 = (8 - 12*np.sin(np.log(2)) - 4*np.cos(np.log(2)))/70
+		# c1 = 11/10 - c2
+		# y = lambda x: c1*x + c2/(x**2) - 3/10*np.sin(np.log(x)) - 1/10*np.cos(np.log(x))
+		for x in domain:
+			Y.append(y(x))
+			increment.append(y(x) - y(x - h))
+		# Y.append(beta)
+		# increment.append(beta - y(b))
+		return pd.DataFrame(data={"Iterations": range(len(domain)), "Domain": np.linspace(a, b, N+2), "Range": Y, "Increments": increment})
+	k = 1
+	for h in H:
+		df = y_analytical(a, b, alpha, beta, h)
+		print(f"{k}, h = {h}: Max = {np.max(df['Range'].values)} in {df['Iterations'].values[-1]} steps.")
+		ax1.plot(df["Domain"].values, df["Range"].values, label=f"{h}")
+		k += 1
+	#plt.show()
 
-	# print("Testing linear_shooting_method...")
-	# ax3r = ax3.twinx()
-	# ax3.get_yaxis().set_visible(False)
-	# k = 1
-	# # k, H = 1, [0.1]
-	# for h in H:
-	# 	N = int((b - a)/h)+1
-	# 	domain = np.linspace(a, b, N+2)
-	# 	df = bar.BVP(F, a, b, alpha, beta, h, steps=N).linear_shooting_method()
-	# 	print(f"{k}, h = {h}: Max = {np.max(df['Range'].values)} in {df['Iterations'].values[-1]} steps.")
-	# 	ax2.plot(df["Domain"].values, df["Range"].values, label=f"{h}")
-	# 	df_analytical = y_analytical(a, b, alpha, beta, h)
-	# 	error = np.abs((df["Range"].values - df_analytical["Range"].values)/df_analytical["Range"].values*100)
-	# 	ax3.plot(domain, error, label=f"{h}")
-	# 	k += 1
-	# #plt.show()
+	print("Testing linear_shooting_method...")
+	ax3r = ax3.twinx()
+	ax3.get_yaxis().set_visible(False)
+	k = 1
+	# k, H = 1, [0.1]
+	for h in H:
+		N = int((b - a)/h)+1
+		domain = np.linspace(a, b, N+2)
+		df = bar.BVP(F, a, b, alpha, beta, h, steps=N).linear_shooting_method()
+		print(f"{k}, h = {h}: Max = {np.max(df['Range'].values)} in {df['Iterations'].values[-1]} steps.")
+		ax2.plot(df["Domain"].values, df["Range"].values, label=f"{h}")
+		df_analytical = y_analytical(a, b, alpha, beta, h)
+		error = np.abs((df["Range"].values - df_analytical["Range"].values)/df_analytical["Range"].values*100)
+		ax3.plot(domain, error, label=f"{h}")
+		k += 1
+	#plt.show()
 
-	# print("Testing finite_difference_method...")
-	# k = 1
-	# def y_analytical(a, b, alpha, beta, h):
-	# 	N = int((b - a)/h)+2
-	# 	domain, Y, increment = np.linspace(a, b, N+2), [], []
-	# 	y = lambda x: -52/(21*x**2) - (x**4)/6 + 37*x/14
-	# 	# c2 = (8 - 12*np.sin(np.log(2)) - 4*np.cos(np.log(2)))/70
-	# 	# c1 = 11/10 - c2
-	# 	# y = lambda x: c1*x + c2/(x**2) - 3/10*np.sin(np.log(x)) - 1/10*np.cos(np.log(x))
-	# 	for x in domain:
-	# 		Y.append(y(x))
-	# 		increment.append(y(x) - y(x - h))
-	# 	# Y.append(beta)
-	# 	# increment.append(beta - y(b))
-	# 	return pd.DataFrame(data={"Iterations": range(len(domain)), "Domain": np.linspace(a, b, N+2), "Range": Y, "Increments": increment})
-	# # k, H = 1, [0.1]
-	# for h in H:
-	# 	N = int((b - a)/h)+1
-	# 	domain = np.linspace(a, b, N+3)
-	# 	df, df_iter = bar.BVP(F, a, b, alpha, beta, h, steps=N).finite_difference_method()
-	# 	print(f"{k}, h = {h}: Max = {np.max(df['Range'].values)} in {df['Iterations'].values[-1]} steps and {df_iter['Iterations'].values[-1]} iterations for total error = {np.sum(df_iter['Errors'].values[-1])}.")
-	# 	ax4.plot(df["Domain"].values, df["Range"].values, label=f"{h}")
-	# 	df_analytical = y_analytical(a, b, alpha, beta, h)
-	# 	error = np.abs((df["Range"].values - df_analytical["Range"].values)/df_analytical["Range"].values*100)
-	# 	ax5.plot(domain, error, label=f"{h}")
-	# 	ax6.semilogx(df_iter["Iterations"].values, df_iter["Errors"].values, label=f"{h}")
-	# 	k += 1
-	# ax4.plot(df_analytical["Domain"].values, df_analytical["Range"].values, label=f"Analytical")
-	# ax1.set_title("Analytical Form")
-	# ax1.set_xlabel("Domain (x)")
-	# ax1.set_ylabel("Range (y)")
-	# ax1.legend()
-	# ax2.plot(df_analytical["Domain"].values, df_analytical["Range"].values, label=f"Analytical")
-	# ax2.set_title("Linear Shooting Method")
-	# ax2.set_xlabel("Domain (x)")
-	# ax2.set_ylabel("Range (y)")
-	# ax2.legend()
-	# ax3r.set_title("Comparing Errors of Step Size")
-	# ax3.set_xlabel("Domain (x)")
-	# ax3r.set_ylabel("Percent Error [%]")
-	# ax3.legend()
-	# ax4.set_title("Finite Difference Method")
-	# ax4.set_xlabel("Domain (x)")
-	# ax4.set_ylabel("Range (y)")
-	# ax4.legend()
-	# ax5.set_title("Comparing Errors of Step Size")
-	# ax5.set_xlabel("Domain (x)")
-	# ax5.set_ylabel("Percent Error [%]")
-	# ax5.legend()
-	# ax6.set_title("Comparing Iterative Errors of Step Size")
-	# ax6.set_xlabel("Iterations")
-	# ax6.set_ylabel("Method Error")
-	# ax6.legend()
-	# #plt.show()
+	print("Testing finite_difference_method...")
+	k = 1
+	def y_analytical(a, b, alpha, beta, h):
+		N = int((b - a)/h)+2
+		domain, Y, increment = np.linspace(a, b, N+2), [], []
+		y = lambda x: -52/(21*x**2) - (x**4)/6 + 37*x/14
+		# c2 = (8 - 12*np.sin(np.log(2)) - 4*np.cos(np.log(2)))/70
+		# c1 = 11/10 - c2
+		# y = lambda x: c1*x + c2/(x**2) - 3/10*np.sin(np.log(x)) - 1/10*np.cos(np.log(x))
+		for x in domain:
+			Y.append(y(x))
+			increment.append(y(x) - y(x - h))
+		# Y.append(beta)
+		# increment.append(beta - y(b))
+		return pd.DataFrame(data={"Iterations": range(len(domain)), "Domain": np.linspace(a, b, N+2), "Range": Y, "Increments": increment})
+	# k, H = 1, [0.1]
+	for h in H:
+		N = int((b - a)/h)+1
+		domain = np.linspace(a, b, N+3)
+		df, df_iter = bar.BVP(F, a, b, alpha, beta, h, steps=N).finite_difference_method()
+		print(f"{k}, h = {h}: Max = {np.max(df['Range'].values)} in {df['Iterations'].values[-1]} steps and {df_iter['Iterations'].values[-1]} iterations for total error = {np.sum(df_iter['Errors'].values[-1])}.")
+		ax4.plot(df["Domain"].values, df["Range"].values, label=f"{h}")
+		df_analytical = y_analytical(a, b, alpha, beta, h)
+		error = np.abs((df["Range"].values - df_analytical["Range"].values)/df_analytical["Range"].values*100)
+		ax5.plot(domain, error, label=f"{h}")
+		ax6.semilogx(df_iter["Iterations"].values, df_iter["Errors"].values, label=f"{h}")
+		k += 1
+	ax4.plot(df_analytical["Domain"].values, df_analytical["Range"].values, label=f"Analytical")
+	ax1.set_title("Analytical Form")
+	ax1.set_xlabel("Domain (x)")
+	ax1.set_ylabel("Range (y)")
+	ax1.legend()
+	ax2.plot(df_analytical["Domain"].values, df_analytical["Range"].values, label=f"Analytical")
+	ax2.set_title("Linear Shooting Method")
+	ax2.set_xlabel("Domain (x)")
+	ax2.set_ylabel("Range (y)")
+	ax2.legend()
+	ax3r.set_title("Comparing Errors of Step Size")
+	ax3.set_xlabel("Domain (x)")
+	ax3r.set_ylabel("Percent Error [%]")
+	ax3.legend()
+	ax4.set_title("Finite Difference Method")
+	ax4.set_xlabel("Domain (x)")
+	ax4.set_ylabel("Range (y)")
+	ax4.legend()
+	ax5.set_title("Comparing Errors of Step Size")
+	ax5.set_xlabel("Domain (x)")
+	ax5.set_ylabel("Percent Error [%]")
+	ax5.legend()
+	ax6.set_title("Comparing Iterative Errors of Step Size")
+	ax6.set_xlabel("Iterations")
+	ax6.set_ylabel("Method Error")
+	ax6.legend()
+	#plt.show()
 
 
 
@@ -1820,48 +1820,48 @@ if __name__ == "__main__":
 
 	# # #print("")
 
-	# test least_squares
-	print("Testing least_squares...")
-	sys.modules["least_squares"] = bar
-	spec.loader.exec_module(bar)
-	plt.figure(figsize=(7,7))
-	plt.title("Raw Data versus Least Square Polynomial and Power Law")
-	## 		supplied parameters
-	# x_i 
-	X_i = [0.01, 0.15, 0.31, 0.5, 0.6, 0.75]
-	# y_i 
-	Y_i = [1.0, 1.004, 1.031, 1.117, 1.223, 1.422]
-	degree = 2
-	obj = bar.LeastSquares(X_i, Y_i)
-	polynomial, error = obj.linear(degree)
-	plt.scatter(X_i,Y_i, color='r', label='Raw Data')
-	# build arrays to plot
-	dx = 0.01 			# distance between discrete elements
-	# X = discretize domain
-	# Y = empty list for range of domain, X
-	X, Y = np.arange(X_i[0],\
-		X_i[-1] + (X_i[-1] - X_i[-2]), dx), []
-	for x in X: 		# for each element in domain
-		# write to range, Y
-		Y.append(polynomial(x))
-	## 		output plots
-	plt.plot(X,Y, color='g', label=f"Polynomial, n = {degree} (error = {error:1.4f})")
-	power_a, power_b, power_expression = obj.power()
-	# build arrays to plot
-	dx = 0.01 			# distance between discrete elements
-	# X = discretize domain
-	# Y = empty list for range of domain, X
-	X, Y = np.arange(X_i[0],\
-		X_i[-1] + (X_i[-1] - X_i[-2]), dx), []
-	for x in X: 		# for each element in domain
-		# write to range, Y
-		Y.append(power_expression(x))
-	## 		output plots
-	plt.plot(X,Y, color='b', label=f'Power: {power_a:1.4f}x**{power_b:1.4f}')
-	plt.xlabel('Real Domain')
-	plt.ylabel('Real Range')
-	plt.legend()
-	#plt.show()
+	# # test least_squares
+	# print("Testing least_squares...")
+	# sys.modules["least_squares"] = bar
+	# spec.loader.exec_module(bar)
+	# plt.figure(figsize=(7,7))
+	# plt.title("Raw Data versus Least Square Polynomial and Power Law")
+	# ## 		supplied parameters
+	# # x_i 
+	# X_i = [0.01, 0.15, 0.31, 0.5, 0.6, 0.75]
+	# # y_i 
+	# Y_i = [1.0, 1.004, 1.031, 1.117, 1.223, 1.422]
+	# degree = 2
+	# obj = bar.LeastSquares(X_i, Y_i)
+	# polynomial, error = obj.linear(degree)
+	# plt.scatter(X_i,Y_i, color='r', label='Raw Data')
+	# # build arrays to plot
+	# dx = 0.01 			# distance between discrete elements
+	# # X = discretize domain
+	# # Y = empty list for range of domain, X
+	# X, Y = np.arange(X_i[0],\
+	# 	X_i[-1] + (X_i[-1] - X_i[-2]), dx), []
+	# for x in X: 		# for each element in domain
+	# 	# write to range, Y
+	# 	Y.append(polynomial(x))
+	# ## 		output plots
+	# plt.plot(X,Y, color='g', label=f"Polynomial, n = {degree} (error = {error:1.4f})")
+	# power_a, power_b, power_expression = obj.power()
+	# # build arrays to plot
+	# dx = 0.01 			# distance between discrete elements
+	# # X = discretize domain
+	# # Y = empty list for range of domain, X
+	# X, Y = np.arange(X_i[0],\
+	# 	X_i[-1] + (X_i[-1] - X_i[-2]), dx), []
+	# for x in X: 		# for each element in domain
+	# 	# write to range, Y
+	# 	Y.append(power_expression(x))
+	# ## 		output plots
+	# plt.plot(X,Y, color='b', label=f'Power: {power_a:1.4f}x**{power_b:1.4f}')
+	# plt.xlabel('Real Domain')
+	# plt.ylabel('Real Range')
+	# plt.legend()
+	# #plt.show()
 
 	# # #print("")
 
